@@ -8,7 +8,7 @@ from .config import EMBEDDING_MODEL
 
 try:
     from sentence_transformers import SentenceTransformer
-except ImportError as exc:  # pragma: no cover
+except Exception as exc:  # pragma: no cover
     SentenceTransformer = None
     _IMPORT_ERROR = exc
 else:
@@ -20,12 +20,16 @@ class EmbeddingModel:
         if SentenceTransformer is None:
             raise ImportError(
                 "sentence-transformers is required for BGE-M3 embeddings. "
-                "Install the project requirements first."
+                f"Install the project requirements first. Original import error: {_IMPORT_ERROR}"
             ) from _IMPORT_ERROR
 
         self.model_name = model_name
         self.normalize_embeddings = normalize_embeddings
-        self.model = SentenceTransformer(model_name, device="cpu")
+        self.model = SentenceTransformer(
+            model_name,
+            device="cpu",
+            model_kwargs={"use_safetensors": True},
+        )
 
     def embed(self, text: str) -> np.ndarray:
         vector = self.model.encode([text], normalize_embeddings=self.normalize_embeddings)

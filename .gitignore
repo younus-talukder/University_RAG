@@ -1,0 +1,9 @@
+.venv/
+.venv312/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/secrets.toml
+results/*.csv
+inspection_report.txt
+debug_phasec.txt

@@ -3,7 +3,7 @@ import sys
 import traceback
 from pathlib import Path
 
-root = Path(r'c:\Code\university_rag')
+root = Path(__file__).resolve().parent
 out = root / 'debug_phasec.txt'
 lines = []
 lines.append('START')

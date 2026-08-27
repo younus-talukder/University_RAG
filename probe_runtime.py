@@ -1,7 +1,7 @@
 import os, sys
 from pathlib import Path
 
-root = Path(r'c:\Code\university_rag')
+root = Path(__file__).resolve().parent
 out_path = root / 'runtime_probe.txt'
 lines = []
 lines.append('PYTHON=' + sys.executable)

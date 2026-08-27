@@ -10,7 +10,13 @@ if str(ROOT_DIR) not in sys.path:
 from src.evaluator import evaluate_dataset, retrieval_framework_note
 
 
+def _configure_stdout() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+
 if __name__ == "__main__":
+    _configure_stdout()
     print(retrieval_framework_note())
     results = evaluate_dataset()
     print(f"Saved {len(results)} evaluation rows to results/evaluation_results.csv")

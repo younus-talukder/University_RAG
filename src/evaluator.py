@@ -18,11 +18,11 @@ def first_non_empty(mapping: Dict[str, Any], keys: List[str]) -> str:
 
 def detect_question_language(row: Dict[str, Any]) -> str:
     if row.get("English Query", "").strip():
-        return "English"
+        return "english"
     if row.get("Bengali Query", "").strip():
-        return "Bangla"
+        return "bangla"
     if row.get("Banglish Query", "").strip():
-        return "Banglish"
+        return "banglish"
     if row.get("Question", "").strip():
         return "unknown"
     return "unknown"
@@ -47,15 +47,34 @@ def load_dataset(dataset_path: str | Path = QUESTIONS_DIR / "questions.csv") -> 
         banglish = first_non_empty(row, ["Banglish Query", "banglish_query", "question_bl"])
         reference = first_non_empty(row, ["Expected Answer (Ground Truth)", "Expected Answer", "Reference Answer", "reference_answer", "answer"])
 
-        question = english or bengali or banglish or first_non_empty(row, ["Question", "question", "query"])
-        prepared.append({
-            "question": question,
-            "reference_answer": reference,
-            "language": detect_question_language(row),
-            "english_query": english,
-            "bengali_query": bengali,
-            "banglish_query": banglish,
-        })
+        variants = [
+            ("english", english),
+            ("bangla", bengali),
+            ("banglish", banglish),
+        ]
+        added_variant = False
+        for language, question in variants:
+            if question:
+                prepared.append({
+                    "question": question,
+                    "reference_answer": reference,
+                    "expected_language": language,
+                    "english_query": english,
+                    "bengali_query": bengali,
+                    "banglish_query": banglish,
+                })
+                added_variant = True
+
+        if not added_variant:
+            question = first_non_empty(row, ["Question", "question", "query"])
+            prepared.append({
+                "question": question,
+                "reference_answer": reference,
+                "expected_language": detect_question_language(row),
+                "english_query": english,
+                "bengali_query": bengali,
+                "banglish_query": banglish,
+            })
 
     return prepared
 
@@ -88,7 +107,13 @@ def evaluate_dataset(dataset_path: str | Path = QUESTIONS_DIR / "questions.csv",
             "question": question,
             "reference_answer": row.get("reference_answer", ""),
             "generated_answer": result.get("answer", ""),
-            "language": row.get("language", "unknown"),
+            "detected_language": result.get("detected_language", "unknown"),
+            "response_language": result.get("response_language", "unknown"),
+            "language_consistency": result.get("language_consistency", False),
+            "factual_correctness": "manual_review_required",
+            "relevance": "manual_review_required",
+            "completeness": "manual_review_required",
+            "groundedness": "manual_review_required",
             "retrieved_source": retrieval_summary["retrieved_source"],
             "retrieved_page": retrieval_summary["retrieved_page"],
             "retrieval_score": retrieval_summary["retrieval_score"],
@@ -104,7 +129,13 @@ def evaluate_dataset(dataset_path: str | Path = QUESTIONS_DIR / "questions.csv",
                 "question",
                 "reference_answer",
                 "generated_answer",
-                "language",
+                "detected_language",
+                "response_language",
+                "language_consistency",
+                "factual_correctness",
+                "relevance",
+                "completeness",
+                "groundedness",
                 "retrieved_source",
                 "retrieved_page",
                 "retrieval_score",

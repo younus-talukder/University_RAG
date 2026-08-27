@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Sequence
+from functools import lru_cache
+from typing import Sequence
 
 from .config import LLM_MODEL
+from .language_detector import Language, detect_language
 
 try:
     from transformers import pipeline
-except ImportError as exc:  # pragma: no cover
+except Exception as exc:  # pragma: no cover
     pipeline = None
     _IMPORT_ERROR = exc
 else:
@@ -25,11 +27,14 @@ Course-specific rule:
 - Ignore unrelated course content even if it is semantically similar.
 
 Language rule:
-- If the student's question is in Bangla, answer in Bangla.
-- If the student's question is in Banglish, answer in Banglish.
-- If the student's question is in English, answer in English.
+- Detected language: {language}
+- If detected language is bangla, answer in Bengali Unicode.
+- If detected language is banglish, answer in Latin-character Banglish.
+- If detected language is english, answer in English.
 - Preserve the same meaning as the context; do not invent information.
 - If the context is in English but the question is Bangla, still answer in Bangla by translating only the retrieved facts into Bangla without adding anything new.
+- Never convert Banglish to Bangla.
+- Never convert Bangla to Banglish.
 
 Student Question:
 {question}
@@ -39,62 +44,95 @@ University Document Context:
 """
 
 
-def detect_question_language(question: str) -> str:
-    if not question:
-        return "English"
-    text = question.strip()
-    if any("\u0980" <= ch <= "\u09FF" for ch in text):
-        return "Bangla"
-    banglish_markers = ["ki", "kora", "kono", "kothay", "kobe", "kivabe", "ebong", "er", "er", "course-er"]
-    lowered = text.lower()
-    if any(marker in lowered for marker in banglish_markers):
-        return "Banglish"
-    return "English"
+def _language_instruction(language: Language) -> str:
+    if language == "bangla":
+        return "Answer entirely in Bengali Unicode."
+    if language == "banglish":
+        return "Answer entirely in Latin-character Banglish. Do not use Bengali script."
+    return "Answer entirely in English."
 
 
-def build_prompt(question: str, context: Sequence[str]) -> str:
+def build_prompt(question: str, context: Sequence[str], language: Language | None = None) -> str:
     joined_context = "\n\n---\n\n".join(str(item) for item in context if str(item).strip())
-    language = detect_question_language(question)
-    language_note = (
-        "Answer entirely in Bangla. "
-        if language == "Bangla"
-        else "Answer entirely in Banglish. "
-        if language == "Banglish"
-        else "Answer entirely in English. "
+    detected_language = language or detect_language(question)
+    return (
+        SYSTEM_PROMPT.format(question=question, context=joined_context, language=detected_language)
+        + "\nLanguage requirement: "
+        + _language_instruction(detected_language)
     )
-    return SYSTEM_PROMPT.format(question=question, context=joined_context) + "\nLanguage requirement: " + language_note
 
 
-def generate_answer(question: str, context: Sequence[str], model_name: str = LLM_MODEL, max_new_tokens: int = 256) -> str:
+def build_language_retry_prompt(
+    question: str,
+    context: Sequence[str],
+    language: Language,
+    previous_answer: str,
+) -> str:
+    return (
+        build_prompt(question, context, language=language)
+        + "\n\nPrevious answer used the wrong language/style:\n"
+        + previous_answer
+        + "\n\nRegenerate the answer using the same retrieved context, and obey the detected language exactly."
+    )
+
+
+@lru_cache(maxsize=1)
+def _get_generator(model_name: str, max_new_tokens: int):
     if pipeline is None:
         raise ImportError(
-            "transformers is required for local Qwen generation. Install the project requirements first."
+            "transformers is required for local Qwen generation. "
+            f"Install the project requirements first. Original import error: {_IMPORT_ERROR}"
         ) from _IMPORT_ERROR
 
-    prompt = build_prompt(question, context)
     try:
         import accelerate  # noqa: F401
-        generator = pipeline(
+        return pipeline(
             "text-generation",
             model=model_name,
             tokenizer=model_name,
             max_new_tokens=max_new_tokens,
             do_sample=False,
             device_map="auto",
+            model_kwargs={"use_safetensors": True},
         )
     except ImportError:
-        generator = pipeline(
+        return pipeline(
             "text-generation",
             model=model_name,
             tokenizer=model_name,
             max_new_tokens=max_new_tokens,
             do_sample=False,
+            model_kwargs={"use_safetensors": True},
         )
-    output = generator(prompt, truncation=True)
+
+
+def generate_answer(
+    question: str,
+    context: Sequence[str],
+    language: Language | None = None,
+    model_name: str = LLM_MODEL,
+    max_new_tokens: int = 256,
+) -> str:
+    prompt = build_prompt(question, context, language=language)
+    generator = _get_generator(model_name, max_new_tokens)
+    output = generator(prompt, truncation=True, return_full_text=False)
     generated_text = output[0]["generated_text"]
-    if generated_text.startswith(prompt):
-        return generated_text[len(prompt):].strip()
     return generated_text.strip()
 
 
-__all__ = ["build_prompt", "generate_answer"]
+def regenerate_answer_for_language(
+    question: str,
+    context: Sequence[str],
+    language: Language,
+    previous_answer: str,
+    model_name: str = LLM_MODEL,
+    max_new_tokens: int = 256,
+) -> str:
+    prompt = build_language_retry_prompt(question, context, language, previous_answer)
+    generator = _get_generator(model_name, max_new_tokens)
+    output = generator(prompt, truncation=True, return_full_text=False)
+    generated_text = output[0]["generated_text"]
+    return generated_text.strip()
+
+
+__all__ = ["build_prompt", "generate_answer", "regenerate_answer_for_language"]

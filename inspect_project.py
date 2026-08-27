@@ -2,7 +2,7 @@ import csv
 from pathlib import Path
 from pypdf import PdfReader
 
-root = Path(r'c:\Code\university_rag')
+root = Path(__file__).resolve().parent
 report_lines = []
 report_lines.append(f'ROOT={root}')
 report_lines.append(f'CSV_FILE={root / "data/questions/questions.csv"}')

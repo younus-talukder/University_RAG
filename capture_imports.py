@@ -3,7 +3,7 @@ import os
 import sys
 from pathlib import Path
 
-root = Path(r'c:\Code\university_rag')
+root = Path(__file__).resolve().parent
 out = root / 'import_check.txt'
 mods = ['sentence_transformers', 'faiss', 'transformers', 'torch', 'pypdf', 'streamlit', 'pandas']
 lines = []
