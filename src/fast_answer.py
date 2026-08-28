@@ -75,15 +75,93 @@ def _extract_field(text: str, label: str) -> str:
     return match.group(1).strip()
 
 
+def _extract_course_code(text: str) -> str:
+    match = re.search(
+        r"Course\s+No\.\s*/\s*Course\s+Code:\s*(.*?)(?=\s+2\.\s+Course\s+Title:)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return match.group(1).strip() if match else ""
+
+
+def _extract_course_learning_outcome(text: str, outcome_number: str) -> str:
+    match = re.search(
+        rf"\bCLO\s*{re.escape(outcome_number)}\b\s*(.*?)(?=\s+CLO\s*\d+\b|$)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return match.group(1).strip(" .") if match else ""
+
+
+def _extract_objectives(text: str) -> str:
+    match = re.search(
+        r"Course Objectives and Course Summary:\s*(.*?)(?=\s+This is a core course\b|$)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return match.group(1).strip(" .") if match else ""
+
+
+def _extract_assessment_percentage(text: str, assessment_name: str) -> str:
+    match = re.search(
+        rf"\b{assessment_name}\b\s*\((\d+(?:\.\d+)?)\s*%\)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return match.group(1) if match else ""
+
+
 def build_extractive_answer(question: str, retrieved: Sequence[Dict[str, Any]], language: Language) -> str:
     if not retrieved:
         return unsupported_answer(language)
 
     top_text = re.sub(r"\s+", " ", str(retrieved[0].get("text", ""))).strip()
+    clo_match = re.search(r"\bCLO\s*(\d+)\b", question, flags=re.IGNORECASE)
+    if clo_match:
+        outcome = _extract_course_learning_outcome(top_text, clo_match.group(1))
+        if outcome:
+            return f"CLO {clo_match.group(1)}: {outcome}."
+
+    if re.search(r"\b(objective|objectives|purpose|aim|aims)\b", question, flags=re.IGNORECASE):
+        objectives = _extract_objectives(top_text)
+        if objectives:
+            return objectives + "."
+
+    if re.search(r"\b(final|term)\s+exam", question, flags=re.IGNORECASE):
+        exam_name = "Final Exam" if re.search(r"\bfinal\b", question, flags=re.IGNORECASE) else "Mid Term"
+        percentage = _extract_assessment_percentage(top_text, exam_name)
+        if percentage:
+            return f"{exam_name}: {percentage}%."
+
     title = _extract_field(top_text, "Course Title")
+    course_code = _extract_course_code(top_text)
     course_type = _extract_field(top_text, "Course Type")
     credit = _extract_field(top_text, "Credit Value")
     if title:
+        asks_code = re.search(r"\b(code|number)\b", question, flags=re.IGNORECASE)
+        asks_title = re.search(r"\btitle\b", question, flags=re.IGNORECASE)
+        asks_type = re.search(r"\b(type|kind)\b", question, flags=re.IGNORECASE)
+        asks_credit = re.search(r"\b(credit|credits)\b", question, flags=re.IGNORECASE)
+
+        if asks_code and asks_title:
+            if course_code:
+                return f"Course code: {course_code}. Course title: {title}."
+            return f"Course title: {title}."
+
+        if asks_type or asks_credit:
+            details = []
+            if asks_type and course_type:
+                details.append(f"Course type: {course_type}.")
+            if asks_credit and credit:
+                details.append(f"Credit value: {credit}.")
+            if details:
+                return " ".join(details)
+
+        if asks_code and course_code:
+            return f"Course code: {course_code}."
+        if asks_title:
+            return f"Course title: {title}."
+
         details = [f"{title}"]
         if course_type:
             details.append(f"Course type: {course_type}.")

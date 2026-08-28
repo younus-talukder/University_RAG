@@ -56,6 +56,19 @@ class Retriever:
         question_keywords = _extract_question_keywords(question)
         course_hint = _extract_course_hint(question)
 
+        course_sources = set()
+        if course_hint:
+            course_sources = {
+                str(item.get("source", ""))
+                for item in raw_results
+                if course_hint in f"{item.get('text', '')} {item.get('source', '')}".lower()
+            }
+            known_items = {(str(item.get("source", "")), item.get("chunk_id")) for item in raw_results}
+            for item in metadata:
+                item_key = (str(item.get("source", "")), item.get("chunk_id"))
+                if str(item.get("source", "")) in course_sources and item_key not in known_items:
+                    raw_results.append({**item, "score": -1.0})
+
         ranked = []
         for item in raw_results:
             text = str(item.get("text", ""))
@@ -66,13 +79,23 @@ class Retriever:
             if course_hint:
                 if course_hint in combined:
                     score += 1.5
+                elif str(item.get("source", "")) in course_sources:
+                    score += 1.5
                 else:
                     score -= 0.75
 
             keyword_hits = sum(1 for kw in question_keywords if kw and kw in combined)
             score += 0.15 * keyword_hits
 
-            if course_hint and course_hint not in combined and keyword_hits == 0:
+            clo_match = re.search(r"\bclo\s*\d+\b", question.lower())
+            if clo_match and clo_match.group(0) in combined:
+                score += 10.0
+            if re.search(r"\b(objective|objectives|purpose|aim|aims)\b", question.lower()):
+                if "course objectives" in combined:
+                    score += 10.0
+
+            same_course_source = str(item.get("source", "")) in course_sources
+            if course_hint and course_hint not in combined and not same_course_source and keyword_hits == 0:
                 continue
 
             ranked.append({**item, "score": score})
