@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import Literal
+
+from .query_normalization import normalize_retrieval_text
 
 Language = Literal["bangla", "english", "banglish"]
 
@@ -91,20 +94,31 @@ UNIVERSITY_TERMS = {
     "probation",
     "retake",
     "semester",
+    "requirement",
+    "prerequisite",
 }
 
 
+@dataclass(frozen=True)
+class LanguageDetection:
+    language: Language
+    reason: str
+    banglish_markers: tuple[str, ...] = ()
+    english_function_words: tuple[str, ...] = ()
+    university_terms: tuple[str, ...] = ()
+
+
 def _tokens(text: str) -> list[str]:
-    return re.findall(r"[A-Za-z]+(?:-[A-Za-z]+)?|\d+(?:\.\d+)?", text.lower())
+    return re.findall(r"[A-Za-z]+(?:-[A-Za-z]+)?|\d+(?:\.\d+)?", normalize_retrieval_text(text))
 
 
-def detect_language(question: str) -> Language:
+def detect_language_details(question: str) -> LanguageDetection:
     if not question or not question.strip():
         raise ValueError("Question cannot be empty.")
 
     text = question.strip()
     if BANGLA_RE.search(text):
-        return "bangla"
+        return LanguageDetection("bangla", "Bengali Unicode characters detected.")
 
     if not LATIN_RE.search(text):
         raise ValueError("Language detection failed: question has no Bangla or Latin text.")
@@ -113,22 +127,29 @@ def detect_language(question: str) -> Language:
     if not tokens:
         raise ValueError("Language detection failed: question has no usable tokens.")
 
-    banglish_hits = sum(1 for token in tokens if token in BANGLISH_MARKERS)
-    english_hits = sum(1 for token in tokens if token in ENGLISH_FUNCTION_WORDS)
-    university_hits = sum(1 for token in tokens if token in UNIVERSITY_TERMS)
+    banglish = tuple(sorted({token for token in tokens if token in BANGLISH_MARKERS}))
+    english = tuple(sorted({token for token in tokens if token in ENGLISH_FUNCTION_WORDS}))
+    university = tuple(sorted({token for token in tokens if token in UNIVERSITY_TERMS}))
+    banglish_hits = len(banglish)
+    english_hits = len(english)
+    university_hits = len(university)
 
     # Latin script alone is not English. Banglish often mixes English university
     # terms with Bangla grammar markers, so style markers outweigh domain terms.
     if banglish_hits >= 2:
-        return "banglish"
+        return LanguageDetection("banglish", "Multiple Latin-script Bangla grammar markers detected.", banglish, english, university)
     if banglish_hits >= 1 and university_hits >= 1:
-        return "banglish"
+        return LanguageDetection("banglish", "Banglish grammar plus university terminology detected.", banglish, english, university)
     if re.search(r"\b[A-Za-z]+-(er|e|gulo)\b", text.lower()):
-        return "banglish"
+        return LanguageDetection("banglish", "Banglish suffix attachment detected.", banglish, english, university)
     if banglish_hits >= 1 and english_hits <= 2:
-        return "banglish"
+        return LanguageDetection("banglish", "Latin-script Bangla marker detected with little English grammar.", banglish, english, university)
 
-    return "english"
+    return LanguageDetection("english", "Latin text without sufficient Banglish grammar signals.", banglish, english, university)
 
 
-__all__ = ["Language", "detect_language"]
+def detect_language(question: str) -> Language:
+    return detect_language_details(question).language
+
+
+__all__ = ["Language", "LanguageDetection", "detect_language", "detect_language_details"]

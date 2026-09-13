@@ -8,24 +8,24 @@ from typing import Any, Dict, List
 
 from .config import (
     DENSE_CANDIDATE_K,
+    DENSE_QUERY_STRATEGY,
     METADATA_CANDIDATE_K,
     RRF_DENSE_WEIGHT,
     RRF_K,
     RRF_METADATA_WEIGHT,
     RRF_SPARSE_WEIGHT,
+    RERANKER_CANDIDATE_K,
+    RERANKER_ENABLED,
     SPARSE_CANDIDATE_K,
     TOP_K,
 )
 from .embeddings import EmbeddingModel, get_embedding_model
 from .evidence import analyze_query
 from .fast_answer import detect_course_code, detect_runtime_intent, extract_week_number
+from .query_normalization import build_query_representations, dense_query_for_strategy, normalize_retrieval_text
+from .reranker import PairScorer, get_reranker_model, rerank_candidate_pool
 from .vector_store import load_hybrid_artifacts, search
 
-
-BANGLA_DIGITS = str.maketrans(
-    "\u09e6\u09e7\u09e8\u09e9\u09ea\u09eb\u09ec\u09ed\u09ee\u09ef",
-    "0123456789",
-)
 
 RETRIEVAL_RERANK_WEIGHTS = {
     "candidate_pool_min": 15,
@@ -147,23 +147,7 @@ class QueryProfile:
 
 
 def normalize_query_for_retrieval(question: str) -> str:
-    text = str(question).translate(BANGLA_DIGITS).casefold()
-    text = re.sub(r"[\u2010-\u2015_/(),:;?!.]+", " ", text)
-    replacements = [
-        (r"\b([a-z]+)-er\b", r"\1 er"),
-        (r"\b([a-z]+)-e\b", r"\1 e"),
-        (r"\bkoy\b", "koto"),
-        (r"\bkii\b", "ki"),
-        (r"\bunder\s+e\b", "under"),
-        (r"\bunder-e\b", "under"),
-        (r"\bboraddo\b", "allocated"),
-        (r"\bporano\s+hoy\b", "porano"),
-        (r"\bfinal\s+exam\s+e\b", "final exam"),
-        (r"\bweek\s+(\d+)\s+e\b", r"week \1"),
-    ]
-    for pattern, replacement in replacements:
-        text = re.sub(pattern, replacement, text)
-    return re.sub(r"\s+", " ", text).strip()
+    return normalize_retrieval_text(question)
 
 
 def _tokens(text: str) -> List[str]:
@@ -487,10 +471,16 @@ class Retriever:
         embedding_model: EmbeddingModel | None = None,
         top_k: int = TOP_K,
         hybrid_configuration: HybridRetrievalConfiguration = DEFAULT_HYBRID_CONFIG,
+        reranker_enabled: bool = RERANKER_ENABLED,
+        reranker: PairScorer | None = None,
+        reranker_candidate_k: int = RERANKER_CANDIDATE_K,
     ):
         self.embedding_model = embedding_model or get_embedding_model()
         self.top_k = top_k
         self.hybrid_configuration = hybrid_configuration
+        self.reranker_enabled = reranker_enabled
+        self.reranker = reranker or (get_reranker_model() if reranker_enabled else None)
+        self.reranker_candidate_k = reranker_candidate_k
         self._artifact_cache_key: tuple[Any, ...] | None = None
         self._artifact_cache: tuple[Any, ...] | None = None
 
@@ -533,7 +523,9 @@ class Retriever:
         index, metadata, _, sparse_index = self._load_artifacts(index_path, metadata_path)
         timings: dict[str, float] = {}
         embedding_started = time.perf_counter()
-        query_vector = self.embedding_model.embed(question)
+        representations = build_query_representations(question)
+        dense_query = dense_query_for_strategy(question, DENSE_QUERY_STRATEGY)
+        query_vector = self.embedding_model.embed(dense_query)
         timings["embedding_seconds"] = time.perf_counter() - embedding_started
         dense_started = time.perf_counter()
         dense = search(
@@ -549,13 +541,13 @@ class Retriever:
 
         sparse_started = time.perf_counter()
         sparse = sparse_index.search(
-            question,
+            representations.retrieval_query,
             metadata,
             top_k=min(len(metadata), self.hybrid_configuration.sparse_candidate_k),
         )
         timings["sparse_search_seconds"] = time.perf_counter() - sparse_started
 
-        request = analyze_query(question)
+        request = analyze_query(representations.normalized_query)
         metadata_started = time.perf_counter()
         metadata_ranked = sparse_index.metadata_candidates(
             entity=request.primary_entity or "",
@@ -573,6 +565,18 @@ class Retriever:
             configuration=self.hybrid_configuration,
         )
         timings["fusion_seconds"] = time.perf_counter() - fusion_started
+
+        if self.reranker_enabled:
+            reranker_started = time.perf_counter()
+            ranked = rerank_candidate_pool(
+                representations.original_query,
+                ranked,
+                self.reranker,
+                self.reranker_candidate_k,
+            )
+            timings["reranker_seconds"] = time.perf_counter() - reranker_started
+        else:
+            timings["reranker_seconds"] = 0.0
 
         normalized = []
         selected = select_retrieval_results(ranked, self.top_k)
@@ -598,6 +602,10 @@ class Retriever:
                 "metadata_rank": item.get("metadata_rank"),
                 "fusion_score": item.get("fusion_score"),
                 "final_rank": item.get("final_rank"),
+                "reranker_score": item.get("reranker_score"),
+                "pre_rerank_rank": item.get("pre_rerank_rank"),
+                "reranker_enabled": self.reranker_enabled,
+                "reranker_candidate_count": min(len(ranked), self.reranker_candidate_k) if self.reranker_enabled else 0,
             }
             if debug:
                 result["fusion_debug"] = {
@@ -606,6 +614,13 @@ class Retriever:
                     "metadata_contribution": item.get("metadata_contribution", 0.0),
                     "rrf_k": self.hybrid_configuration.rrf_k,
                     "timings": timings,
+                    "original_query": representations.original_query,
+                    "normalized_query": representations.normalized_query,
+                    "retrieval_query": representations.retrieval_query,
+                    "dense_query": dense_query,
+                    "dense_query_strategy": DENSE_QUERY_STRATEGY,
+                    "reranker_enabled": self.reranker_enabled,
+                    "reranker_candidate_k": self.reranker_candidate_k,
                 }
             normalized.append(result)
 

@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Literal, Sequence
 from .language_detector import Language
 from .language_validator import unsupported_answer
 from .evidence import identify_entities
+from .query_normalization import extract_course_entities, normalize_retrieval_text
 
 RuntimeIntent = Literal[
     "topics",
@@ -34,7 +35,6 @@ STOPWORDS = {
 # routing no longer maps courses to a particular PDF filename.
 DEFAULT_COURSE_SOURCE = ""
 
-BANGLA_DIGITS = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
 WORD_NUMBERS = {
     "one": 1,
     "two": 2,
@@ -114,30 +114,19 @@ def _normalize_topic_items(subject: str, items: Sequence[str]) -> list[str]:
 
 
 def _normalized_query(text: str) -> str:
-    text = str(text).translate(BANGLA_DIGITS).casefold()
-    text = re.sub(r"[\u2010-\u2015_/(),:;?!.]+", " ", text)
-    return re.sub(r"\s+", " ", text).strip()
+    return normalize_retrieval_text(text)
 
 
 def detect_course_code(question: str) -> str:
-    for entity in identify_entities(question):
-        if entity.kind != "course_code":
-            continue
-        letters = re.findall(r"[A-Za-z]+", entity.value)
-        number = re.search(r"\d{2,4}(?:\s*\([A-Za-z0-9]+\))?", entity.value)
-        if not letters or not number:
-            continue
-        if re.match(r"^[A-Za-z]+\s*(?:\(|\s+[A-Za-z]+\s*\d)", entity.value):
-            return f"{letters[0].upper()} ({letters[1].upper()}) {number.group(0).replace(' ', '')}"
-        return f"{letters[0].upper()} {number.group(0).replace(' ', '')}"
-    return ""
+    entities = extract_course_entities(question)
+    return entities[0].canonical if entities else ""
 
 
 def _intent_patterns(text: str) -> dict[str, bool]:
     return {
         "clo": bool(re.search(r"\bclo\s*\d*\b|course learning outcome", text)),
         "objective": bool(re.search(r"\b(objective|objectives|purpose|aim|aims|udd?esh|uddeshyo|main objective)\b|\u0989\u09a6\u09cd\u09a6\u09c7\u09b6\u09cd\u09af", text)),
-        "weekly": bool(re.search(r"\bweek\s*(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\b|\b\d+(?:st|nd|rd|th|\u09ae)?\s+(?:week|\u09b8\u09aa\u09cd\u09a4\u09be\u09b9)\b|\bsoptah\b|\bsoptaho\b", text)),
+        "weekly": bool(re.search(r"\bweek\s*(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\b|\b\d+(?:st|nd|rd|th|\u09ae)?\s+(?:week|\u09b8\u09aa\u09cd\u09a4\u09be\u09b9)\b|\u09b8\u09aa\u09cd\u09a4\u09be\u09b9\s*\d+|\bsoptah\b|\bsoptaho\b", text)),
         "final_exam": bool(re.search(r"\bfinal(?:\s+exam(?:ination)?)?\b|\bterm\s+examination\b|\u09ab\u09be\u0987\u09a8\u09be\u09b2", text)),
         "mark_distribution": bool(re.search(r"mark\s+distribution|marks?\s+distribution|weighting|allocated|boraddo|percentage|percent|shotangsho|শতাংশ|বরাদ্দ", text)),
         "assessment": bool(re.search(r"\bassessment\b|class\s+tests?|quizz?es?|assignment|presentation|attendance|grade|grading|score|marks?\b|পরীক্ষা|কুইজ|গ্রেড", text)),
@@ -421,9 +410,9 @@ def build_topic_answer(question: str, retrieved: Sequence[Dict[str, Any]], langu
 
 def extract_week_number(question: str) -> int | None:
     text = _normalized_query(question)
-    match = re.search(r"\bweek\s*(\d{1,2})\b|\b(\d{1,2})(?:st|nd|rd|th|\u09ae)?\s+(?:week|\u09b8\u09aa\u09cd\u09a4\u09be\u09b9)\b", text)
+    match = re.search(r"\bweek\s*(\d{1,2})\b|\b(\d{1,2})(?:st|nd|rd|th|\u09ae)?\s+(?:week|\u09b8\u09aa\u09cd\u09a4\u09be\u09b9)\b|\u09b8\u09aa\u09cd\u09a4\u09be\u09b9\s*(\d{1,2})", text)
     if match:
-        return int(match.group(1) or match.group(2))
+        return int(match.group(1) or match.group(2) or match.group(3))
     for word, number in WORD_NUMBERS.items():
         if re.search(rf"\bweek\s+{word}\b|\b{word}\s+week\b", text):
             return number

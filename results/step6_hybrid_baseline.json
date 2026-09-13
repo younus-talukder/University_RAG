@@ -1,0 +1,71 @@
+{
+  "notice": "FROZEN STEP-5 DEVELOPMENT BASELINE - NOT FINAL THESIS ACCURACY",
+  "source": "results\\step5_hybrid_results.json",
+  "selected_configuration": "A_equal",
+  "overall": {
+    "queries": 300,
+    "page_hit_at_1": 0.57,
+    "page_hit_at_3": 0.96,
+    "mrr_at_3": 0.7594444444444446,
+    "entity_queries": 208,
+    "entity_hit_at_1": 0.9711538461538461,
+    "entity_hit_at_3": 0.9951923076923077,
+    "field_queries": 272,
+    "field_hit_at_1": 0.9007352941176471,
+    "field_hit_at_3": 0.9411764705882353,
+    "supportable_at_1": 0.88,
+    "supportable_at_3": 0.92,
+    "median_search_seconds_excluding_embedding": 0.0022282000008999603,
+    "p95_search_seconds_excluding_embedding": 0.0032439999995403923
+  },
+  "languages": {
+    "bangla": {
+      "queries": 100,
+      "page_hit_at_1": 0.51,
+      "page_hit_at_3": 0.94,
+      "mrr_at_3": 0.715,
+      "entity_queries": 69,
+      "entity_hit_at_1": 0.9710144927536232,
+      "entity_hit_at_3": 0.9855072463768116,
+      "field_queries": 90,
+      "field_hit_at_1": 0.9111111111111111,
+      "field_hit_at_3": 0.9333333333333333,
+      "supportable_at_1": 0.84,
+      "supportable_at_3": 0.86,
+      "median_search_seconds_excluding_embedding": 0.001972700001715566,
+      "p95_search_seconds_excluding_embedding": 0.0027730999972845893
+    },
+    "banglish": {
+      "queries": 100,
+      "page_hit_at_1": 0.53,
+      "page_hit_at_3": 0.95,
+      "mrr_at_3": 0.735,
+      "entity_queries": 69,
+      "entity_hit_at_1": 0.9710144927536232,
+      "entity_hit_at_3": 1.0,
+      "field_queries": 90,
+      "field_hit_at_1": 0.9111111111111111,
+      "field_hit_at_3": 0.9555555555555556,
+      "supportable_at_1": 0.91,
+      "supportable_at_3": 0.96,
+      "median_search_seconds_excluding_embedding": 0.002122399999279878,
+      "p95_search_seconds_excluding_embedding": 0.0029696000019612256
+    },
+    "english": {
+      "queries": 100,
+      "page_hit_at_1": 0.67,
+      "page_hit_at_3": 0.99,
+      "mrr_at_3": 0.8283333333333333,
+      "entity_queries": 70,
+      "entity_hit_at_1": 0.9714285714285714,
+      "entity_hit_at_3": 1.0,
+      "field_queries": 92,
+      "field_hit_at_1": 0.8804347826086957,
+      "field_hit_at_3": 0.9347826086956522,
+      "supportable_at_1": 0.89,
+      "supportable_at_3": 0.94,
+      "median_search_seconds_excluding_embedding": 0.0025441500001761597,
+      "p95_search_seconds_excluding_embedding": 0.003529800000251271
+    }
+  }
+}

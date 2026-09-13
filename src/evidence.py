@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any, Iterable, Sequence
 
 from .language_detector import Language
+from .query_normalization import extract_course_entities, normalize_retrieval_text
 
 
 class SupportStatus(str, Enum):
@@ -63,8 +64,6 @@ class EvidenceAssessment:
     conflicting_values: tuple[str, ...] = ()
 
 
-BANGLA_DIGITS = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
-
 # Patterns describe document language, not a particular dataset, PDF, or course.
 FIELD_PATTERNS: dict[str, tuple[str, ...]] = {
     "credits": (r"\bcredits?\b", r"credit\s+value", r"ক্রেডিট"),
@@ -121,38 +120,14 @@ ENTITY_DEPENDENT_FIELDS = {
 
 
 def _normal(text: str) -> str:
-    text = str(text).translate(BANGLA_DIGITS).casefold()
+    text = normalize_retrieval_text(text)
     text = re.sub(r"[^a-z0-9\u0980-\u09ff@.+]+", " ", text)
     return re.sub(r"\s+", " ", text).strip()
 
 
 def _course_code_parts(text: str) -> Iterable[tuple[str, str, tuple[int, int]]]:
-    # Supports CSE101, CSE 101, ENG (CSE) 101, HSS 111(B), and similar codes.
-    patterns = (
-        re.compile(r"(?<![A-Za-z0-9])([A-Za-z]{2,12}\s*\(\s*[A-Za-z]{2,12}\s*\)\s*\d{2,4}(?:\s*\([A-Za-z0-9]{1,4}\))?)(?![A-Za-z0-9])"),
-        re.compile(r"(?<![A-Za-z0-9])([A-Z]{2,12}\s+[A-Z]{2,12}\s+\d{2,4}(?:\s*\([A-Za-z0-9]{1,4}\))?)(?![A-Za-z0-9])"),
-        re.compile(r"(?<![A-Za-z0-9])([A-Za-z]{2,12}\s*[- ]?\s*\d{2,4}(?:\s*\([A-Za-z0-9]{1,4}\))?)(?![A-Za-z0-9])"),
-    )
-    non_course_prefixes = {
-        "WEEK", "CLO", "PAGE", "SEMESTER", "YEAR", "GRADE", "LEVEL",
-        "OF", "FOR", "IS", "THE", "MANY", "ABOVE", "BELOW", "AT", "FROM",
-        "WITH", "AND", "OR", "TO", "IN", "ON",
-    }
-    matches: list[tuple[int, int, str, str]] = []
-    occupied: list[tuple[int, int]] = []
-    for pattern in patterns:
-        for match in pattern.finditer(str(text)):
-            span = match.span()
-            if any(span[0] < end and span[1] > start for start, end in occupied):
-                continue
-            raw = re.sub(r"\s+", " ", match.group(1)).strip()
-            compact = re.sub(r"[^A-Za-z0-9]", "", raw).upper()
-            prefix = re.match(r"[A-Z]+", compact)
-            if prefix and prefix.group(0) not in non_course_prefixes:
-                matches.append((span[0], span[1], raw, compact))
-                occupied.append(span)
-    for start, end, raw, compact in sorted(matches):
-        yield raw, compact, (start, end)
+    for entity in extract_course_entities(text):
+        yield entity.raw, entity.compact, entity.span
 
 
 def identify_entities(question: str) -> tuple[RequestedEntity, ...]:
@@ -194,7 +169,7 @@ def identify_entities(question: str) -> tuple[RequestedEntity, ...]:
 
 
 def detect_requested_field(question: str) -> str:
-    normalized = str(question).translate(BANGLA_DIGITS).casefold()
+    normalized = normalize_retrieval_text(question)
     for field, patterns in FIELD_QUERY_PATTERNS:
         if any(re.search(pattern, normalized, re.I) for pattern in patterns):
             return field
@@ -202,10 +177,11 @@ def detect_requested_field(question: str) -> str:
 
 
 def analyze_query(question: str) -> QueryRequest:
-    entities = identify_entities(question)
-    requested_field = detect_requested_field(question)
+    normalized = normalize_retrieval_text(question)
+    entities = identify_entities(normalized)
+    requested_field = detect_requested_field(normalized)
     has_subject_context = bool(
-        re.search(r"\b(?:program(?:me)?|prospectus|university|department|policy|rule|semester)\b|বিশ্ববিদ্যালয়|বিভাগ|নীতি|নিয়ম", question, re.I)
+        re.search(r"\b(?:program(?:me)?|prospectus|university|department|policy|rule|semester)\b|বিশ্ববিদ্যালয়|বিভাগ|নীতি|নিয়ম", normalized, re.I)
     )
     ambiguous = requested_field in ENTITY_DEPENDENT_FIELDS and not entities and not has_subject_context
     reason = "The requested field needs a specific entity or context." if ambiguous else ""

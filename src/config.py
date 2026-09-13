@@ -47,7 +47,7 @@ EMBEDDING_USE_SAFETENSORS = _env_bool("EMBEDDING_USE_SAFETENSORS", False)
 EMBEDDING_DTYPE = os.environ.get("EMBEDDING_DTYPE", "float32")
 EMBEDDING_NORM_TOLERANCE = float(os.environ.get("EMBEDDING_NORM_TOLERANCE", "0.001"))
 
-SPARSE_TOKENIZER_SCHEMA = "unicode-university-v1.1"
+SPARSE_TOKENIZER_SCHEMA = "unicode-university-v1.2"
 BM25_IMPLEMENTATION = "local-okapi-bm25-v1"
 BM25_K1 = float(os.environ.get("BM25_K1", "1.5"))
 BM25_B = float(os.environ.get("BM25_B", "0.75"))
@@ -58,6 +58,28 @@ RRF_K = _env_positive_int("RRF_K", 60)
 RRF_DENSE_WEIGHT = float(os.environ.get("RRF_DENSE_WEIGHT", "1.0"))
 RRF_SPARSE_WEIGHT = float(os.environ.get("RRF_SPARSE_WEIGHT", "1.0"))
 RRF_METADATA_WEIGHT = float(os.environ.get("RRF_METADATA_WEIGHT", "0.8"))
+DENSE_QUERY_STRATEGY = os.environ.get("DENSE_QUERY_STRATEGY", "original").strip().casefold()
+if DENSE_QUERY_STRATEGY not in {"original", "normalized", "original_plus_normalized"}:
+    raise ValueError("DENSE_QUERY_STRATEGY must be original, normalized, or original_plus_normalized.")
+RERANKER_ENABLED = _env_bool("RERANKER_ENABLED", False)
+APPROVED_RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"
+APPROVED_RERANKER_REVISION = "b5160aeac3c6c8fe7beaaaf04c9e0142826b58d1"
+RERANKER_MODEL = os.environ.get("RERANKER_MODEL", APPROVED_RERANKER_MODEL).strip()
+RERANKER_REVISION = os.environ.get(
+    "RERANKER_REVISION",
+    APPROVED_RERANKER_REVISION,
+).strip()
+if RERANKER_MODEL != APPROVED_RERANKER_MODEL or RERANKER_REVISION != APPROVED_RERANKER_REVISION:
+    raise ValueError(
+        "Only the approved pinned reranker is permitted: "
+        f"{APPROVED_RERANKER_MODEL}@{APPROVED_RERANKER_REVISION}."
+    )
+# Least harmful of the evaluated K values; reranking itself remains disabled by default.
+RERANKER_CANDIDATE_K = _env_positive_int("RERANKER_CANDIDATE_K", 10)
+RERANKER_LOCAL_ONLY = _env_bool("RERANKER_LOCAL_ONLY", True)
+RERANKER_DEVICE = os.environ.get("RERANKER_DEVICE", "cpu").strip().casefold()
+RERANKER_BATCH_SIZE = _env_positive_int("RERANKER_BATCH_SIZE", 1)
+RERANKER_MAX_LENGTH = _env_positive_int("RERANKER_MAX_LENGTH", 512)
 LLM_MODEL = os.environ.get(
     "LLM_MODEL_PATH",
     str(MODEL_DIR / "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf"),
@@ -108,6 +130,17 @@ __all__ = [
     "RRF_DENSE_WEIGHT",
     "RRF_SPARSE_WEIGHT",
     "RRF_METADATA_WEIGHT",
+    "DENSE_QUERY_STRATEGY",
+    "APPROVED_RERANKER_MODEL",
+    "APPROVED_RERANKER_REVISION",
+    "RERANKER_ENABLED",
+    "RERANKER_MODEL",
+    "RERANKER_REVISION",
+    "RERANKER_CANDIDATE_K",
+    "RERANKER_LOCAL_ONLY",
+    "RERANKER_DEVICE",
+    "RERANKER_BATCH_SIZE",
+    "RERANKER_MAX_LENGTH",
     "LLM_MODEL",
     "TOP_K",
     "CHUNK_SIZE",

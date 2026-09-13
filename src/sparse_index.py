@@ -6,7 +6,6 @@ import math
 import os
 import pickle
 import re
-import unicodedata
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,6 +18,7 @@ from .config import (
     SPARSE_TOKENIZER_SCHEMA,
     VECTOR_DB_DIR,
 )
+from .query_normalization import compact_entity, normalize_unicode
 
 
 SPARSE_INDEX_PATH = VECTOR_DB_DIR / "sparse_index.pkl"
@@ -37,11 +37,13 @@ class SparseIndexError(RuntimeError):
 
 
 def normalize_entity(value: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKC", str(value)).casefold())
+    return compact_entity(value)
 
 
 def sparse_tokenize(text: str) -> list[str]:
-    normalized = unicodedata.normalize("NFKC", str(text)).casefold()
+    # Keep corpus token statistics close to the Step-5 contract. Query-only
+    # linguistic normalization is applied by Retriever before this function.
+    normalized = normalize_unicode(text).casefold()
     tokens = [match.group(0) for match in TOKEN_PATTERN.finditer(normalized)]
     for match in COURSE_PATTERN.finditer(normalized):
         prefix, number, suffix = match.groups()

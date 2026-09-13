@@ -18,9 +18,10 @@ from .evidence import (
 )
 from .fast_answer import build_extractive_answer, build_topic_answer, detect_runtime_intent, retrieve_lexical
 from .generator import generate_answer, regenerate_answer_for_language
-from .language_detector import detect_language
+from .language_detector import detect_language_details
 from .language_validator import unsupported_answer, validate_language
 from .retriever import Retriever
+from .query_normalization import build_query_representations
 from .vector_store import load_index
 
 
@@ -109,7 +110,9 @@ def answer_question(
             status_callback(message)
 
     report("Detecting question language...")
-    detected_language = detect_language(question)
+    representations = build_query_representations(question)
+    language_detection = detect_language_details(question)
+    detected_language = language_detection.language
     runtime_intent = detect_runtime_intent(question)
 
     answer_bank_match = None
@@ -122,7 +125,10 @@ def answer_question(
         validation = validate_language(answer, detected_language)
         return {
             "question": question,
+            "normalized_query": representations.normalized_query,
+            "retrieval_query": representations.retrieval_query,
             "detected_language": detected_language,
+            "language_detection_reason": language_detection.reason,
             "answer": answer,
             "answer_mode": "answer_bank",
             "intent": runtime_intent,
@@ -217,7 +223,10 @@ def answer_question(
         primary = assessment.evidence[0] if assessment.evidence else None
         return {
             "question": question,
+            "normalized_query": representations.normalized_query,
+            "retrieval_query": representations.retrieval_query,
             "detected_language": detected_language,
+            "language_detection_reason": language_detection.reason,
             "answer": answer,
             "answer_mode": assessment.status.value,
             "intent": runtime_intent,
@@ -376,7 +385,10 @@ def answer_question(
 
     return {
         "question": question,
+        "normalized_query": representations.normalized_query,
+        "retrieval_query": representations.retrieval_query,
         "detected_language": detected_language,
+        "language_detection_reason": language_detection.reason,
         "answer": answer,
         "answer_mode": answer_mode,
         "intent": runtime_intent,

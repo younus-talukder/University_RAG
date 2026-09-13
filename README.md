@@ -121,6 +121,32 @@ python scripts/evaluate_step5_hybrid.py
 
 This writes `results/step5_dense_baseline.json`, `results/step5_hybrid_results.json`, and `results/step5_hybrid_report.md`. These are development/regression diagnostics, not final thesis results.
 
+## Multilingual query normalization
+
+Runtime query handling preserves three bounded representations: the original user query, a conservative normalized query, and an original-plus-normalized sparse retrieval query. The shared layer handles Unicode NFKC, Bengali digits, course-code formatting, a small documented Banglish variant set, and selected Bengali/mixed terminology without using translation APIs or dataset-specific mappings.
+
+The original query remains the BGE-M3 input because the Step 6 development comparison found that this best protects field and supportability top-three performance. BM25 receives the bounded original-plus-normalized representation, while entity and field understanding use the normalized form. Debug output exposes these representations and the language-detection reason.
+
+Optional second-stage reranking uses the locally cached, immutable `BAAI/bge-reranker-v2-m3` revision `b5160aeac3c6c8fe7beaaaf04c9e0142826b58d1`. Runtime resolution is local-only, validates the complete snapshot, and raises a visible error instead of silently falling back. RRF creates a bounded candidate pool and the neural logits determine ordering only; raw RRF and reranker scores are never added.
+
+`RERANKER_ENABLED=false` remains the default. The 300-query CPU development evaluation rejected default enablement: the least harmful tested pool (`K=10`) changed Supportable@1 from 88.00% to 86.33%, Page Hit@1 from 57.00% to 28.67%, and added 4.64 seconds median reranker latency. The implementation remains available for explicit experiments without changing the approved normalization plus hybrid baseline.
+
+Run the normalization-only development comparison:
+
+```bash
+python scripts/evaluate_step6_normalization.py
+```
+
+The Step 5 reports are not overwritten. Step 6 results are written separately under `results/step6_*`.
+
+Run the explicit reranker comparison (100 English, 100 Bangla, and 100 Banglish queries; answer bank and generation off):
+
+```bash
+python scripts/evaluate_step6_reranker.py
+```
+
+The expensive real-model smoke test is opt-in with `RUN_REAL_RERANKER_TEST=1`; normal unit tests use mocks and do not load the model.
+
 Run a test query:
 
 ```bash
