@@ -1,6 +1,6 @@
 {
-  "schema_version": 2,
-  "created_at": "2026-09-13T10:25:13.384085+00:00",
+  "schema_version": 4,
+  "created_at": "2026-09-13T16:42:38.609612+00:00",
   "corpus_fingerprint": "e7ed003cda0fd4f9127ccde82852fe482e9d39f63f36e5cc66ac65c0ec66b0f2",
   "documents": [
     {
@@ -29,10 +29,56 @@
   "chunking_configuration_id": "abd83af1e9e364d6",
   "chunking_strategy": "semantic_blocks_then_bounded_windows",
   "chunker_schema_version": "structure-aware-v1.1",
-  "embedding_model": "BAAI/bge-m3",
-  "embedding_dimension": 1024,
-  "embedding_normalized": true,
   "faiss_index_type": "IndexFlatIP",
   "chunk_size": 260,
-  "chunk_overlap": 40
+  "chunk_overlap": 40,
+  "embedding_model": "BAAI/bge-m3",
+  "embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+  "embedding_dimension": 1024,
+  "embedding_normalized": true,
+  "embedding_dtype": "float32",
+  "embedding_use_safetensors": false,
+  "embedding_device_class": "cpu",
+  "embedding_batch_size": 16,
+  "embedding_local_only": true,
+  "embedding_libraries": {
+    "python": "3.11.9",
+    "sentence_transformers": "6.0.0",
+    "transformers": "5.16.1",
+    "torch": "2.6.0+cpu",
+    "faiss": "1.15.0",
+    "huggingface_hub": "1.29.0",
+    "numpy": "2.4.6"
+  },
+  "snapshot_complete": true,
+  "snapshot_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+  "weight_format": "pytorch_bin",
+  "snapshot_inventory_hash": "c56c66d3a6d0dc156312af4250022a881a287e99cf60f5d51986603d3f7a6285",
+  "validated_files": [
+    "1_Pooling/config.json",
+    "config.json",
+    "config_sentence_transformers.json",
+    "modules.json",
+    "pytorch_model.bin",
+    "sentence_bert_config.json",
+    "sentencepiece.bpe.model",
+    "tokenizer.json",
+    "tokenizer_config.json"
+  ],
+  "embedding_configuration_fingerprint": "36b22721bd5d9633cde18a8286b90cdd25d643b834c08d9a27ce26b1cfa8765e",
+  "index_configuration_fingerprint": "da726ec95c73234cd6f75f7d429e02d78aba3e0e4b930aa077433112b841de91",
+  "build_metrics": {
+    "ingestion_and_chunking_seconds": 3.214879,
+    "model_load_seconds": 2.39374,
+    "embedding_seconds": 411.373271,
+    "index_creation_seconds": 0.005881,
+    "sparse_index_seconds": 0.052028
+  },
+  "sparse_retrieval_enabled": true,
+  "sparse_implementation": "local-okapi-bm25-v1",
+  "sparse_tokenizer_schema": "unicode-university-v1.1",
+  "sparse_configuration_fingerprint": "535337a2e8eff08913129e9455bdf5494b6c34b3c0e9d56db293d474b789d324",
+  "sparse_chunk_count": 490,
+  "sparse_vocabulary_size": 5563,
+  "sparse_metadata_binding_hash": "c8cda5e84335ceb171ee8c1cb2508984b2cde83309187984c8cec8593e36572a"
 }

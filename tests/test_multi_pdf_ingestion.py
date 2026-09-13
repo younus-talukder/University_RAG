@@ -105,7 +105,7 @@ class CorpusChangeTests(unittest.TestCase):
             b.write_bytes(b"b-v1")
             initial = discover_documents(root)
             initial_fingerprint = corpus_fingerprint(initial)
-            save_manifest(build_manifest(initial, chunk_count=2, embedding_dimension=3), manifest_path)
+            save_manifest(build_manifest(initial, chunk_count=2, embedding_dimension=1024), manifest_path)
             self.assertTrue(index_is_fresh(discover_documents(root), manifest_path=manifest_path))
 
             c.write_bytes(b"c-v1")

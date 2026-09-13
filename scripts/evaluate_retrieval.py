@@ -14,7 +14,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from src.config import QUESTIONS_DIR, VECTOR_DB_DIR
-from src.embeddings import EmbeddingModel
+from src.embeddings import get_embedding_model
 from src.fast_answer import DEFAULT_COURSE_SOURCE
 from src.retriever import RETRIEVAL_RERANK_WEIGHTS, Retriever
 
@@ -198,7 +198,7 @@ def baseline_rows() -> list[dict[str, Any]]:
 
 
 def optimized_rows() -> list[dict[str, Any]]:
-    embedding_model = EmbeddingModel()
+    embedding_model = get_embedding_model()
     retriever = Retriever(embedding_model=embedding_model, top_k=3)
     rows = []
     for row in dataset_variants():

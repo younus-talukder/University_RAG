@@ -14,10 +14,10 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from src.config import QUESTIONS_DIR, VECTOR_DB_DIR
-from src.embeddings import EmbeddingModel
+from src.embeddings import get_embedding_model
 from src.evidence import SupportStatus, assess_evidence, detect_requested_field, identify_entities
 from src.retriever import RETRIEVAL_RERANK_WEIGHTS, rerank_candidates, select_retrieval_results
-from src.vector_store import load_index, search
+from src.vector_store import load_compatible_index, search
 
 
 def variants() -> list[dict[str, str]]:
@@ -80,8 +80,8 @@ def summarize(rows: list[dict]) -> dict:
 def run(label: str) -> dict:
     started = time.perf_counter()
     dataset = variants()
-    index, metadata = load_index()
-    model = EmbeddingModel()
+    model = get_embedding_model()
+    index, metadata, _ = load_compatible_index(configuration=model.configuration)
     vectors = model.embed_many([row["question"] for row in dataset])
     results: list[dict] = []
     candidate_pool = min(

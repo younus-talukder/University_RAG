@@ -129,7 +129,7 @@ class RetrieverRerankTests(unittest.TestCase):
         )
         self.assertGreater(components["topic_plan_boost"], 0)
 
-    def test_selection_preserves_best_reranked_first_and_semantic_recall(self) -> None:
+    def test_selection_returns_first_k_from_final_ranking(self) -> None:
         ranked = [
             {"source": "curricula_BSc-Curriculum-New.pdf", "chunk_id": "a", "score": 9.0, "_semantic_score": 0.5},
             {"source": "curricula_BSc-Curriculum-New.pdf", "chunk_id": "b", "score": 8.0, "_semantic_score": 0.3},
@@ -137,7 +137,7 @@ class RetrieverRerankTests(unittest.TestCase):
             {"source": "curricula_BSc-Curriculum-New.pdf", "chunk_id": "d", "score": 6.0, "_semantic_score": 0.8},
         ]
         selected = select_retrieval_results(ranked, top_k=3)
-        self.assertEqual([item["chunk_id"] for item in selected], ["a", "c", "d"])
+        self.assertEqual([item["chunk_id"] for item in selected], ["a", "b", "c"])
 
     def test_top_k_ordering_stability_uses_semantic_tiebreak(self) -> None:
         rows = [

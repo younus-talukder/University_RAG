@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict
 
 from .answer_bank import find_answer_bank_match
 from .config import TOP_K, VECTOR_DB_DIR
-from .embeddings import EmbeddingModel
+from .embeddings import EmbeddingModel, get_embedding_model
 from .evidence import (
     SupportStatus,
     answer_claim_is_bound,
@@ -30,7 +30,7 @@ DEBUG_LOG_PATH = Path(__file__).resolve().parent.parent / "output" / "generation
 
 @lru_cache(maxsize=1)
 def _get_embedding_model() -> EmbeddingModel:
-    return EmbeddingModel()
+    return get_embedding_model()
 
 
 def _log_generation_debug(

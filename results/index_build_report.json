@@ -1,0 +1,30 @@
+{
+  "started_at": "2026-09-13T16:51:49.625461+00:00",
+  "corpus_fingerprint": "e7ed003cda0fd4f9127ccde82852fe482e9d39f63f36e5cc66ac65c0ec66b0f2",
+  "chunk_count": 490,
+  "embedding_model": "BAAI/bge-m3",
+  "embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+  "embedding_dimension": 1024,
+  "embedding_normalized": true,
+  "embedding_dtype": "float32",
+  "embedding_use_safetensors": false,
+  "embedding_local_only": true,
+  "embedding_batch_size": 16,
+  "faiss_index_type": "IndexFlatIP",
+  "build_success": true,
+  "reused": true,
+  "finished_at": "2026-09-13T16:51:49.649280+00:00",
+  "document_count": 1,
+  "elapsed_seconds": 0.023651,
+  "build_metrics": {
+    "ingestion_and_chunking_seconds": 3.214879,
+    "model_load_seconds": 2.39374,
+    "embedding_seconds": 411.373271,
+    "index_creation_seconds": 0.005881,
+    "sparse_index_seconds": 0.052028
+  },
+  "sparse_retrieval_enabled": true,
+  "sparse_vocabulary_size": 5563,
+  "dense_reused": true,
+  "last_full_build_measured_seconds": 417.039799
+}

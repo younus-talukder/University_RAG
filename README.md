@@ -7,10 +7,10 @@ This project is a thesis prototype for a multilingual university RAG chatbot gro
 - Knowledge base: one active curriculum PDF.
 - Dataset: 100 base questions with English, Bangla, and Banglish variants.
 - Embedding model: `BAAI/bge-m3`.
-- Vector store: FAISS `IndexFlatIP`.
+- Retrieval: pinned BGE-M3 + FAISS `IndexFlatIP`, local BM25, metadata candidates, and reciprocal-rank fusion (RRF).
 - Generator: local Qwen2.5 GGUF through `llama-cpp-python`.
 - UI: Streamlit.
-- Current vector index: 95 chunks.
+- Current vector index: 490 structure-aware chunks from 92 evidence-bearing pages.
 
 ## Knowledge And Evaluation Data
 
@@ -24,8 +24,9 @@ The question-answer CSV is used for testing and evaluation only. It is not used 
 ## Pipeline
 
 ```text
-Student Question -> Language Detection -> BGE-M3 Embedding -> FAISS Search
--> Top-K Relevant Chunks -> Fast Extractive Answer or Qwen2.5 GGUF -> Language Validation
+Student Question -> Language Detection -> BGE-M3/FAISS + BM25 + Metadata Candidates
+-> Rank-Based RRF -> Top-K Relevant Chunks -> Step-1 Evidence Validation
+-> Fast Extractive Answer or Qwen2.5 GGUF -> Language Validation
 -> Final Answer
 ```
 
@@ -71,7 +72,7 @@ Import the question workbook into the canonical CSV:
 python scripts/import_question_workbook.py data/questions/uap_cse_multilingual_rag_dataset.xlsx
 ```
 
-Build the FAISS index:
+Build the mutually compatible dense and sparse retrieval artifacts:
 
 ```bash
 python scripts/build_index.py
@@ -82,6 +83,43 @@ Force a rebuild even if the document manifest is fresh:
 ```bash
 python scripts/build_index.py --force
 ```
+
+## Reproducible BGE-M3 embeddings
+
+Semantic indexing and queries use the same pinned configuration:
+
+- Model: `BAAI/bge-m3`
+- Immutable revision: `5617a9f61b028005a4858fdac845db406aefb181`
+- Dimension: 1024 float32 values
+- Similarity contract: normalized vectors with FAISS `IndexFlatIP`
+- Default loading policy: local-only/offline
+- Cached weight format for the pinned complete snapshot: `pytorch_model.bin`
+
+The loader validates the snapshot, tokenizer, configuration, sentence-transformer files, and weight policy before use. It never silently substitutes another embedding model. Set `EMBEDDING_LOCAL_ONLY=false` only when intentionally allowing Hugging Face to resolve missing files. A changed model revision, normalization policy, dimension, weight format, chunker configuration, or corpus makes the existing index incompatible and requires rebuilding it.
+
+The most recent build status and timings are written to `results/index_build_report.json`. Exact embedding provenance and installed library versions are stored in `vector_db/index_manifest.json`. These files do not contain machine-specific model-cache paths.
+
+## Hybrid retrieval
+
+The retrieval unit remains each Step-3 structured chunk. At query time the system independently retrieves up to 30 dense FAISS candidates, up to 30 positive-score BM25 candidates, and up to 20 exact structured-metadata candidates. It merges duplicate `chunk_id` values and ranks the union with weighted reciprocal-rank fusion:
+
+```text
+dense contribution    = 1.0 / (60 + dense rank)
+sparse contribution   = 1.0 / (60 + sparse rank)
+metadata contribution = 0.8 / (60 + metadata rank)
+```
+
+Raw cosine and BM25 scores are retained for debugging but are never added together. The final top three are the first three items in the fused ordering. If BM25 has no positive lexical matches, dense candidates keep their ordering. Dense-search operational failures remain visible instead of being silently relabeled as semantic success.
+
+`vector_db/sparse_index.pkl` is published atomically with FAISS, metadata, and the manifest. Corpus changes, structured-chunk changes, embedding incompatibility, or sparse tokenizer/BM25 configuration changes make the artifact set stale. The build command reuses an unchanged compatible set and can attach a newly required sparse index to a verified dense index without re-embedding.
+
+Run the 300-query development comparison (answer bank and generation are not used):
+
+```bash
+python scripts/evaluate_step5_hybrid.py
+```
+
+This writes `results/step5_dense_baseline.json`, `results/step5_hybrid_results.json`, and `results/step5_hybrid_report.md`. These are development/regression diagnostics, not final thesis results.
 
 Run a test query:
 

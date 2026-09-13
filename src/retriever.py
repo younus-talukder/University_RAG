@@ -1,13 +1,25 @@
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict, List
 
-from .config import TOP_K
-from .embeddings import EmbeddingModel
+from .config import (
+    DENSE_CANDIDATE_K,
+    METADATA_CANDIDATE_K,
+    RRF_DENSE_WEIGHT,
+    RRF_K,
+    RRF_METADATA_WEIGHT,
+    RRF_SPARSE_WEIGHT,
+    SPARSE_CANDIDATE_K,
+    TOP_K,
+)
+from .embeddings import EmbeddingModel, get_embedding_model
+from .evidence import analyze_query
 from .fast_answer import detect_course_code, detect_runtime_intent, extract_week_number
-from .vector_store import load_index, search
+from .vector_store import load_hybrid_artifacts, search
 
 
 BANGLA_DIGITS = str.maketrans(
@@ -31,6 +43,26 @@ RETRIEVAL_RERANK_WEIGHTS = {
     "section_heading_boost": 0.45,
     "metadata_mismatch_penalty": -1.6,
 }
+
+
+@dataclass(frozen=True)
+class HybridRetrievalConfiguration:
+    dense_candidate_k: int = DENSE_CANDIDATE_K
+    sparse_candidate_k: int = SPARSE_CANDIDATE_K
+    metadata_candidate_k: int = METADATA_CANDIDATE_K
+    rrf_k: int = RRF_K
+    dense_weight: float = RRF_DENSE_WEIGHT
+    sparse_weight: float = RRF_SPARSE_WEIGHT
+    metadata_weight: float = RRF_METADATA_WEIGHT
+
+    def __post_init__(self) -> None:
+        if min(self.dense_candidate_k, self.sparse_candidate_k, self.metadata_candidate_k, self.rrf_k) <= 0:
+            raise ValueError("Hybrid candidate counts and RRF k must be positive.")
+        if min(self.dense_weight, self.sparse_weight, self.metadata_weight) < 0:
+            raise ValueError("RRF channel weights cannot be negative.")
+
+
+DEFAULT_HYBRID_CONFIG = HybridRetrievalConfiguration()
 
 STOPWORDS = {
     "a", "an", "and", "are", "be", "can", "course", "do", "does", "for", "from",
@@ -378,42 +410,110 @@ def rerank_candidates(question: str, candidates: List[Dict[str, Any]], debug: bo
 def select_retrieval_results(ranked: List[Dict[str, Any]], top_k: int) -> List[Dict[str, Any]]:
     if top_k <= 0:
         return []
-    if len(ranked) <= top_k:
-        return ranked
+    return ranked[:top_k]
 
-    selected = [ranked[0]]
-    seen = {(str(ranked[0].get("source", "")), ranked[0].get("chunk_id"))}
 
-    semantic_backfill = sorted(
-        ranked[1:],
-        key=lambda item: (
-            float(item.get("_semantic_score", item.get("score", 0.0))),
-            float(item.get("score", 0.0)),
-        ),
-        reverse=True,
+def reciprocal_rank_fusion(
+    dense: List[Dict[str, Any]],
+    sparse: List[Dict[str, Any]],
+    metadata_ranked: List[Dict[str, Any]],
+    configuration: HybridRetrievalConfiguration = DEFAULT_HYBRID_CONFIG,
+) -> List[Dict[str, Any]]:
+    channels = (
+        ("dense", dense, configuration.dense_weight),
+        ("sparse", sparse, configuration.sparse_weight),
+        ("metadata", metadata_ranked, configuration.metadata_weight),
     )
-    for item in semantic_backfill:
-        item_key = (str(item.get("source", "")), item.get("chunk_id"))
-        if item_key in seen:
-            continue
-        selected.append(item)
-        seen.add(item_key)
-        if len(selected) >= top_k:
-            return selected
+    candidates: dict[str, Dict[str, Any]] = {}
+    for channel, ranking, weight in channels:
+        for rank, item in enumerate(ranking, start=1):
+            chunk_id = str(item.get("chunk_id") or "")
+            if not chunk_id:
+                continue
+            candidate = candidates.setdefault(chunk_id, dict(item))
+            candidate.update({key: value for key, value in item.items() if key not in candidate})
+            contribution = weight / (configuration.rrf_k + rank) if weight else 0.0
+            candidate[f"{channel}_rank"] = rank
+            candidate[f"{channel}_contribution"] = contribution
+            if channel == "dense":
+                candidate["dense_score"] = float(item.get("dense_score", item.get("score", 0.0)))
+            elif channel == "sparse":
+                candidate["sparse_score"] = float(item.get("sparse_score", 0.0))
+            candidate["fusion_score"] = float(candidate.get("fusion_score", 0.0)) + contribution
 
-    for item in ranked[1:]:
-        item_key = (str(item.get("source", "")), item.get("chunk_id"))
-        if item_key not in seen:
-            selected.append(item)
-            if len(selected) >= top_k:
-                break
-    return selected
+    for candidate in candidates.values():
+        candidate.setdefault("dense_rank", None)
+        candidate.setdefault("dense_score", None)
+        candidate.setdefault("dense_contribution", 0.0)
+        candidate.setdefault("sparse_rank", None)
+        candidate.setdefault("sparse_score", None)
+        candidate.setdefault("sparse_contribution", 0.0)
+        candidate.setdefault("metadata_rank", None)
+        candidate.setdefault("metadata_contribution", 0.0)
+        candidate["score"] = candidate["fusion_score"]
+
+    fused = sorted(
+        candidates.values(),
+        key=lambda item: (
+            -float(item.get("fusion_score", 0.0)),
+            int(item["dense_rank"]) if item.get("dense_rank") is not None else 10**9,
+            int(item["sparse_rank"]) if item.get("sparse_rank") is not None else 10**9,
+            int(item["metadata_rank"]) if item.get("metadata_rank") is not None else 10**9,
+            str(item.get("chunk_id") or ""),
+        ),
+    )
+
+    deduplicated: list[Dict[str, Any]] = []
+    seen_chunk_ids: set[str] = set()
+    seen_document_text: set[tuple[str, str]] = set()
+    for item in fused:
+        chunk_id = str(item.get("chunk_id") or "")
+        normalized_text = re.sub(r"\s+", " ", str(item.get("text") or "")).strip().casefold()
+        text_key = (str(item.get("document_id") or ""), normalized_text)
+        if chunk_id in seen_chunk_ids or (normalized_text and text_key in seen_document_text):
+            continue
+        seen_chunk_ids.add(chunk_id)
+        if normalized_text:
+            seen_document_text.add(text_key)
+        deduplicated.append(item)
+    for final_rank, item in enumerate(deduplicated, start=1):
+        item["final_rank"] = final_rank
+    return deduplicated
 
 
 class Retriever:
-    def __init__(self, embedding_model: EmbeddingModel | None = None, top_k: int = TOP_K):
-        self.embedding_model = embedding_model or EmbeddingModel()
+    def __init__(
+        self,
+        embedding_model: EmbeddingModel | None = None,
+        top_k: int = TOP_K,
+        hybrid_configuration: HybridRetrievalConfiguration = DEFAULT_HYBRID_CONFIG,
+    ):
+        self.embedding_model = embedding_model or get_embedding_model()
         self.top_k = top_k
+        self.hybrid_configuration = hybrid_configuration
+        self._artifact_cache_key: tuple[Any, ...] | None = None
+        self._artifact_cache: tuple[Any, ...] | None = None
+
+    def _load_artifacts(self, index_path: str, metadata_path: str):
+        index_file = Path(index_path)
+        metadata_file = Path(metadata_path)
+        manifest_file = index_file.parent / "index_manifest.json"
+        sparse_file = index_file.parent / "sparse_index.pkl"
+        files = (index_file, metadata_file, manifest_file, sparse_file)
+        key = tuple(
+            (str(path.resolve()), path.stat().st_mtime_ns, path.stat().st_size)
+            for path in files
+        )
+        if self._artifact_cache_key != key or self._artifact_cache is None:
+            self._artifact_cache = load_hybrid_artifacts(
+                index_path=index_file,
+                metadata_path=metadata_file,
+                manifest_path=manifest_file,
+                sparse_path=sparse_file,
+                configuration=self.embedding_model.configuration,
+            )
+            self._artifact_cache_key = key
+        return self._artifact_cache
 
     def retrieve(
         self,
@@ -430,18 +530,49 @@ class Retriever:
             index_path = str(VECTOR_DB_DIR / "index.faiss")
             metadata_path = str(VECTOR_DB_DIR / "metadata.pkl")
 
-        index, metadata = load_index(index_path=index_path, metadata_path=metadata_path)
+        index, metadata, _, sparse_index = self._load_artifacts(index_path, metadata_path)
+        timings: dict[str, float] = {}
+        embedding_started = time.perf_counter()
         query_vector = self.embedding_model.embed(question)
-        profile = build_query_profile(question)
-        candidate_pool = min(
-            len(metadata),
-            max(
-                int(RETRIEVAL_RERANK_WEIGHTS["candidate_pool_min"]),
-                self.top_k * int(RETRIEVAL_RERANK_WEIGHTS["candidate_pool_multiplier"]),
-            ),
+        timings["embedding_seconds"] = time.perf_counter() - embedding_started
+        dense_started = time.perf_counter()
+        dense = search(
+            index=index,
+            query_vector=query_vector,
+            metadata=metadata,
+            top_k=min(len(metadata), self.hybrid_configuration.dense_candidate_k),
         )
-        raw_results = search(index=index, query_vector=query_vector, metadata=metadata, top_k=candidate_pool)
-        ranked = rerank_candidates(question, raw_results, debug=debug)
+        for rank, item in enumerate(dense, start=1):
+            item["dense_rank"] = rank
+            item["dense_score"] = float(item.pop("score", 0.0))
+        timings["dense_search_seconds"] = time.perf_counter() - dense_started
+
+        sparse_started = time.perf_counter()
+        sparse = sparse_index.search(
+            question,
+            metadata,
+            top_k=min(len(metadata), self.hybrid_configuration.sparse_candidate_k),
+        )
+        timings["sparse_search_seconds"] = time.perf_counter() - sparse_started
+
+        request = analyze_query(question)
+        metadata_started = time.perf_counter()
+        metadata_ranked = sparse_index.metadata_candidates(
+            entity=request.primary_entity or "",
+            requested_field=request.requested_field,
+            metadata=metadata,
+            top_k=min(len(metadata), self.hybrid_configuration.metadata_candidate_k),
+        )
+        timings["metadata_search_seconds"] = time.perf_counter() - metadata_started
+
+        fusion_started = time.perf_counter()
+        ranked = reciprocal_rank_fusion(
+            dense,
+            sparse,
+            metadata_ranked,
+            configuration=self.hybrid_configuration,
+        )
+        timings["fusion_seconds"] = time.perf_counter() - fusion_started
 
         normalized = []
         selected = select_retrieval_results(ranked, self.top_k)
@@ -454,10 +585,28 @@ class Retriever:
                 "relative_path": item.get("relative_path"),
                 "page": item.get("page", None),
                 "chunk_id": item.get("chunk_id", None),
+                "heading": item.get("heading"),
+                "section": item.get("section"),
+                "entity_type": item.get("entity_type"),
+                "entity_id": item.get("entity_id"),
+                "course_code": item.get("course_code"),
+                "field_types": item.get("field_types", []),
+                "dense_rank": item.get("dense_rank"),
+                "dense_score": item.get("dense_score"),
+                "sparse_rank": item.get("sparse_rank"),
+                "sparse_score": item.get("sparse_score"),
+                "metadata_rank": item.get("metadata_rank"),
+                "fusion_score": item.get("fusion_score"),
+                "final_rank": item.get("final_rank"),
             }
             if debug:
-                result["rerank_debug"] = item.get("rerank_debug", {})
-                result["section_tags"] = item.get("section_tags", [])
+                result["fusion_debug"] = {
+                    "dense_contribution": item.get("dense_contribution", 0.0),
+                    "sparse_contribution": item.get("sparse_contribution", 0.0),
+                    "metadata_contribution": item.get("metadata_contribution", 0.0),
+                    "rrf_k": self.hybrid_configuration.rrf_k,
+                    "timings": timings,
+                }
             normalized.append(result)
 
         return normalized
@@ -465,11 +614,14 @@ class Retriever:
 
 __all__ = [
     "RETRIEVAL_RERANK_WEIGHTS",
+    "DEFAULT_HYBRID_CONFIG",
+    "HybridRetrievalConfiguration",
     "Retriever",
     "build_query_profile",
     "detect_retrieval_course_code",
     "normalize_query_for_retrieval",
     "rerank_candidates",
+    "reciprocal_rank_fusion",
     "score_candidate_components",
     "select_retrieval_results",
     "section_tags",
