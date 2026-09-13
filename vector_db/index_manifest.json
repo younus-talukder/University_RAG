@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "created_at": "2026-09-13T10:25:13.384085+00:00",
+  "corpus_fingerprint": "e7ed003cda0fd4f9127ccde82852fe482e9d39f63f36e5cc66ac65c0ec66b0f2",
+  "documents": [
+    {
+      "document_id": "doc-4d373684ce4879ed066003f5",
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "relative_path": "curricula_BSc-Curriculum-New.pdf",
+      "sha256": "48e65f0224d3c1e5fa1a451306223f640d52f977b9d31c4d15bda3e003ccf6d0",
+      "size_bytes": 1284861,
+      "modified_timestamp": 1789224697.279776,
+      "page_count": 95,
+      "extractable_page_count": 95,
+      "empty_page_count": 0,
+      "chunk_count": 490,
+      "ingestion_status": "success",
+      "ingestion_errors": [],
+      "warnings": [],
+      "duplicate_of": null
+    }
+  ],
+  "document_count": 1,
+  "successful_document_count": 1,
+  "partial_document_count": 0,
+  "failed_document_count": 0,
+  "duplicate_document_count": 0,
+  "chunk_count": 490,
+  "chunking_configuration_id": "abd83af1e9e364d6",
+  "chunking_strategy": "semantic_blocks_then_bounded_windows",
+  "chunker_schema_version": "structure-aware-v1.1",
+  "embedding_model": "BAAI/bge-m3",
+  "embedding_dimension": 1024,
+  "embedding_normalized": true,
+  "faiss_index_type": "IndexFlatIP",
+  "chunk_size": 260,
+  "chunk_overlap": 40
+}

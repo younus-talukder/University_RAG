@@ -1,0 +1,6 @@
+question,expected_language,expected_intent,expected_source,must_contain,must_not_contain
+What is the title of the undergraduate prospectus?,english,course_title,data/questions/questions.csv,Prospectus|Undergraduate Program,
+আন্ডারগ্র্যাজুয়েট প্রসপেক্টাসটির শিরোনাম কী?,bangla,course_title,data/questions/questions.csv,শিরোনামটি|Prospectus,
+Undergraduate prospectus-tar title ki?,banglish,course_title,data/questions/questions.csv,Title holo|Prospectus,
+Who published the prospectus?,english,unknown,data/questions/questions.csv,Department of Computer Science & Engineering|University of Asia Pacific,
+What prerequisite is listed for CSE 205 Data Structures?,english,prerequisite,data/questions/questions.csv,CSE 101|CSE 103|CSE 105,

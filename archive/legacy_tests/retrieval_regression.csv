@@ -1,0 +1,15 @@
+question,expected_source,expected_page,intent
+What is CLO 2 of CSE 101?,document2.pdf,2,clo
+CSE 101-er CLO 4 ki?,document2.pdf,2,clo
+MTH 101-এর CLO ৫ কী?,document1.pdf,2,clo
+What are the objectives of MTH 101?,document1.pdf,1,course_objective
+English course-er main objective ki?,document3.pdf,1,course_objective
+What topics are covered in CSE 101?,document2.pdf,2,topics
+Boolean Algebra-er under-e kon kon topic include kora hoyeche?,document2.pdf,2,topics
+Limits-এর অধীনে কোন কোন বিষয় অন্তর্ভুক্ত রয়েছে?,document1.pdf,2,topics
+What is taught in Week 5 of MTH 101?,document1.pdf,3,weekly_content
+Week 2 e ki porano hoy CSE 101 course-e?,document2.pdf,3,weekly_content
+English কোর্সে Week 2-এ কী পড়ানো হয়?,document3.pdf,3,weekly_content
+How many class tests and quizzes may be taken in the English course?,document3.pdf,5,assessment
+What percentage is allocated to the Final Exam in CSE 101?,document2.pdf,9,final_exam_marks
+What is the course code and title of ENG(CSE)101?,document3.pdf,1,course_metadata

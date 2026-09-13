@@ -1,0 +1,55 @@
+{
+  "label": "old_page_chunks",
+  "notice": "DEVELOPMENT DIAGNOSTIC - NOT FINAL THESIS ACCURACY",
+  "elapsed_seconds": 36.04390609999973,
+  "overall": {
+    "queries": 300,
+    "page_hit_at_1": 0.5266666666666666,
+    "page_hit_at_3": 0.8333333333333334,
+    "mrr_at_3": 0.6627777777777782,
+    "entity_queries": 208,
+    "entity_hit_at_1": 0.9855769230769231,
+    "entity_hit_at_3": 0.9951923076923077,
+    "field_queries": 272,
+    "field_hit_at_1": 0.8566176470588235,
+    "field_hit_at_3": 0.8897058823529411
+  },
+  "languages": {
+    "bangla": {
+      "queries": 100,
+      "page_hit_at_1": 0.5,
+      "page_hit_at_3": 0.81,
+      "mrr_at_3": 0.6383333333333334,
+      "entity_queries": 69,
+      "entity_hit_at_1": 1.0,
+      "entity_hit_at_3": 1.0,
+      "field_queries": 90,
+      "field_hit_at_1": 0.8555555555555555,
+      "field_hit_at_3": 0.8666666666666667
+    },
+    "banglish": {
+      "queries": 100,
+      "page_hit_at_1": 0.52,
+      "page_hit_at_3": 0.86,
+      "mrr_at_3": 0.6716666666666667,
+      "entity_queries": 69,
+      "entity_hit_at_1": 0.9855072463768116,
+      "entity_hit_at_3": 1.0,
+      "field_queries": 90,
+      "field_hit_at_1": 0.8666666666666667,
+      "field_hit_at_3": 0.9111111111111111
+    },
+    "english": {
+      "queries": 100,
+      "page_hit_at_1": 0.56,
+      "page_hit_at_3": 0.83,
+      "mrr_at_3": 0.6783333333333332,
+      "entity_queries": 70,
+      "entity_hit_at_1": 0.9714285714285714,
+      "entity_hit_at_3": 0.9857142857142858,
+      "field_queries": 92,
+      "field_hit_at_1": 0.8478260869565217,
+      "field_hit_at_3": 0.8913043478260869
+    }
+  }
+}

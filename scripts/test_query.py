@@ -17,13 +17,23 @@ def _configure_stdout() -> None:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
-def run_test_query(question: str, top_k: int = TOP_K, use_generation: bool = True) -> None:
+def run_test_query(
+    question: str,
+    top_k: int = TOP_K,
+    use_generation: bool = True,
+    use_answer_bank: bool = False,
+) -> None:
     _configure_stdout()
     print(f"Question: {question}\n")
 
-    result = answer_question(question, top_k=top_k, use_generation=use_generation)
+    result = answer_question(
+        question,
+        top_k=top_k,
+        use_generation=use_generation,
+        use_answer_bank=use_answer_bank,
+    )
     print(f"Detected Language: {result.get('detected_language')}\n")
-    print(f"Mode: {result.get('generation_mode')}\n")
+    print(f"Mode: {result.get('answer_mode', result.get('generation_mode'))}\n")
     print("Answer:")
     print(result.get("answer", ""))
 
@@ -48,6 +58,7 @@ def main() -> None:
     parser.add_argument("question", nargs="*", help="Question text to ask.")
     parser.add_argument("--top-k", type=int, default=TOP_K, help=f"Number of chunks to retrieve. Default: {TOP_K}.")
     parser.add_argument("--fast", action="store_true", help="Use fast extractive mode instead of local LLM generation.")
+    parser.add_argument("--answer-bank", action="store_true", help="Allow curated answer-bank lookup.")
     args = parser.parse_args()
 
     if args.question:
@@ -63,7 +74,12 @@ def main() -> None:
     if not question:
         parser.error("question is required")
 
-    run_test_query(question, top_k=args.top_k, use_generation=not args.fast)
+    run_test_query(
+        question,
+        top_k=args.top_k,
+        use_generation=not args.fast,
+        use_answer_bank=args.answer_bank,
+    )
 
 
 if __name__ == "__main__":

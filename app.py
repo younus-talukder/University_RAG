@@ -34,9 +34,9 @@ def render_sources(sources):
         st.info("No source metadata was returned for this answer.")
         return
 
-    st.subheader("Retrieved sources")
+    st.subheader("Supporting evidence")
     for i, item in enumerate(sources, start=1):
-        source = item.get("source") or "Unknown source"
+        source = item.get("relative_path") or item.get("source") or "Unknown source"
         page = item.get("page")
         score = item.get("score")
         label = f"Source {i}"
@@ -46,6 +46,9 @@ def render_sources(sources):
             label += f" • Score {score:.4f}"
         st.markdown(f"**{label}**")
         st.caption(source)
+        excerpt = item.get("supporting_excerpt")
+        if excerpt:
+            st.write(excerpt)
 
 
 def render_debug_context(chunks):
@@ -55,7 +58,7 @@ def render_debug_context(chunks):
     with st.expander("Retrieved context / debugging"):
         for i, item in enumerate(chunks, start=1):
             st.markdown(
-                f"**Chunk {i}:** {item.get('source', 'unknown')} | "
+                f"**Chunk {i}:** {item.get('relative_path') or item.get('source', 'unknown')} | "
                 f"page {item.get('page', 'unknown')} | score {item.get('score', 0.0):.4f}"
             )
             st.write(item.get("text", ""))
@@ -123,7 +126,8 @@ if st.button("Ask"):
             status.update(label=f"Answer generated in {elapsed:.1f}s.", state="complete", expanded=False)
             st.subheader("Answer")
             st.caption(f"Detected Language: {response.get('detected_language', 'unknown')}")
-            st.caption(f"Mode: {response.get('generation_mode', 'unknown')}")
+            st.caption(f"Mode: {response.get('answer_mode', response.get('generation_mode', 'unknown'))}")
+            st.caption(f"Evidence status: {response.get('support_status', 'unknown')}")
             st.write(response.get("answer", "No answer was generated."))
             render_sources(response.get("sources", []))
             render_debug_context(response.get("retrieved_context", []))

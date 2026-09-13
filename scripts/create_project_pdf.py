@@ -52,10 +52,11 @@ def parse_markdown(path: Path):
                 index += 1
             blocks.append(("bullets", items))
             continue
-        elif line[:2].isdigit() and line[2:4] == ". ":
+        elif line[0].isdigit() and ". " in line[:4]:
             items = []
-            while index < len(lines) and lines[index][:2].isdigit() and lines[index][2:4] == ". ":
-                items.append(lines[index][4:])
+            while index < len(lines) and lines[index] and lines[index][0].isdigit() and ". " in lines[index][:4]:
+                _, item = lines[index].split(". ", 1)
+                items.append(item)
                 index += 1
             blocks.append(("numbered", items))
             continue
@@ -145,15 +146,16 @@ def build_pdf():
         Spacer(1, 15 * mm),
         SectionRule(),
         Spacer(1, 8 * mm),
-        Paragraph("A complete description of how the PDF-grounded multilingual RAG system is built, executed, evaluated, and troubleshot.", styles["CoverSubtitle"]),
+        Paragraph("A complete description of how the PDF-grounded multilingual RAG system is structured, executed, evaluated, and maintained.", styles["CoverSubtitle"]),
         Spacer(1, 35 * mm),
     ])
     summary_data = [
-        [Paragraph("Knowledge base", styles["BodyCustom"]), Paragraph("Official university PDF documents", styles["BodyCustom"])],
+        [Paragraph("Knowledge base", styles["BodyCustom"]), Paragraph("All supported PDFs discovered recursively under data/documents/", styles["BodyCustom"])],
         [Paragraph("Languages", styles["BodyCustom"]), Paragraph("English, Bangla, Banglish", styles["BodyCustom"])],
         [Paragraph("Default UI mode", styles["BodyCustom"]), Paragraph("Fast extractive answering", styles["BodyCustom"])],
-        [Paragraph("Optional mode", styles["BodyCustom"]), Paragraph("Local Qwen generation", styles["BodyCustom"])],
-        [Paragraph("Vector store", styles["BodyCustom"]), Paragraph("FAISS IndexFlatIP + metadata.pkl", styles["BodyCustom"])],
+        [Paragraph("Optional mode", styles["BodyCustom"]), Paragraph("Local Qwen2.5 GGUF generation", styles["BodyCustom"])],
+        [Paragraph("Vector store", styles["BodyCustom"]), Paragraph("FAISS IndexFlatIP, metadata.pkl, index_manifest.json", styles["BodyCustom"])],
+        [Paragraph("Current index", styles["BodyCustom"]), Paragraph("Corpus-manifest-driven; chunk count varies with document content", styles["BodyCustom"])],
     ]
     table = Table(summary_data, colWidths=[45 * mm, 105 * mm])
     table.setStyle(TableStyle([

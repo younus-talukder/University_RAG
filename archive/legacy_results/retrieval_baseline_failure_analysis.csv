@@ -1,0 +1,18 @@
+group,value,n,A_source_and_page_rank1,B_source_top3_page_not_rank1,C_source_top3_page_absent,D_source_absent_top3,E_multiple_valid_pages
+expected_language,bangla,60,19,25,15,1,41
+expected_language,banglish,60,23,22,14,1,41
+expected_language,english,60,21,18,20,1,41
+intent,assessment,6,0,3,3,0,6
+intent,clo,39,24,0,15,0,0
+intent,course_metadata,9,9,0,0,0,0
+intent,course_objective,9,9,0,0,0,0
+intent,final_exam_marks,6,0,0,5,1,6
+intent,mark_distribution,3,0,3,0,0,3
+intent,topics,81,12,50,19,0,81
+intent,weekly_content,27,9,9,7,2,27
+course_code,CSE 101,60,21,17,22,0,42
+course_code,ENG (CSE) 101,60,17,25,17,1,42
+course_code,MTH 101,60,25,23,10,2,39
+difficulty,easy,57,33,3,20,1,9
+difficulty,hard,9,0,7,1,1,9
+difficulty,medium,114,30,55,28,1,105

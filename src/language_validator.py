@@ -21,10 +21,12 @@ def detect_response_language(text: str) -> str:
 
 def validate_language(answer: str, expected_language: Language) -> Dict[str, object]:
     response_language = detect_response_language(answer)
+    language_consistency = response_language == expected_language
     return {
         "expected_language": expected_language,
         "response_language": response_language,
-        "language_consistency": response_language == expected_language,
+        "language_consistency": language_consistency,
+        "language_validation_failed": not language_consistency,
     }
 
 

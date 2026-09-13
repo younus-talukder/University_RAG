@@ -33,6 +33,8 @@ BANGLISH_MARKERS = {
     "ki",
     "kivabe",
     "kobe",
+    "kokhon",
+    "kon",
     "kora",
     "korbo",
     "korle",
@@ -40,11 +42,16 @@ BANGLISH_MARKERS = {
     "koto",
     "kothay",
     "naki",
+    "naam",
     "nibo",
+    "neya",
+    "onushthito",
     "o",
     "paoa",
     "parbo",
+    "porano",
     "ta",
+    "hoy",
 }
 
 ENGLISH_FUNCTION_WORDS = {
