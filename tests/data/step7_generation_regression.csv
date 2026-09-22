@@ -1,0 +1,31 @@
+case_id,language,category,question,evidence,expected_strategy,expected_fact
+S7-EN-01,english,credits,How many credits is ABC 123?,Course Code: ABC 123 Credit Value: 3.00,structured_exact,3.00
+S7-EN-02,english,prerequisite,What is the prerequisite for XYZ 201?,Course Code: XYZ 201 Pre-requisite: ABC 123,structured_exact,ABC 123
+S7-EN-03,english,percentage,What percentage is the final exam?,Final Exam (50%),structured_exact,50%
+S7-EN-04,english,email,What is the registrar email?,Registrar email: registrar@example.edu,structured_exact,registrar@example.edu
+S7-EN-05,english,date,What is the relevant date?,Application date: 12/10/2026,structured_exact,12/10/2026
+S7-EN-06,english,topics,Which topics are covered?,Course Content: Algorithms; Data Structures,structured_list,Algorithms
+S7-EN-07,english,explanation,Explain the attendance policy.,Students must attend scheduled classes.,gguf_generation,attend
+S7-EN-08,english,unsupported,What is the hostel fee?,No hostel information.,unsupported,
+S7-EN-09,english,ambiguous,What is the course credit?,Course Code: ABC 123 Credit Value: 3.00,ambiguous,
+S7-EN-10,english,conflicting,How many credits is ABC 123?,Credit Value: 3.00 | Credit Value: 4.00,conflicting,
+S7-BN-01,bangla,credits,ABC 123 কোর্সের ক্রেডিট কত?,Course Code: ABC 123 Credit Value: 3.00,structured_exact,3.00
+S7-BN-02,bangla,prerequisite,XYZ 201 কোর্সের prerequisite কী?,Course Code: XYZ 201 Pre-requisite: ABC 123,structured_exact,ABC 123
+S7-BN-03,bangla,percentage,Final exam-এর percentage কত?,Final Exam (50%),structured_exact,50%
+S7-BN-04,bangla,email,Registrar-এর email কী?,Registrar email: registrar@example.edu,structured_exact,registrar@example.edu
+S7-BN-05,bangla,date,আবেদনের তারিখ কী?,Application date: 12/10/2026,structured_exact,12/10/2026
+S7-BN-06,bangla,topics,কোন কোন বিষয় পড়ানো হয়?,Course Content: Algorithms; Data Structures,structured_list,Algorithms
+S7-BN-07,bangla,explanation,Attendance policy ব্যাখ্যা করুন।,Students must attend scheduled classes.,gguf_generation,attendance
+S7-BN-08,bangla,unsupported,Hostel fee কত?,No hostel information.,unsupported,
+S7-BN-09,bangla,ambiguous,কোর্সটির ক্রেডিট কত?,Course Code: ABC 123 Credit Value: 3.00,ambiguous,
+S7-BN-10,bangla,conflicting,ABC 123-এর ক্রেডিট কত?,Credit Value: 3.00 | Credit Value: 4.00,conflicting,
+S7-BL-01,banglish,credits,ABC 123 course-er credit koto?,Course Code: ABC 123 Credit Value: 3.00,structured_exact,3.00
+S7-BL-02,banglish,prerequisite,XYZ 201 course-er prerequisite ki?,Course Code: XYZ 201 Pre-requisite: ABC 123,structured_exact,ABC 123
+S7-BL-03,banglish,percentage,Final exam-er percentage koto?,Final Exam (50%),structured_exact,50%
+S7-BL-04,banglish,email,Registrar-er email ki?,Registrar email: registrar@example.edu,structured_exact,registrar@example.edu
+S7-BL-05,banglish,date,Application-er date kobe?,Application date: 12/10/2026,structured_exact,12/10/2026
+S7-BL-06,banglish,topics,Kon kon topic porano hoy?,Course Content: Algorithms; Data Structures,structured_list,Algorithms
+S7-BL-07,banglish,explanation,Attendance policy-ta explain korun.,Students must attend scheduled classes.,gguf_generation,attendance
+S7-BL-08,banglish,unsupported,Hostel fee koto?,No hostel information.,unsupported,
+S7-BL-09,banglish,ambiguous,Course-er credit koto?,Course Code: ABC 123 Credit Value: 3.00,ambiguous,
+S7-BL-10,banglish,conflicting,ABC 123 course-er credit koto?,Credit Value: 3.00 | Credit Value: 4.00,conflicting,

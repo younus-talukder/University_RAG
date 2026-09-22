@@ -152,46 +152,63 @@ class PipelineEvidenceContractTests(unittest.TestCase):
 
     def test_generation_receives_only_verified_excerpt(self) -> None:
         rows = [
-            chunk("Course Code: XYZ 987 Credit Value: 9.0", source="wrong.pdf", chunk_id="wrong"),
-            chunk("Course Code: ABC 234 Credit Value: 3.0", source="right.pdf", chunk_id="right"),
+            chunk("Course Code: XYZ 987 Course overview: unrelated material.", source="wrong.pdf", chunk_id="wrong"),
+            chunk("Course Code: ABC 234 Course overview: systems principles.", source="right.pdf", chunk_id="right"),
         ]
         with (
             patch.object(pipeline, "load_index", return_value=(FakeIndex(), rows)),
             patch.object(pipeline, "_get_embedding_model", return_value=object()),
             patch.object(pipeline, "Retriever") as retriever,
-            patch.object(pipeline, "generate_answer", return_value="Credit value: 3.0.") as generate,
+            patch.object(pipeline, "generate_canonical_answer", return_value="ABC 234 explains systems principles.") as generate,
         ):
             retriever.return_value.retrieve.return_value = rows
-            result = pipeline.answer_question("How many credits is ABC 234?", use_generation=True)
-        context = generate.call_args.kwargs["context"]
+            result = pipeline.answer_question("Explain ABC 234.", use_generation=True)
+        package = generate.call_args.args[0]
+        context = [item.excerpt for item in package.evidence]
         self.assertEqual(result["support_status"], "supported")
         self.assertIn("ABC 234", context[0])
         self.assertNotIn("XYZ 987", " ".join(context))
 
-    def test_unbound_generated_fact_abstains_without_unsafe_fallback(self) -> None:
+    def test_exact_fact_bypasses_generation(self) -> None:
         rows = [chunk("Course Code: ABC 234 Credit Value: 3.0")]
         with (
             patch.object(pipeline, "load_index", return_value=(FakeIndex(), rows)),
             patch.object(pipeline, "_get_embedding_model", return_value=object()),
             patch.object(pipeline, "Retriever") as retriever,
-            patch.object(pipeline, "generate_answer", return_value="Credit value: 9.0."),
+            patch.object(pipeline, "generate_canonical_answer") as generate,
         ):
             retriever.return_value.retrieve.return_value = rows
             result = pipeline.answer_question("How many credits is ABC 234?", use_generation=True)
-        self.assertEqual(result["support_status"], "insufficient")
-        self.assertNotIn("9.0", result["answer"])
+        generate.assert_not_called()
+        self.assertEqual(result["answer_strategy"], "structured_exact")
+        self.assertIn("3.0", result["answer"])
 
-    def test_unbound_generated_text_claim_also_abstains(self) -> None:
-        rows = [chunk("Course Code: ABC 234 Prerequisite: None")]
+    def test_unbound_generated_fact_abstains_without_unsafe_fallback(self) -> None:
+        rows = [chunk("Course Code: ABC 234 Course overview: systems principles.")]
         with (
             patch.object(pipeline, "load_index", return_value=(FakeIndex(), rows)),
             patch.object(pipeline, "_get_embedding_model", return_value=object()),
             patch.object(pipeline, "Retriever") as retriever,
-            patch.object(pipeline, "generate_answer", return_value="The prerequisite is Calculus."),
+            patch.object(pipeline, "generate_canonical_answer", return_value="ABC 234 requires 9.0 years."),
         ):
             retriever.return_value.retrieve.return_value = rows
-            result = pipeline.answer_question("What is the prerequisite of ABC 234?", use_generation=True)
-        self.assertEqual(result["support_status"], "insufficient")
+            result = pipeline.answer_question("Explain ABC 234.", use_generation=True)
+        self.assertEqual(result["support_status"], "supported")
+        self.assertEqual(result["final_status"], "GENERATION_REJECTED")
+        self.assertNotIn("9.0", result["answer"])
+
+    def test_unbound_generated_text_claim_also_abstains(self) -> None:
+        rows = [chunk("Course Code: ABC 234 Course overview: programming fundamentals.")]
+        with (
+            patch.object(pipeline, "load_index", return_value=(FakeIndex(), rows)),
+            patch.object(pipeline, "_get_embedding_model", return_value=object()),
+            patch.object(pipeline, "Retriever") as retriever,
+            patch.object(pipeline, "generate_canonical_answer", return_value="ABC 234 focuses on Calculus."),
+        ):
+            retriever.return_value.retrieve.return_value = rows
+            result = pipeline.answer_question("Explain ABC 234.", use_generation=True)
+        self.assertEqual(result["support_status"], "supported")
+        self.assertEqual(result["final_status"], "GENERATION_REJECTED")
         self.assertNotIn("Calculus", result["answer"])
 
 

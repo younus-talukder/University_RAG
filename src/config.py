@@ -1,5 +1,7 @@
 import os
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Mapping
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
@@ -28,6 +30,83 @@ def _env_positive_int(name: str, default: int) -> int:
     if value <= 0:
         raise ValueError(f"{name} must be a positive integer.")
     return value
+
+
+@dataclass(frozen=True)
+class GeneratorSettings:
+    profile: str
+    model_path: str
+    context_size: int
+    threads: int
+    batch_size: int
+    gpu_layers: int
+    temperature: float
+    top_p: float
+    max_tokens: int
+    use_mmap: bool
+    use_mlock: bool
+
+
+GENERATOR_PROFILES = {
+    "DEVELOPMENT_8GB": {"context_size": 4096, "threads": 8, "batch_size": 128},
+    "FULL_32GB": {"context_size": 8192, "threads": 12, "batch_size": 512},
+}
+
+
+def load_generator_settings(environ: Mapping[str, str] | None = None) -> GeneratorSettings:
+    """Load the model-independent generator runtime contract from configuration."""
+    values = os.environ if environ is None else environ
+
+    def positive_int(name: str, default: int) -> int:
+        value = int(values.get(name, str(default)))
+        if value <= 0:
+            raise ValueError(f"{name} must be a positive integer.")
+        return value
+
+    def boolean(name: str, default: bool) -> bool:
+        raw = values.get(name, str(default)).strip().casefold()
+        if raw in {"1", "true", "yes", "on"}:
+            return True
+        if raw in {"0", "false", "no", "off"}:
+            return False
+        raise ValueError(f"{name} must be one of: true, false, 1, 0, yes, no, on, off.")
+
+    profile = values.get("GENERATOR_PROFILE", "DEVELOPMENT_8GB").strip().upper()
+    if profile not in GENERATOR_PROFILES:
+        raise ValueError(f"GENERATOR_PROFILE must be one of: {', '.join(GENERATOR_PROFILES)}.")
+    defaults = GENERATOR_PROFILES[profile]
+
+    raw_model_path = values.get(
+        "GENERATOR_MODEL_PATH",
+        str(MODEL_DIR / "qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf"),
+    ).strip()
+    model_path = Path(raw_model_path).expanduser()
+    if not model_path.is_absolute():
+        model_path = ROOT_DIR / model_path
+
+    gpu_layers = int(values.get("GENERATOR_GPU_LAYERS", "0"))
+    if gpu_layers < 0:
+        raise ValueError("GENERATOR_GPU_LAYERS must be zero or a positive integer.")
+    temperature = float(values.get("GENERATOR_TEMPERATURE", "0"))
+    if temperature < 0:
+        raise ValueError("GENERATOR_TEMPERATURE must be zero or greater.")
+    top_p = float(values.get("GENERATOR_TOP_P", "1"))
+    if not 0 < top_p <= 1:
+        raise ValueError("GENERATOR_TOP_P must be greater than zero and at most one.")
+
+    return GeneratorSettings(
+        profile=profile,
+        model_path=str(model_path.resolve()),
+        context_size=positive_int("GENERATOR_CONTEXT_SIZE", defaults["context_size"]),
+        threads=positive_int("GENERATOR_THREADS", defaults["threads"]),
+        batch_size=positive_int("GENERATOR_BATCH_SIZE", defaults["batch_size"]),
+        gpu_layers=gpu_layers,
+        temperature=temperature,
+        top_p=top_p,
+        max_tokens=positive_int("GENERATOR_MAX_TOKENS", 180),
+        use_mmap=boolean("GENERATOR_USE_MMAP", True),
+        use_mlock=boolean("GENERATOR_USE_MLOCK", False),
+    )
 
 
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "BAAI/bge-m3")
@@ -80,10 +159,17 @@ RERANKER_LOCAL_ONLY = _env_bool("RERANKER_LOCAL_ONLY", True)
 RERANKER_DEVICE = os.environ.get("RERANKER_DEVICE", "cpu").strip().casefold()
 RERANKER_BATCH_SIZE = _env_positive_int("RERANKER_BATCH_SIZE", 1)
 RERANKER_MAX_LENGTH = _env_positive_int("RERANKER_MAX_LENGTH", 512)
-LLM_MODEL = os.environ.get(
-    "LLM_MODEL_PATH",
-    str(MODEL_DIR / "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf"),
-)
+GENERATOR_SETTINGS = load_generator_settings()
+GENERATOR_MODEL_PATH = GENERATOR_SETTINGS.model_path
+GENERATOR_CONTEXT_SIZE = GENERATOR_SETTINGS.context_size
+GENERATOR_THREADS = GENERATOR_SETTINGS.threads
+GENERATOR_BATCH_SIZE = GENERATOR_SETTINGS.batch_size
+GENERATOR_GPU_LAYERS = GENERATOR_SETTINGS.gpu_layers
+GENERATOR_TEMPERATURE = GENERATOR_SETTINGS.temperature
+GENERATOR_TOP_P = GENERATOR_SETTINGS.top_p
+GENERATOR_MAX_TOKENS = GENERATOR_SETTINGS.max_tokens
+GENERATOR_USE_MMAP = GENERATOR_SETTINGS.use_mmap
+GENERATOR_USE_MLOCK = GENERATOR_SETTINGS.use_mlock
 
 TOP_K = 3
 CHUNK_SIZE = 700
@@ -141,7 +227,20 @@ __all__ = [
     "RERANKER_DEVICE",
     "RERANKER_BATCH_SIZE",
     "RERANKER_MAX_LENGTH",
-    "LLM_MODEL",
+    "GeneratorSettings",
+    "GENERATOR_PROFILES",
+    "load_generator_settings",
+    "GENERATOR_SETTINGS",
+    "GENERATOR_MODEL_PATH",
+    "GENERATOR_CONTEXT_SIZE",
+    "GENERATOR_THREADS",
+    "GENERATOR_BATCH_SIZE",
+    "GENERATOR_GPU_LAYERS",
+    "GENERATOR_TEMPERATURE",
+    "GENERATOR_TOP_P",
+    "GENERATOR_MAX_TOKENS",
+    "GENERATOR_USE_MMAP",
+    "GENERATOR_USE_MLOCK",
     "TOP_K",
     "CHUNK_SIZE",
     "CHUNK_OVERLAP",

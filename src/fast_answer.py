@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Literal, Sequence
 
+from .answer_policy import format_structured_text
 from .language_detector import Language
 from .language_validator import unsupported_answer
 from .evidence import identify_entities
@@ -489,7 +490,7 @@ def format_answer_for_language(answer: str, language: Language) -> str:
         subject, items = topic_answer
         bullet_list = _format_items(items)
         if language == "bangla":
-            return f"{subject}-er odhine bishoygulo:\n{bullet_list}"
+            return f"{subject}-এর অধীনে বিষয়গুলো:\n{bullet_list}"
         if language == "banglish":
             return f"{subject}-er under-e topics:\n{bullet_list}"
         return f"Topics under {subject}:\n{bullet_list}"
@@ -498,37 +499,11 @@ def format_answer_for_language(answer: str, language: Language) -> str:
 
 
 def _translate_english_to_banglish(text: str) -> str:
-    cleaned_text = " ".join(str(text).split()).strip()
-    if not cleaned_text:
-        return ""
-
-    normalized = cleaned_text.rstrip(" .")
-    patterns = [
-        (r"^Course code:\s*(.+)$", r"Course-er code holo \1."),
-        (r"^Course title:\s*(.+)$", r"Course-er title holo \1."),
-        (r"^Course type:\s*(.+)$", r"Course-er type holo \1."),
-        (r"^Credit value:\s*(.+)$", r"Credit value holo \1."),
-        (r"^Final Exam:\s*(.+)$", r"Final exam-er mark holo \1."),
-        (r"^Mid Term:\s*(.+)$", r"Mid term-er mark holo \1."),
-        (r"^(CLO\s*\d+):\s*(.+)$", r"\1 holo \2."),
-        (r"^Week\s+(\d+):\s*(.+)$", r"Week \1-e \2 porano hoy."),
-    ]
-    for pattern, replacement in patterns:
-        if re.search(pattern, normalized, flags=re.IGNORECASE):
-            return re.sub(pattern, replacement, normalized, flags=re.IGNORECASE)
-
-    if re.search(r"could not be found|not found", normalized, flags=re.IGNORECASE):
-        return "Available university documents-e ei information-ta paoa jayni."
-
-    return f"Ei information-ta: {normalized}."
+    return format_structured_text(text, "banglish")
 
 
 def _finalize_answer_for_language(answer: str, language: Language) -> str:
-    if language == "english":
-        return answer
-    if language == "banglish":
-        return _translate_english_to_banglish(answer)
-    return f"\u0989\u09a4\u09cd\u09a4\u09b0: {answer}"
+    return format_structured_text(answer, language)
 
 
 def _relevant_items(retrieved: Sequence[Dict[str, Any]], course: str) -> list[Dict[str, Any]]:

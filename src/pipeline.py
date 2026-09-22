@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import json
 import re
+import time
+from dataclasses import replace
 from pathlib import Path
 from functools import lru_cache
 from typing import Any, Callable, Dict
 
+from .answer_policy import effective_answer_field, evidence_value, format_exact_fact, format_structured_text, select_answer_strategy
 from .answer_bank import find_answer_bank_match
 from .config import TOP_K, VECTOR_DB_DIR
 from .embeddings import EmbeddingModel, get_embedding_model
@@ -17,11 +20,16 @@ from .evidence import (
     select_primary_evidence,
 )
 from .fast_answer import build_extractive_answer, build_topic_answer, detect_runtime_intent, retrieve_lexical
-from .generator import generate_answer, regenerate_answer_for_language
+from .generator import generate_canonical_answer, realize_canonical_answer
+from .generation_context import build_verified_evidence_package, evidence_excerpts
+from .grounding_validator import validate_grounding
 from .language_detector import detect_language_details
-from .language_validator import unsupported_answer, validate_language
+from .language_validator import generation_rejected_answer, unsupported_answer, validate_language
+from .realization_validator import validate_realization
 from .retriever import Retriever
 from .query_normalization import build_query_representations
+from .semantic_contract import build_semantic_contract, repair_instruction
+from .semistructured_realizer import realize_semistructured
 from .vector_store import load_index
 
 
@@ -102,6 +110,7 @@ def answer_question(
     use_generation: bool = True,
     use_answer_bank: bool = False,
 ) -> Dict[str, Any]:
+    pipeline_started = time.perf_counter()
     if not question or not question.strip():
         raise ValueError("Question cannot be empty.")
 
@@ -135,6 +144,7 @@ def answer_question(
             "generation_mode": "answer_bank",
             "answer_bank_enabled": use_answer_bank,
             "support_status": SupportStatus.SUPPORTED.value,
+            "final_status": "ANSWER_RETURNED",
             "support_reason": "Explicit answer-bank/debug mode matched the evaluation dataset.",
             "requested_entity": None,
             "requested_field": None,
@@ -147,6 +157,16 @@ def answer_question(
             "response_language": validation["response_language"],
             "language_consistency": validation["language_consistency"],
             "language_validation_failed": bool(validation.get("language_validation_failed", False)),
+            "language_validation_passed": bool(validation.get("validation_passed", validation["language_consistency"])),
+            "language_validation_reason": validation.get("validation_reason"),
+            "grounding_validation_passed": True,
+            "grounding_validation_reason": "ANSWER_BANK_MODE",
+            "generation_used": False,
+            "generation_attempts": 0,
+            "retry_used": False,
+            "target_language": detected_language,
+            "answer_strategy": "answer_bank",
+            "latency_seconds": {"retrieval": 0.0, "answering": time.perf_counter() - pipeline_started, "generation": 0.0, "retry": 0.0, "total": time.perf_counter() - pipeline_started},
             "sources": [
                 {
                     "source": "data/questions/questions.csv",
@@ -185,9 +205,12 @@ def answer_question(
     else:
         report("Retrieving relevant context with fast lexical search...")
         retrieved = retrieve_lexical(question, metadata=metadata, top_k=top_k)
+    retrieval_seconds = time.perf_counter() - pipeline_started
 
     report("Validating retrieved evidence...")
     assessment = assess_evidence(question, retrieved)
+    pre_generation_support_status = assessment.status.value
+    pre_generation_support_reason = assessment.reason
     verified = [item.to_dict() for item in assessment.evidence]
     verified_retrieved = [
         {
@@ -233,6 +256,7 @@ def answer_question(
             "generation_mode": assessment.status.value,
             "answer_bank_enabled": use_answer_bank,
             "support_status": assessment.status.value,
+            "final_status": "INSUFFICIENT_EVIDENCE" if assessment.status is SupportStatus.INSUFFICIENT else assessment.status.value.upper(),
             "support_reason": assessment.reason,
             "requested_entity": assessment.request.primary_entity,
             "requested_field": assessment.request.requested_field,
@@ -246,129 +270,269 @@ def answer_question(
             "response_language": validation["response_language"],
             "language_consistency": validation["language_consistency"],
             "language_validation_failed": bool(validation.get("language_validation_failed", False)),
+            "language_validation_passed": bool(validation.get("validation_passed", validation["language_consistency"])),
+            "language_validation_reason": validation.get("validation_reason"),
+            "grounding_validation_passed": True,
+            "grounding_validation_reason": "GENERATION_NOT_USED",
+            "generation_used": False,
+            "generation_attempts": 0,
+            "retry_used": False,
+            "target_language": detected_language,
+            "answer_strategy": "unsupported" if assessment.status is SupportStatus.INSUFFICIENT else assessment.status.value,
+            "latency_seconds": {"retrieval": retrieval_seconds, "answering": time.perf_counter() - pipeline_started - retrieval_seconds, "generation": 0.0, "retry": 0.0, "total": time.perf_counter() - pipeline_started},
             "sources": sources,
             "evidence": verified,
             "retrieved_context": retrieved,
+            "pre_generation_evidence": verified,
+            "pre_generation_support_status": pre_generation_support_status,
+            "pre_generation_support_reason": pre_generation_support_reason,
+            "raw_first_generation": "",
+            "first_language_validation": {},
+            "first_semantic_validation": {},
+            "first_grounding_validation": {},
+            "retry_reason": "",
+            "raw_retry_output": "",
+            "retry_language_validation": {},
+            "retry_semantic_validation": {},
+            "retry_grounding_validation": {},
+            "final_fallback_reason": assessment.status.value,
         }
 
-    if use_generation:
-        context = [
-            _truncate_chunk_for_generation(question, item["supporting_excerpt"], max_words=300)
-            for item in verified_retrieved[:2]
-            if item.get("supporting_excerpt")
-        ]
-    else:
-        context = [item["text"] for item in verified_retrieved if item.get("text")]
+    package = build_verified_evidence_package(question, detected_language, assessment, retrieved)
+    semantic_contract = build_semantic_contract(package)
+    context = list(evidence_excerpts(package))
+    requested_strategy = select_answer_strategy(assessment.status, assessment.request.requested_field, runtime_intent, question)
+    answer_field = effective_answer_field(assessment.request.requested_field, question)
+    answer_strategy = requested_strategy
+    generation_used = False
+    generation_attempts = 0
+    retry_attempted = False
+    generation_error: str | None = None
+    generation_seconds = 0.0
+    retry_seconds = 0.0
+    canonical_seconds = 0.0
+    realization_seconds = 0.0
+    answering_started = time.perf_counter()
+    raw_first_generation = ""
+    first_language_validation: Dict[str, Any] = {}
+    first_grounding_validation: Dict[str, Any] = {}
+    retry_reason = ""
+    raw_retry_output = ""
+    retry_language_validation: Dict[str, Any] = {}
+    retry_grounding_validation: Dict[str, Any] = {}
+    canonical_answer = ""
+    canonical_validation: Dict[str, Any] = {}
+    canonical_grounding: Dict[str, Any] = {}
+    realization_output = ""
+    realization_validation: Dict[str, Any] = {}
+    final_status = "ANSWER_RETURNED"
 
-    topic_answer = (
-        build_topic_answer(question, retrieved=verified_retrieved, language=detected_language)
-        if runtime_intent == "topics"
-        else None
-    )
-
-    answer_mode = "gguf_generation" if use_generation else "fast_extractive"
-
-    if not context:
-        answer = unsupported_answer(detected_language)
-        answer_mode = "unsupported"
-    elif topic_answer:
-        answer = topic_answer
-        answer_mode = "structured_extractive"
+    answer = ""
+    if requested_strategy == "structured_exact":
+        if runtime_intent == "final_exam_marks":
+            answer = build_extractive_answer(question, verified_retrieved, detected_language, runtime_intent)
+        value = evidence_value(answer_field, context) if not answer else None
+        if value:
+            answer = format_exact_fact(assessment.request.primary_entity, answer_field, value, detected_language)
+        if not answer:
+            extracted = build_extractive_answer(question, verified_retrieved, "english", runtime_intent)
+            if extracted.startswith((
+                "Course code:", "Course title:", "Course type:", "Credit value:", "Prerequisite:",
+                "Final Exam:", "Term Examination:", "80% and above",
+            )):
+                answer = format_structured_text(extracted, detected_language)
+        answer_mode = "structured_exact"
+    elif requested_strategy == "structured_list":
+        answer = build_extractive_answer(question, verified_retrieved, detected_language, runtime_intent)
+        answer_mode = "structured_list"
+        if answer == unsupported_answer(detected_language) and use_generation:
+            answer = ""
+            answer_strategy = "gguf_generation"
     elif not use_generation:
         report("Building fast answer from retrieved document text...")
-        answer = build_extractive_answer(
-            question,
-            retrieved=verified_retrieved,
-            language=detected_language,
-            intent=runtime_intent,
-        )
+        answer = build_extractive_answer(question, verified_retrieved, detected_language, runtime_intent)
+        answer_mode = "fast_extractive"
     else:
-        report("Loading/generating with the local Qwen model...")
-        answer = generate_answer(
-            question=question,
-            context=context,
-            language=detected_language,
-            requested_entity=assessment.request.primary_entity,
-            requested_field=assessment.request.requested_field,
+        answer_mode = "gguf_generation"
+
+    generation_rejection_reason: str | None = None
+    final_fallback_reason = ""
+    validation: Dict[str, Any] = {}
+    grounding: Dict[str, Any] = {}
+
+    if not answer and use_generation and answer_strategy == "gguf_generation":
+        generation_used = True
+        canonical_package = replace(package, original_language="english")
+        canonical_contract = build_semantic_contract(canonical_package)
+        report("Generating a canonical English answer from verified evidence...")
+        generation_attempts = 1
+        generation_started = time.perf_counter()
+        try:
+            canonical_answer = generate_canonical_answer(canonical_package, canonical_contract)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            generation_error = str(exc)
+        canonical_seconds += time.perf_counter() - generation_started
+        raw_first_generation = canonical_answer
+        canonical_validation = validate_language(canonical_answer, "english")
+        canonical_grounding = validate_grounding(canonical_answer, package.evidence, canonical_contract)
+        first_language_validation = dict(canonical_validation)
+        first_grounding_validation = dict(canonical_grounding)
+
+        canonical_semantic = canonical_grounding.get("semantic_validation") or {}
+        canonical_repairable = (
+            not canonical_validation.get("validation_passed", False)
+            or bool(canonical_semantic.get("repairable"))
         )
+        if (
+            (not canonical_validation.get("validation_passed", False)
+             or not canonical_grounding.get("grounding_validation_passed", False))
+            and canonical_repairable
+            and generation_attempts < 3
+        ):
+            retry_attempted = True
+            retry_reason = str(
+                canonical_grounding.get("grounding_validation_reason")
+                if not canonical_grounding.get("grounding_validation_passed")
+                else canonical_validation.get("validation_reason")
+            )
+            report("Repairing the canonical answer once...")
+            retry_started = time.perf_counter()
+            generation_attempts += 1
+            try:
+                repaired = generate_canonical_answer(
+                    canonical_package,
+                    canonical_contract,
+                    previous_answer=canonical_answer,
+                    correction_reason=repair_instruction(retry_reason),
+                )
+            except (FileNotFoundError, RuntimeError, ValueError) as exc:
+                generation_error = str(exc)
+                repaired = ""
+            elapsed_retry = time.perf_counter() - retry_started
+            retry_seconds += elapsed_retry
+            canonical_seconds += elapsed_retry
+            raw_retry_output = repaired
+            retry_language_validation = validate_language(repaired, "english")
+            retry_grounding_validation = validate_grounding(repaired, package.evidence, canonical_contract)
+            canonical_answer = repaired
+            canonical_validation = retry_language_validation
+            canonical_grounding = retry_grounding_validation
 
-    if answer == unsupported_answer(detected_language) or not answer.strip():
-        answer = response_for_status(SupportStatus.INSUFFICIENT, detected_language)
-        answer_mode = "unsupported"
-        assessment = type(assessment)(
-            assessment.request,
-            SupportStatus.INSUFFICIENT,
-            (),
-            "Verified passages did not yield the requested factual value.",
+        canonical_ok = bool(
+            canonical_answer
+            and canonical_validation.get("validation_passed")
+            and canonical_grounding.get("grounding_validation_passed")
         )
-        verified_retrieved = []
-        context = []
+        if canonical_ok and detected_language == "english":
+            answer = canonical_answer
+            validation = canonical_validation
+            grounding = canonical_grounding
+        elif canonical_ok:
+            report(f"Realizing the validated canonical answer in {detected_language}...")
+            realization_started = time.perf_counter()
+            realization_output = realize_semistructured(canonical_answer, detected_language) or ""
+            if not realization_output:
+                generation_attempts += 1
+                try:
+                    realization_output = realize_canonical_answer(canonical_answer, detected_language)
+                except (FileNotFoundError, RuntimeError, ValueError) as exc:
+                    generation_error = str(exc)
+            realization_seconds += time.perf_counter() - realization_started
+            realization_validation = validate_realization(
+                canonical_answer, realization_output, detected_language, semantic_contract
+            )
+            validation = dict(realization_validation.get("language_validation") or validate_language(realization_output, detected_language))
+            grounding = validate_grounding(
+                realization_output, package.evidence, replace(semantic_contract, target_language="english")
+            )
+            realization_ok = bool(realization_validation.get("passed") and grounding.get("grounding_validation_passed"))
+            if not realization_ok and not retry_attempted and generation_attempts < 3:
+                retry_attempted = True
+                retry_reason = str(
+                    realization_validation.get("reason")
+                    if not realization_validation.get("passed")
+                    else grounding.get("grounding_validation_reason")
+                )
+                report("Repairing the target-language realization once...")
+                retry_started = time.perf_counter()
+                generation_attempts += 1
+                try:
+                    repaired = realize_canonical_answer(
+                        canonical_answer,
+                        detected_language,
+                        previous_answer=realization_output,
+                        correction_reason=repair_instruction(retry_reason),
+                    )
+                except (FileNotFoundError, RuntimeError, ValueError) as exc:
+                    generation_error = str(exc)
+                    repaired = ""
+                elapsed_retry = time.perf_counter() - retry_started
+                retry_seconds += elapsed_retry
+                realization_seconds += elapsed_retry
+                raw_retry_output = repaired
+                realization_output = repaired
+                realization_validation = validate_realization(
+                    canonical_answer, realization_output, detected_language, semantic_contract
+                )
+                retry_language_validation = dict(realization_validation.get("language_validation") or {})
+                grounding = validate_grounding(
+                    realization_output, package.evidence, replace(semantic_contract, target_language="english")
+                )
+                retry_grounding_validation = dict(grounding)
+                validation = retry_language_validation
+                realization_ok = bool(realization_validation.get("passed") and grounding.get("grounding_validation_passed"))
+            if realization_ok:
+                answer = realization_output
+        generation_seconds = canonical_seconds + realization_seconds
 
-    report("Validating response language...")
-    validation = validate_language(answer, detected_language)
-    best_answer = answer
-    best_validation = validation
-    retry_attempted = False
+        if not answer:
+            if not canonical_ok:
+                generation_rejection_reason = str(
+                    canonical_grounding.get("grounding_validation_reason")
+                    if not canonical_grounding.get("grounding_validation_passed")
+                    else canonical_validation.get("validation_reason")
+                )
+            else:
+                generation_rejection_reason = str(
+                    realization_validation.get("reason")
+                    if not realization_validation.get("passed")
+                    else grounding.get("grounding_validation_reason")
+                )
 
-    if (
-        assessment.status is SupportStatus.SUPPORTED
-        and use_generation
-        and not validation["language_consistency"]
-        and context
-        and not retry_attempted
-    ):
-        report("Retrying answer once in the detected language...")
-        retry_attempted = True
-        retry_answer = regenerate_answer_for_language(
-            question=question,
-            context=context,
-            language=detected_language,
-            previous_answer=answer,
-        )
-        retry_validation = validate_language(retry_answer, detected_language)
-        _log_generation_debug(
-            question=question,
-            first_answer=answer,
-            first_validation=validation,
-            second_answer=retry_answer,
-            second_validation=retry_validation,
-        )
-
-        if retry_validation["language_consistency"]:
-            best_answer = retry_answer
-            best_validation = retry_validation
-        else:
-            best_answer = retry_answer.strip() or answer
-            best_validation = retry_validation
-            best_validation["language_validation_failed"] = True
-
-    elif use_generation and not validation["language_consistency"] and not context:
-        best_validation["language_validation_failed"] = True
-        _log_generation_debug(
-            question=question,
-            first_answer=answer,
-            first_validation=best_validation,
-        )
-
-    if use_generation and not best_validation["language_consistency"]:
-        best_validation["language_validation_failed"] = True
-
-    answer = best_answer
-    validation = best_validation
-
-    if assessment.status is SupportStatus.SUPPORTED and use_generation and not answer_claim_is_bound(answer, assessment.evidence):
-        assessment = type(assessment)(
-            assessment.request,
-            SupportStatus.INSUFFICIENT,
-            (),
-            "Generated factual tokens were not present in the verified excerpts.",
-        )
-        answer = response_for_status(SupportStatus.INSUFFICIENT, detected_language)
-        answer_mode = "unsupported"
+    if answer and not validation:
+        report("Validating response language and factual grounding...")
         validation = validate_language(answer, detected_language)
-        verified_retrieved = []
+        grounding = validate_grounding(answer, package.evidence, semantic_contract)
+        first_language_validation = dict(validation)
+        first_grounding_validation = dict(grounding)
 
-    primary = select_primary_evidence(answer, assessment.evidence)
+    generation_failed = generation_used and (
+        not answer
+        or not validation.get("validation_passed", False)
+        or not grounding.get("grounding_validation_passed", False)
+    )
+    structured_extraction_failed = (
+        not answer and requested_strategy in {"structured_exact", "structured_list"}
+    )
+    if assessment.status is SupportStatus.SUPPORTED and (generation_failed or structured_extraction_failed):
+        generation_rejection_reason = generation_rejection_reason or str(
+            grounding.get("grounding_validation_reason")
+            if grounding and not grounding.get("grounding_validation_passed")
+            else validation.get("validation_reason") or "NO_SAFE_ANSWER_FROM_SUPPORTED_EVIDENCE"
+        )
+        final_fallback_reason = "GENERATION_REJECTED"
+        final_status = "GENERATION_REJECTED"
+        answer = generation_rejected_answer(detected_language)
+        answer_mode = "generation_rejected"
+        answer_strategy = "generation_rejected"
+        validation = validate_language(answer, detected_language)
+        grounding = {
+            "grounding_validation_passed": False,
+            "grounding_validation_reason": "GENERATION_REJECTED",
+            "unsupported_facts": grounding.get("unsupported_facts", []) if grounding else [],
+        }
+
+    primary = select_primary_evidence(answer, assessment.evidence) or (assessment.evidence[0] if assessment.evidence else None)
 
     sources = [
         {
@@ -395,6 +559,7 @@ def answer_question(
         "generation_mode": answer_mode,
         "answer_bank_enabled": use_answer_bank,
         "support_status": assessment.status.value,
+        "final_status": final_status,
         "support_reason": assessment.reason,
         "requested_entity": assessment.request.primary_entity,
         "requested_field": assessment.request.requested_field,
@@ -407,9 +572,51 @@ def answer_question(
         "response_language": validation["response_language"],
         "language_consistency": validation["language_consistency"],
         "language_validation_failed": bool(validation.get("language_validation_failed", False)),
+        "language_validation_passed": bool(validation.get("validation_passed", validation["language_consistency"])),
+        "language_validation_reason": validation.get("validation_reason"),
+        "grounding_validation_passed": bool(grounding.get("grounding_validation_passed", False)),
+        "grounding_validation_reason": grounding.get("grounding_validation_reason"),
+        "generation_rejection_reason": generation_rejection_reason,
+        "unsupported_generated_facts": grounding.get("unsupported_facts", []),
+        "generation_used": generation_used,
+        "generation_attempts": generation_attempts,
+        "retry_used": retry_attempted,
+        "target_language": detected_language,
+        "answer_strategy": answer_strategy,
+        "requested_answer_strategy": requested_strategy,
+        "generation_error": generation_error,
+        "canonical_answer": canonical_answer,
+        "canonical_validation_passed": bool(canonical_validation.get("validation_passed", False)),
+        "canonical_grounding_passed": bool(canonical_grounding.get("grounding_validation_passed", False)),
+        "canonical_validation_reason": canonical_grounding.get("grounding_validation_reason") or canonical_validation.get("validation_reason"),
+        "target_language_realization": realization_output,
+        "realization_validation_passed": bool(realization_validation.get("passed", False)) if detected_language != "english" and generation_used else bool(canonical_answer),
+        "realization_validation_reason": realization_validation.get("reason") if realization_validation else ("NOT_REQUIRED" if detected_language == "english" else ""),
+        "latency_seconds": {
+            "retrieval": retrieval_seconds,
+            "answering": time.perf_counter() - answering_started,
+            "generation": generation_seconds,
+            "retry": retry_seconds,
+            "canonical_generation": canonical_seconds,
+            "language_realization": realization_seconds,
+            "total": time.perf_counter() - pipeline_started,
+        },
         "sources": sources,
         "evidence": [item.to_dict() for item in assessment.evidence],
         "retrieved_context": retrieved,
+        "pre_generation_evidence": verified,
+        "pre_generation_support_status": pre_generation_support_status,
+        "pre_generation_support_reason": pre_generation_support_reason,
+        "raw_first_generation": raw_first_generation,
+        "first_language_validation": first_language_validation,
+        "first_semantic_validation": first_grounding_validation.get("semantic_validation", {}),
+        "first_grounding_validation": first_grounding_validation,
+        "retry_reason": retry_reason,
+        "raw_retry_output": raw_retry_output,
+        "retry_language_validation": retry_language_validation,
+        "retry_semantic_validation": retry_grounding_validation.get("semantic_validation", {}),
+        "retry_grounding_validation": retry_grounding_validation,
+        "final_fallback_reason": final_fallback_reason,
     }
 
 

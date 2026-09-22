@@ -1,0 +1,81 @@
+{
+  "notice": "STEP-7 DEVELOPMENT / REGRESSION EVALUATION — NOT FINAL THESIS ACCURACY",
+  "queries": 300,
+  "answer_bank_enabled": false,
+  "reranker_enabled": false,
+  "strategy_counts": {
+    "unsupported": 70,
+    "ambiguous": 5,
+    "gguf_generation": 15,
+    "structured_exact": 205,
+    "structured_list": 2,
+    "conflicting": 3
+  },
+  "language_consistency": {
+    "english": {
+      "passed": 100,
+      "total": 100,
+      "rate": 1.0,
+      "reasons": {
+        "ENGLISH_BODY_VALID": 100
+      }
+    },
+    "bangla": {
+      "passed": 100,
+      "total": 100,
+      "rate": 1.0,
+      "reasons": {
+        "BANGLA_BODY_MEANINGFUL": 100
+      }
+    },
+    "banglish": {
+      "passed": 98,
+      "total": 100,
+      "rate": 0.98,
+      "reasons": {
+        "BANGLISH_MARKERS_PRESENT": 98,
+        "BANGLISH_BODY_PURE_ENGLISH": 2
+      }
+    },
+    "overall": {
+      "passed": 298,
+      "total": 300,
+      "rate": 0.9933333333333333
+    }
+  },
+  "grounding": {
+    "generated_answers": 31,
+    "accepted_generation": 15,
+    "rejected_generation": 16,
+    "retries": 15,
+    "successful_retries": 4,
+    "failed_retries": 11
+  },
+  "fact_preservation": {
+    "applicable": 276,
+    "preserved": 183,
+    "rate": 0.6630434782608695
+  },
+  "automatic_diagnostic_proxies": {
+    "precision": 0.36361507277774147,
+    "recall": 0.24595407321723112,
+    "f1": 0.2855605442759034
+  },
+  "latency_seconds": {
+    "structured_median": 0.00024000000030355295,
+    "structured_p95": 0.000498899999911373,
+    "gguf_median": 6.652335400000084,
+    "gguf_p95": 22.103669099999934,
+    "retry_total": 89.21468839999989,
+    "total_median": 0.19976254999983212,
+    "total_p95": 6.853151700000126
+  },
+  "qwen": {
+    "model": "Qwen2.5-1.5B-Instruct",
+    "quantization": "Q4_K_M",
+    "context": 8192,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 180
+  }
+}

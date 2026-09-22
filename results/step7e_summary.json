@@ -1,0 +1,62 @@
+{
+  "full": {
+    "notice": "STEP-7E DEVELOPMENT / REGRESSION EVALUATION — NOT FINAL THESIS ACCURACY",
+    "queries": 300,
+    "answer_bank_enabled": false,
+    "reranker_enabled": false,
+    "status_counts": {
+      "AMBIGUOUS": 5,
+      "ANSWER_RETURNED": 224,
+      "GENERATION_REJECTED": 49,
+      "INSUFFICIENT_EVIDENCE": 19,
+      "CONFLICTING": 3
+    },
+    "languages": {
+      "english": {
+        "rows": 100,
+        "structured_answers": 67,
+        "generation_required": 11,
+        "evidence_available": 11,
+        "canonical_successful": 7,
+        "realization_successful": 11,
+        "final_answer_returned": 7,
+        "generation_rejected": 19,
+        "insufficient_evidence": 5
+      },
+      "bangla": {
+        "rows": 100,
+        "structured_answers": 71,
+        "generation_required": 6,
+        "evidence_available": 6,
+        "canonical_successful": 4,
+        "realization_successful": 3,
+        "final_answer_returned": 3,
+        "generation_rejected": 11,
+        "insufficient_evidence": 11
+      },
+      "banglish": {
+        "rows": 100,
+        "structured_answers": 69,
+        "generation_required": 14,
+        "evidence_available": 14,
+        "canonical_successful": 10,
+        "realization_successful": 8,
+        "final_answer_returned": 7,
+        "generation_rejected": 19,
+        "insufficient_evidence": 3
+      }
+    },
+    "latency_seconds_median": {
+      "canonical": 25.907889300000534,
+      "bangla_realization": 0.0011909499999092077,
+      "banglish_realization": 16.326602900000125,
+      "total_generation": 27.754208199999994
+    },
+    "memory": {
+      "peak_rss_bytes": 5878292480,
+      "minimum_available_ram_bytes": 52772864,
+      "peak_swap_used_bytes": 2087407615
+    },
+    "errors": 0
+  }
+}

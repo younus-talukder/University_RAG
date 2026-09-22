@@ -1,0 +1,94 @@
+{
+  "notice": "STEP-7 DEVELOPMENT / REGRESSION EVALUATION — NOT FINAL THESIS ACCURACY",
+  "queries": 300,
+  "answer_bank_enabled": false,
+  "reranker_enabled": false,
+  "strategy_counts": {
+    "unsupported": 68,
+    "ambiguous": 5,
+    "gguf_generation": 17,
+    "structured_exact": 205,
+    "structured_list": 2,
+    "conflicting": 3
+  },
+  "language_consistency": {
+    "english": {
+      "passed": 100,
+      "total": 100,
+      "rate": 1.0,
+      "reasons": {
+        "ENGLISH_BODY_VALID": 100
+      }
+    },
+    "bangla": {
+      "passed": 100,
+      "total": 100,
+      "rate": 1.0,
+      "reasons": {
+        "BANGLA_BODY_MEANINGFUL": 100
+      }
+    },
+    "banglish": {
+      "passed": 98,
+      "total": 100,
+      "rate": 0.98,
+      "reasons": {
+        "BANGLISH_MARKERS_PRESENT": 98,
+        "BANGLISH_BODY_PURE_ENGLISH": 2
+      }
+    },
+    "overall": {
+      "passed": 298,
+      "total": 300,
+      "rate": 0.9933333333333333
+    }
+  },
+  "grounding": {
+    "generated_answers": 31,
+    "accepted_generation": 17,
+    "rejected_generation": 14,
+    "retries": 9,
+    "successful_retries": 2,
+    "failed_retries": 7
+  },
+  "fact_preservation": {
+    "applicable": 276,
+    "preserved": 184,
+    "rate": 0.6666666666666666
+  },
+  "automatic_diagnostic_proxies": {
+    "precision": 0.3734821032768401,
+    "recall": 0.25207556283872073,
+    "f1": 0.29387167616081183
+  },
+  "latency_seconds": {
+    "structured_median": 0.00023570000030304072,
+    "structured_p95": 0.0008601999998063548,
+    "gguf_median": 29.103425100000095,
+    "gguf_p95": 81.75733160000073,
+    "retry_total": 232.99255320000202,
+    "total_median": 0.2252859499999431,
+    "total_p95": 31.333402000000206
+  },
+  "prompt_tokens": {
+    "median": 520,
+    "p95": 663,
+    "maximum": 680
+  },
+  "tokens_per_second_median": 1.0989170608007945,
+  "memory": {
+    "peak_rss_bytes": 5767397376,
+    "minimum_available_ram_bytes": 47996928,
+    "peak_swap_used_bytes": 3938754560
+  },
+  "errors": 0,
+  "qwen": {
+    "model": "Qwen2.5-7B-Instruct",
+    "quantization": "Q4_K_M",
+    "profile": "DEVELOPMENT_8GB",
+    "context": 4096,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 180
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "before": {
+    "rows": 15,
+    "strategies": {
+      "gguf_generation": 8,
+      "unsupported": 7
+    },
+    "generation_attempted": 15,
+    "accepted": 8,
+    "rejected": 7,
+    "retries": 5,
+    "successful_retries": 0,
+    "failed_retries": 5,
+    "semantic_rejections": {}
+  },
+  "after": {
+    "rows": 15,
+    "strategies": {
+      "gguf_generation": 4,
+      "unsupported": 11
+    },
+    "generation_attempted": 15,
+    "accepted": 4,
+    "rejected": 11,
+    "retries": 6,
+    "successful_retries": 0,
+    "failed_retries": 6,
+    "semantic_rejections": {
+      "WRONG_RELATION_VALUE": 2,
+      "SEMANTIC_CONTRACT_UNCERTAIN": 5,
+      "BANGLA_BODY_TOO_ENGLISH": 1,
+      "MISSING_REQUIRED_ENTITY": 1,
+      "MIXED_SCRIPT_TOKEN": 1,
+      "BANGLISH_BODY_PURE_ENGLISH": 1
+    }
+  },
+  "paired_rows": [
+    {
+      "question_id": "Q002",
+      "language": "english",
+      "question": "Who published the prospectus?",
+      "before_answer": "The prospectus was published by the Department of Computer Science & Engineering at the University of Asia Pacific.",
+      "before_strategy": "gguf_generation",
+      "after_answer": "The prospectus was published by the Department of Computer Science & Engineering University of Asia Pacific.",
+      "after_strategy": "gguf_generation",
+      "after_language_reason": "ENGLISH_BODY_VALID",
+      "after_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "after_rejection_reason": ""
+    },
+    {
+      "question_id": "Q005",
+      "language": "english",
+      "question": "What does the disclaimer say about the prospectus information?",
+      "before_answer": "The information contained in this prospectus is subject to change at the discretion of the Department of Computer Science & Engineering, UAP.",
+      "before_strategy": "gguf_generation",
+      "after_answer": "The information contained in this prospectus is subject to change at the discretion of the Department of Computer Science & Engineering, UAP.",
+      "after_strategy": "gguf_generation",
+      "after_language_reason": "ENGLISH_BODY_VALID",
+      "after_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "after_rejection_reason": ""
+    },
+    {
+      "question_id": "Q007",
+      "language": "english",
+      "question": "Which two bachelor degree programs did UAP initially offer?",
+      "before_answer": "UAP initially offered Bachelor Degree Programs in Computer Science & Technology (or Computer Science & Engineering) and Business Administration.",
+      "before_strategy": "gguf_generation",
+      "after_answer": "UAP initially offered four-year Bachelor Degree Programs in Computer Science & Technology and Business Administration.",
+      "after_strategy": "gguf_generation",
+      "after_language_reason": "ENGLISH_BODY_VALID",
+      "after_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "after_rejection_reason": ""
+    },
+    {
+      "question_id": "Q009",
+      "language": "english",
+      "question": "What accreditation did the CSE Department receive from IEB?",
+      "before_answer": "The CSE Department received a Certificate of Accreditation from the Engineers Institution Bangladesh (IEB) for the BSc in CSE program starting from August 2014.",
+      "before_strategy": "gguf_generation",
+      "after_answer": "The CSE Department received a Certificate of Accreditation from the Engineers Institution Bangladesh (IEB) for the BSc in CSE program starting from August 2014.",
+      "after_strategy": "gguf_generation",
+      "after_language_reason": "ENGLISH_BODY_VALID",
+      "after_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "after_rejection_reason": ""
+    },
+    {
+      "question_id": "Q010",
+      "language": "english",
+      "question": "Under which act did UAP start its operation?",
+      "before_answer": "UAP started its operation under the Private University Act 1992.",
+      "before_strategy": "gguf_generation",
+      "after_answer": "I couldn't find enough information in the provided university documents to answer this reliably.",
+      "after_strategy": "unsupported",
+      "after_language_reason": "ENGLISH_BODY_VALID",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "WRONG_RELATION_VALUE"
+    },
+    {
+      "question_id": "Q002",
+      "language": "bangla",
+      "question": "প্রসপেক্টাসটি কে প্রকাশ করেছে?",
+      "before_answer": "প্রসপেক্টাসটি প্রকাশক তথ্য দেওয়া হয়নি।",
+      "before_strategy": "gguf_generation",
+      "after_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "SEMANTIC_CONTRACT_UNCERTAIN"
+    },
+    {
+      "question_id": "Q009",
+      "language": "bangla",
+      "question": "CSE Department IEB থেকে কী স্বীকৃতি পেয়েছে?",
+      "before_answer": "CSE অধ্যাদেশ ইngineers Institution Bangladesh (IEB) থেকে BSc in CSE প্রোগ্রামের জন্য সertificate of Accreditation পেয়েছে।",
+      "before_strategy": "gguf_generation",
+      "after_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "SEMANTIC_CONTRACT_UNCERTAIN"
+    },
+    {
+      "question_id": "Q013",
+      "language": "bangla",
+      "question": "UAP Administration কোথায় অবস্থিত?",
+      "before_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "before_strategy": "unsupported",
+      "after_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "BANGLA_BODY_TOO_ENGLISH"
+    },
+    {
+      "question_id": "Q026",
+      "language": "bangla",
+      "question": "ফাইনাল answer script re-examination-এর ফি কত?",
+      "before_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "before_strategy": "unsupported",
+      "after_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "MISSING_REQUIRED_ENTITY"
+    },
+    {
+      "question_id": "Q028",
+      "language": "bangla",
+      "question": "কখন একজন শিক্ষার্থী repeat examination দিতে পারে?",
+      "before_answer": "একজন শিক্ষার্থী রিটেন্ড পরীক্ষায় দিতে পারে, যদি তিনটি বিষয়ে বা 10 ক্রেডিট হাইর্স থেকে কম অথবা সমান অনুষ্ঠিত সেমিস্ট্রি ফাইনালে অনুষ্ঠিত পরীক্ষায় অনুধাবিত হন।",
+      "before_strategy": "gguf_generation",
+      "after_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "MIXED_SCRIPT_TOKEN"
+    },
+    {
+      "question_id": "Q002",
+      "language": "banglish",
+      "question": "Prospectus-ta ke publish koreche?",
+      "before_answer": "I couldn't find enough information in the provided university documents to answer this reliably.",
+      "before_strategy": "unsupported",
+      "after_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "SEMANTIC_CONTRACT_UNCERTAIN"
+    },
+    {
+      "question_id": "Q005",
+      "language": "banglish",
+      "question": "Prospectus-er information niye disclaimer-e ki bola hoyeche?",
+      "before_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "before_strategy": "unsupported",
+      "after_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "SEMANTIC_CONTRACT_UNCERTAIN"
+    },
+    {
+      "question_id": "Q007",
+      "language": "banglish",
+      "question": "UAP shurute kon duita bachelor degree program offer korechilo?",
+      "before_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "before_strategy": "unsupported",
+      "after_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "WRONG_RELATION_VALUE"
+    },
+    {
+      "question_id": "Q009",
+      "language": "banglish",
+      "question": "CSE Department IEB theke ki accreditation peyechhe?",
+      "before_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "before_strategy": "unsupported",
+      "after_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "SEMANTIC_CONTRACT_UNCERTAIN"
+    },
+    {
+      "question_id": "Q013",
+      "language": "banglish",
+      "question": "UAP Administration kothay located?",
+      "before_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "before_strategy": "unsupported",
+      "after_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "after_strategy": "unsupported",
+      "after_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "after_grounding_reason": "GENERATION_REJECTED",
+      "after_rejection_reason": "BANGLISH_BODY_PURE_ENGLISH"
+    }
+  ]
+}

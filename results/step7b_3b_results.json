@@ -1,0 +1,3068 @@
+{
+  "notice": "STEP-7B CONTROLLED MODEL COMPARISON — NOT FINAL CORRECTNESS",
+  "model_provenance": {
+    "model": "Qwen2.5-3B-Instruct-Q4_K_M",
+    "repository": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+    "revision": "7dabda4d13d513e3e842b20f0d435c732f172cbe",
+    "filename": "qwen2.5-3b-instruct-q4_k_m.gguf",
+    "quantization": "Q4_K_M",
+    "size_bytes": 2104932768,
+    "sha256": "626B4A6678B86442240E33DF819E00132D3BA7DDDFE1CDC4FBB18E0A9615C62D",
+    "license": "Qwen Research License Agreement (non-commercial research/evaluation)"
+  },
+  "frozen_settings": {
+    "context": 8192,
+    "threads": 12,
+    "batch_size": 512,
+    "gpu_layers": 0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 180
+  },
+  "load_benchmark": {
+    "load_seconds": 4.609275499999967,
+    "rss_before_bytes": 442773504,
+    "rss_after_bytes": 3466289152,
+    "rss_increase_bytes": 3023515648,
+    "system_available_after_bytes": 43290624,
+    "utf8_token_counts": [
+      5,
+      17,
+      6
+    ],
+    "context_size": 8192,
+    "threads": 12,
+    "batch_size": 512,
+    "gpu_layers": 0
+  },
+  "focused_peak_rss_bytes": 3466608640,
+  "focused_summary": {
+    "cases": 45,
+    "strategy_counts": {
+      "unsupported": 27,
+      "gguf_generation": 13,
+      "ambiguous": 5
+    },
+    "language": {
+      "english": {
+        "cases": 15,
+        "final_language_pass": 15,
+        "generated": 8,
+        "final_accepted_generation": 8,
+        "semantic_screen_flags": {}
+      },
+      "bangla": {
+        "cases": 15,
+        "final_language_pass": 15,
+        "generated": 4,
+        "final_accepted_generation": 3,
+        "semantic_screen_flags": {
+          "POSSIBLY_TRUNCATED": 2,
+          "BANGLA_BODY_TOO_ENGLISH": 1,
+          "VERY_SHORT_BANGLA_BODY": 1
+        }
+      },
+      "banglish": {
+        "cases": 15,
+        "final_language_pass": 14,
+        "generated": 10,
+        "final_accepted_generation": 2,
+        "semantic_screen_flags": {
+          "BANGLISH_BODY_PURE_ENGLISH": 6
+        }
+      }
+    },
+    "grounding": {
+      "generation_attempted_cases": 22,
+      "first_pass_accepted": 13,
+      "first_pass_rejected": 9,
+      "retry_attempts": 4,
+      "successful_retries": 0,
+      "failed_retries": 4,
+      "final_accepted_generation": 13,
+      "final_safe_abstention": 9
+    },
+    "fact_preservation": {
+      "applicable": 44,
+      "preserved": 8,
+      "rate": 0.18181818181818182
+    },
+    "automatic_development_proxies": {
+      "precision": 0.18038427134918364,
+      "recall": 0.206595191682911,
+      "f1": 0.1881082999360045
+    },
+    "latency": {
+      "generation_median_seconds": 11.019760549999774,
+      "generation_p95_seconds": 35.9913260000003,
+      "retry_total_seconds": 69.41779990000032,
+      "tokens_per_second_median": 3.6212300937279536
+    }
+  },
+  "focused_rows": [
+    {
+      "case_id": "S7B-001",
+      "question_id": "Q001",
+      "language": "english",
+      "question": "What is the title of the undergraduate prospectus?",
+      "reference_answer": "The title is Prospectus (Undergraduate Program) 2017-18 for the Department of Computer Science & Engineering, UAP.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 51,
+          "heading": null,
+          "entity": null,
+          "excerpt": "…ast digit, if odd, indicates a theory course and if even, indicates a laboratory course. Core Courses First Year First Semester Course Code Course Title Credits Pre- Requisite",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000051-b0001-c0001",
+          "retrieval_score": 0.031746031746031744
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "I couldn't find enough information in the provided university documents to answer this reliably.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:computer",
+          "named_identifiers:department",
+          "named_identifiers:engineering",
+          "named_identifiers:program",
+          "named_identifiers:prospectus",
+          "named_identifiers:science",
+          "named_identifiers:uap",
+          "named_identifiers:undergraduate",
+          "numbers:18",
+          "numbers:2017"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.07692307692307693,
+        "recall": 0.07142857142857142,
+        "f1": 0.07407407407407408
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.009347999999590684,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-002",
+      "question_id": "Q002",
+      "language": "english",
+      "question": "Who published the prospectus?",
+      "reference_answer": "The prospectus was published by the Department of Computer Science & Engineering, University of Asia Pacific.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 2,
+          "heading": null,
+          "entity": null,
+          "excerpt": "Published by Department of Computer Science & Engineering University of Asia Pacific 74/A, Green Road, Dhaka-1215 Edition 13th Edition, July 2017 Address of Correspondence",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000002-b0001-c0001",
+          "retrieval_score": 0.02761904761904762
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 2,
+      "raw_answer": "The prospectus was published by the Department of Computer Science & Engineering, University of Asia Pacific.",
+      "retry_answer": "",
+      "final_answer": "The prospectus was published by the Department of Computer Science & Engineering, University of Asia Pacific.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "ENGLISH_BODY_VALID",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:asia",
+          "named_identifiers:computer",
+          "named_identifiers:department",
+          "named_identifiers:engineering",
+          "named_identifiers:pacific",
+          "named_identifiers:science"
+        ],
+        "preserved": true,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "tokens_generated": 19,
+      "generation_seconds": 7.139791900000091,
+      "retry_seconds": 0.0,
+      "total_seconds": 7.144207899999856,
+      "tokens_per_second": 2.661141986505203
+    },
+    {
+      "case_id": "S7B-003",
+      "question_id": "Q005",
+      "language": "english",
+      "question": "What does the disclaimer say about the prospectus information?",
+      "reference_answer": "The information in the prospectus is subject to change at the discretion of the Department of CSE, UAP.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 3,
+          "heading": "Disclaimer",
+          "entity": null,
+          "excerpt": "Disclaimer The information contained in this prospectus is subject to change at the discretion of the Department of Computer Science & Engineering, UAP.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000003-b0001-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 85,
+          "heading": "Course Code: CSE 407",
+          "entity": null,
+          "excerpt": "Course Code: CSE 407 Course Title: ICTLaw, Policy and Ethics Credits: 2.00 Prerequisite: None Ethics: Introduction to ethical theories and principles, Ethics and critical reasoning in computer science, Privacy, personal information, and trust, Software piracy, Music and video piracy, Misuse of software, Viruses and hacking, Compute r communication and freedom of expression, Security and encryption, Content control an…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000085-b0002-c0001",
+          "retrieval_score": 0.02684684684684685
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 75,
+          "heading": "Course Code: CSE 305",
+          "entity": null,
+          "excerpt": "Course Code: CSE 305 Course Title: System Analysis and Design Credits: 3.00 Prerequisite: CSE 211 Introduction to System analysis, concepts, understanding and modeling organization Systems, System development life cycle(SDLC), structured analysis and struc tured design, object oriented analysis and design, Different types of information, Qualities of information, Analysis оf Information requirements for modern organi…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000075-b0003-c0001",
+          "retrieval_score": 0.026547116736990152
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 3,
+      "raw_answer": "The disclaimer in the prospectus states that information can be changed by the Department of Computer Science & Engineering, UAP at their discretion. No specific information about the prospectus itself is provided in the given evidence.",
+      "retry_answer": "",
+      "final_answer": "The disclaimer in the prospectus states that information can be changed by the Department of Computer Science & Engineering, UAP at their discretion. No specific information about the prospectus itself is provided in the given evidence.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "ENGLISH_BODY_VALID",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:cse",
+          "named_identifiers:department",
+          "named_identifiers:uap"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.2857142857142857,
+        "recall": 0.5714285714285714,
+        "f1": 0.38095238095238093
+      },
+      "tokens_generated": 42,
+      "generation_seconds": 11.417929000000186,
+      "retry_seconds": 0.0,
+      "total_seconds": 11.429312900000696,
+      "tokens_per_second": 3.6784253957087416
+    },
+    {
+      "case_id": "S7B-004",
+      "question_id": "Q007",
+      "language": "english",
+      "question": "Which two bachelor degree programs did UAP initially offer?",
+      "reference_answer": "UAP initially offered four-year bachelor degree programs in Computer Science & Engineering and Business Administration.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1. Introduction",
+          "entity": null,
+          "excerpt": "1. Introduction University of Asia Pacific (UAP) was established in 1996 with a vision to enhance the opportunities for higher education in Bangladesh. The University, under the Private University Act 1992, started its operation in 1996 by offering four -year Bachelor Degree Programs in Computer Science & Technology and Business Administration only. Now UAP offers undergraduate programs in nine disciplines and post-g…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0001-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 4,
+          "heading": null,
+          "entity": null,
+          "excerpt": "University of Asia Pacific (UAP) was established in 1996 under the Private University Act 1992 as a private university with the vision of providing quality education and fulf illing the needs of our motherland, Bangladesh. This university started its journ ey in 1996 and offered four years bachelor degree programs in Computer Science & Engineering and Business Administration only, thus the very step of publishing the…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000004-b0001-c0001",
+          "retrieval_score": 0.031754032258064516
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 9,
+          "heading": "1.3 Schools and Departments",
+          "entity": null,
+          "excerpt": "1.3 Schools and Departments At present, UAP has five schools comprising of relevant departments: School of Engineering Department of Computer Science and Engineering Department of Civil Engineering Department of Electrical and Electronic Engineering School of Business Department of Business Administration School of Environmental Science and Engineering Department of Architecture School of Science Department of Pharma…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000009-b0004-c0001",
+          "retrieval_score": 0.031746031746031744
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 8,
+      "raw_answer": "UAP initially offered Bachelor Degree Programs in Computer Science & Technology and Business Administration.",
+      "retry_answer": "",
+      "final_answer": "UAP initially offered Bachelor Degree Programs in Computer Science & Technology and Business Administration.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "ENGLISH_BODY_VALID",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:administration",
+          "named_identifiers:business",
+          "named_identifiers:computer",
+          "named_identifiers:engineering",
+          "named_identifiers:science",
+          "named_identifiers:uap"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.9230769230769231,
+        "recall": 0.8571428571428571,
+        "f1": 0.888888888888889
+      },
+      "tokens_generated": 16,
+      "generation_seconds": 8.191900599999826,
+      "retry_seconds": 0.0,
+      "total_seconds": 8.200796599999194,
+      "tokens_per_second": 1.9531486990943638
+    },
+    {
+      "case_id": "S7B-005",
+      "question_id": "Q009",
+      "language": "english",
+      "question": "What accreditation did the CSE Department receive from IEB?",
+      "reference_answer": "The CSE Department received IEB accreditation for the BSc in CSE program starting from August 2014.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 6,
+          "heading": "IEB Affiliation",
+          "entity": null,
+          "excerpt": "IEB Affiliation Department of CSE has received the Certificate of Accreditation from the Engineers Institution Bangladesh (IEB) for the BSc in CSE program starting from August 2014. This will enable the CSE students to enjoy the privileges offered by Engineers Institution Bangladesh (IEB) including membership.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000006-b0002-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 31,
+          "heading": "Activities:",
+          "entity": null,
+          "excerpt": "Activities: The Activities of this club are as follows:  The club arranges at least one intradepartmental robotic competition in an academic year on regular basis.  This club usually selects the participants from the CSE department for any Robotic event outside the university.  The Club arranges training as well as workshops for the interested students to spread robotics. Developments and progress achieved For the…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000031-b0004-c0001",
+          "retrieval_score": 0.026540946394272742
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 32,
+          "heading": "3. Network and Communication Research Group (NCRG) of CSE",
+          "entity": null,
+          "excerpt": "3. Network and Communication Research Group (NCRG) of CSE Department is conducting research on real -life, industry-oriented problems. QUBEE will share necessary relevant information, if any. The outcome of the research can be accessed by both parties.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000032-b0002-c0001",
+          "retrieval_score": 0.025728708679368183
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 6,
+      "raw_answer": "The CSE Department received the Certificate of Accreditation from the Engineers Institution Bangladesh (IEB) for the BSc in CSE program starting from August 2014.",
+      "retry_answer": "",
+      "final_answer": "The CSE Department received the Certificate of Accreditation from the Engineers Institution Bangladesh (IEB) for the BSc in CSE program starting from August 2014.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "ENGLISH_BODY_VALID",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:august",
+          "named_identifiers:cse",
+          "named_identifiers:department",
+          "named_identifiers:ieb",
+          "numbers:2014"
+        ],
+        "preserved": true,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.7368421052631579,
+        "recall": 1.0,
+        "f1": 0.8484848484848484
+      },
+      "tokens_generated": 36,
+      "generation_seconds": 10.58614999999918,
+      "retry_seconds": 0.0,
+      "total_seconds": 10.593052199999875,
+      "tokens_per_second": 3.4006697430135406
+    },
+    {
+      "case_id": "S7B-006",
+      "question_id": "Q010",
+      "language": "english",
+      "question": "Under which act did UAP start its operation?",
+      "reference_answer": "UAP started its operation under the Private University Act 1992.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1. Introduction",
+          "entity": null,
+          "excerpt": "1. Introduction University of Asia Pacific (UAP) was established in 1996 with a vision to enhance the opportunities for higher education in Bangladesh. The University, under the Private University Act 1992, started its operation in 1996 by offering four -year Bachelor Degree Programs in Computer Science & Technology and Business Administration only. Now UAP offers undergraduate programs in nine disciplines and post-g…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0001-c0001",
+          "retrieval_score": 0.03252247488101534
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 4,
+          "heading": null,
+          "entity": null,
+          "excerpt": "University of Asia Pacific (UAP) was established in 1996 under the Private University Act 1992 as a private university with the vision of providing quality education and fulf illing the needs of our motherland, Bangladesh. This university started its journ ey in 1996 and offered four years bachelor degree programs in Computer Science & Engineering and Business Administration only, thus the very step of publishing the…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000004-b0001-c0001",
+          "retrieval_score": 0.031746031746031744
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 13,
+          "heading": "Laboratory",
+          "entity": null,
+          "excerpt": "Laboratory UAP provide laboratory facilities for the students of respective departments. The laboratories are self -sufficient and r ich in instruments and other facilities to carry out sessional / practical classes for different courses. Unlike many other private Universities, UAP does not depend on any other institutions for its laboratory classes. Other than sessional / practical cla sses, the faculties of UAP do…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000013-b0004-c0001",
+          "retrieval_score": 0.031054405392392875
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 8,
+      "raw_answer": "UAP started its operation under the Private University Act 1992.",
+      "retry_answer": "",
+      "final_answer": "UAP started its operation under the Private University Act 1992.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "ENGLISH_BODY_VALID",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:act",
+          "named_identifiers:private",
+          "named_identifiers:uap",
+          "numbers:1992"
+        ],
+        "preserved": true,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "tokens_generated": 16,
+      "generation_seconds": 8.152840099999594,
+      "retry_seconds": 0.0,
+      "total_seconds": 8.16341629999988,
+      "tokens_per_second": 1.9625062927458614
+    },
+    {
+      "case_id": "S7B-007",
+      "question_id": "Q011",
+      "language": "english",
+      "question": "How many undergraduate and postgraduate disciplines does UAP offer according to the introduction?",
+      "reference_answer": "The introduction says UAP offers undergraduate programs in nine disciplines and post-graduate programs in eight disciplines.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1. Introduction",
+          "entity": null,
+          "excerpt": "1. Introduction University of Asia Pacific (UAP) was established in 1996 with a vision to enhance the opportunities for higher education in Bangladesh. The University, under the Private University Act 1992, started its operation in 1996 by offering four -year Bachelor Degree Programs in Computer Science & Technology and Business Administration only. Now UAP offers undergraduate programs in nine disciplines and post-g…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0001-c0001",
+          "retrieval_score": 0.032266458495966696
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 9,
+          "heading": "1.3 Schools and Departments",
+          "entity": null,
+          "excerpt": "1.3 Schools and Departments At present, UAP has five schools comprising of relevant departments: School of Engineering Department of Computer Science and Engineering Department of Civil Engineering Department of Electrical and Electronic Engineering School of Business Department of Business Administration School of Environmental Science and Engineering Department of Architecture School of Science Department of Pharma…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000009-b0004-c0001",
+          "retrieval_score": 0.03200204813108039
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 10,
+          "heading": "1.4 Academic Programs",
+          "entity": null,
+          "excerpt": "1.4 Academic Programs Undergraduate Studies Currently UAP is offering undergraduate programs in the following seven disciplines Architecture Business Administration Civil Engineering Computer Science and Engineering Electrical and Electronic Engineering Law and Human Rights Pharmacy English Basic Science and Humanities Other than Architecture, all the courses are four -year programs. Architecture is a five-year cours…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000010-b0001-c0001",
+          "retrieval_score": 0.030886196246139225
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 8,
+      "raw_answer": "UAP offers undergraduate programs in nine disciplines and postgraduate programs.",
+      "retry_answer": "",
+      "final_answer": "UAP offers undergraduate programs in nine disciplines and postgraduate programs.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "ENGLISH_BODY_VALID",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:uap"
+        ],
+        "preserved": true,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.8,
+        "recall": 0.5714285714285714,
+        "f1": 0.6666666666666666
+      },
+      "tokens_generated": 13,
+      "generation_seconds": 7.378778799999964,
+      "retry_seconds": 0.0,
+      "total_seconds": 7.387366899999506,
+      "tokens_per_second": 1.7618091492321282
+    },
+    {
+      "case_id": "S7B-008",
+      "question_id": "Q012",
+      "language": "english",
+      "question": "Who is named as the Vice-Chancellor in the prospectus?",
+      "reference_answer": "Prof. Dr. Jamilur Reza Choudhury is named as the Vice-Chancellor.",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "I couldn't find enough information in the provided university documents to answer this reliably.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:chancellor",
+          "named_identifiers:choudhury",
+          "named_identifiers:jamilur",
+          "named_identifiers:prof",
+          "named_identifiers:reza",
+          "named_identifiers:vice"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.07692307692307693,
+        "recall": 0.1,
+        "f1": 0.08695652173913043
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.002572100000179489,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-009",
+      "question_id": "Q013",
+      "language": "english",
+      "question": "Where is the UAP Administration located?",
+      "reference_answer": "UAP Administration is located at 74/A, Green Road, Farmgate, Dhaka-1215, Bangladesh.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 11,
+          "heading": "1.6 The Campus",
+          "entity": null,
+          "excerpt": "1.6 The Campus UAP Administration 74/A, Green Road, Farmgate, Dhaka - 1215, Bangladesh PABX:+8802-58157091-4, +8802-58157096 Ext: 107, 114 FAX:+8802-58157097 Email: registrar@uap-bd.edu",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000011-b0003-c0001",
+          "retrieval_score": 0.03225806451612903
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1. Introduction",
+          "entity": null,
+          "excerpt": "1. Introduction University of Asia Pacific (UAP) was established in 1996 with a vision to enhance the opportunities for higher education in Bangladesh. The University, under the Private University Act 1992, started its operation in 1996 by offering four -year Bachelor Degree Programs in Computer Science & Technology and Business Administration only. Now UAP offers undergraduate programs in nine disciplines and post-g…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0001-c0001",
+          "retrieval_score": 0.03149801587301587
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 4,
+          "heading": null,
+          "entity": null,
+          "excerpt": "University of Asia Pacific (UAP) was established in 1996 under the Private University Act 1992 as a private university with the vision of providing quality education and fulf illing the needs of our motherland, Bangladesh. This university started its journ ey in 1996 and offered four years bachelor degree programs in Computer Science & Engineering and Business Administration only, thus the very step of publishing the…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000004-b0001-c0001",
+          "retrieval_score": 0.031009615384615385
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 11,
+      "raw_answer": "The UAP Administration is located at 74/A, Green Road, Farmgate, Dhaka - 1215, Bangladesh.",
+      "retry_answer": "",
+      "final_answer": "The UAP Administration is located at 74/A, Green Road, Farmgate, Dhaka - 1215, Bangladesh.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "ENGLISH_BODY_VALID",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:administration",
+          "named_identifiers:bangladesh",
+          "named_identifiers:dhaka",
+          "named_identifiers:farmgate",
+          "named_identifiers:green",
+          "named_identifiers:road",
+          "named_identifiers:uap",
+          "numbers:1215",
+          "numbers:74"
+        ],
+        "preserved": true,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.7692307692307693,
+        "recall": 0.9090909090909091,
+        "f1": 0.8333333333333333
+      },
+      "tokens_generated": 29,
+      "generation_seconds": 10.424792299999353,
+      "retry_seconds": 0.0,
+      "total_seconds": 10.432130099999995,
+      "tokens_per_second": 2.781830003462208
+    },
+    {
+      "case_id": "S7B-010",
+      "question_id": "Q018",
+      "language": "english",
+      "question": "How is one credit assigned for theoretical courses?",
+      "reference_answer": "For theoretical courses, one lecture per week per semester is equivalent to one credit.",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "Please specify the course, program, policy, or other item you mean so I can answer reliably.",
+      "answer_strategy": "ambiguous",
+      "support_status": "ambiguous",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:for"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0024026000000958447,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-011",
+      "question_id": "Q019",
+      "language": "english",
+      "question": "What is Category 1 in the registration process?",
+      "reference_answer": "Category 1 is for students who passed all prescribed semester courses and have no backlog.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 18,
+          "heading": "Category 1:",
+          "entity": null,
+          "excerpt": "Category 1: Students, who have passed all the courses prescribed for the semester and have no backlog of courses. A student of Category -1 is eligible for registration in all courses prescribed for the next or following semesters.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000018-b0002-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 18,
+          "heading": "Category 3:",
+          "entity": null,
+          "excerpt": "Category 3: Students, who have failed to earn 15 credits in a semester, belong to this category. Students of this category are advised to take a t least two courses less in the following semester than those offered for students of Category -1 subject to the registration for a minimum of 15 credits and maximum 24 credit hours. However, they are required to register for such backlog courses as would be prescribed by th…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000018-b0004-c0001",
+          "retrieval_score": 0.03225806451612903
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 18,
+          "heading": "Category 2:",
+          "entity": null,
+          "excerpt": "Category 2: Students, who have earned at least 15 credits in a semester but do not belong to Category 1. These students are advised to take at least one course less in the following semester than those offered for students of Category 1, subject to the condition that, they will register for such backlog courses as prescribed by the respective adviser.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000018-b0003-c0001",
+          "retrieval_score": 0.03149801587301587
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 18,
+      "raw_answer": "Category 1 includes students who have passed all courses prescribed for the semester and have no backlog of courses. These students are eligible for registration in all courses for the next or following semesters.",
+      "retry_answer": "",
+      "final_answer": "Category 1 includes students who have passed all courses prescribed for the semester and have no backlog of courses. These students are eligible for registration in all courses for the next or following semesters.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "ENGLISH_BODY_VALID",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:category",
+          "numbers:1"
+        ],
+        "preserved": true,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.46153846153846156,
+        "recall": 0.8571428571428571,
+        "f1": 0.6
+      },
+      "tokens_generated": 38,
+      "generation_seconds": 10.574783499999285,
+      "retry_seconds": 0.0,
+      "total_seconds": 10.58003649999955,
+      "tokens_per_second": 3.5934541827738196
+    },
+    {
+      "case_id": "S7B-012",
+      "question_id": "Q022",
+      "language": "english",
+      "question": "What happens if a student gets less than 40% in a course?",
+      "reference_answer": "Less than 40% results in an F grade with grade point 0.00.",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "I couldn't find enough information in the provided university documents to answer this reliably.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:less",
+          "numbers:0.00",
+          "numbers:40%"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.07692307692307693,
+        "recall": 0.1,
+        "f1": 0.08695652173913043
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.006883199999720091,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-013",
+      "question_id": "Q023",
+      "language": "english",
+      "question": "What attendance is required to sit for the final examination?",
+      "reference_answer": "A student must attend at least 70% of all classes held in every course to sit for the final examination.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Attendance",
+          "entity": null,
+          "excerpt": "Attendance All students are expected to attend classes regularly. The University of Asia Pacific believes that regular attendance is essential for effective learning. A student is required to attend at least 70% of all the classes held in every course in order to sit for the final examination.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0001-c0001",
+          "retrieval_score": 0.03278688524590164
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "I couldn't find enough information in the provided university documents to answer this reliably.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "numbers:70%"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.23076923076923078,
+        "recall": 0.15789473684210525,
+        "f1": 0.18749999999999997
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0035081999994872604,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-014",
+      "question_id": "Q025",
+      "language": "english",
+      "question": "What CGPA is considered normal progress toward a degree?",
+      "reference_answer": "A CGPA of 2.25 or better is considered normal progress toward a degree.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Performance Evaluation",
+          "entity": null,
+          "excerpt": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or be…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 21,
+          "heading": "Category - B",
+          "entity": null,
+          "excerpt": "Category - B 1. A Cumulative Grade Point Average (CGPA) of minimum 2.25 is required for graduation. A candidate whose CGPA is below 2.25 shall have to increase his/her CGPA to the minimum requirement within two consecutive semesters failing which s/he shall be placed under academic probation.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0004-c0001",
+          "retrieval_score": 0.03225806451612903
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 19,
+          "heading": "GPA Calculation:",
+          "entity": null,
+          "excerpt": "…ion: A student's performance is measured by the number of c redits that he/she has completed satisfactorily and the weighted average of the grade points that he/she has maintained. A minimum GPA is required to be maintained for satisfactory progress and a minimum number of earned credits should be acquired in Credits CreditssGradePoGPA   )int( Where grade points are points against letter grades A+, A, A -, B+, B,…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000019-b0005-c0001",
+          "retrieval_score": 0.031746031746031744
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "I couldn't find enough information in the provided university documents to answer this reliably.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:cgpa",
+          "numbers:2.25"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0034580999999889173,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-015",
+      "question_id": "Q028",
+      "language": "english",
+      "question": "When is a student allowed to appear at a repeat examination?",
+      "reference_answer": "A student may appear at a repeat examination if they fail in three theory courses or less, not exceeding 10 credit hours.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Rules for Repeat Examination",
+          "entity": null,
+          "excerpt": "Rules for Repeat Examination A student wo uld be allowed to appear at the Repeat Examination in case s/he fails in three theory courses or less but not exceeding 10 credit hours. The results of Repeat Examinations would be published within three weeks from the date of publication of the results of the Semester Final",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0006-c0001",
+          "retrieval_score": 0.03278688524590164
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "I couldn't find enough information in the provided university documents to answer this reliably.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "ENGLISH_BODY_VALID",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "numbers:10"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.07692307692307693,
+        "recall": 0.05,
+        "f1": 0.060606060606060615
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0032407999997303705,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-016",
+      "question_id": "Q001",
+      "language": "bangla",
+      "question": "আন্ডারগ্র্যাজুয়েট প্রসপেক্টাসটির শিরোনাম কী?",
+      "reference_answer": "শিরোনামটি হলো UAP-এর Department of Computer Science & Engineering-এর Prospectus (Undergraduate Program) 2017-18।",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "নির্ভরযোগ্যভাবে উত্তর দেওয়ার জন্য অনুগ্রহ করে কোন কোর্স, প্রোগ্রাম, নীতি বা বিষয় বোঝাচ্ছেন তা নির্দিষ্ট করুন।",
+      "answer_strategy": "ambiguous",
+      "support_status": "ambiguous",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:computer",
+          "named_identifiers:department",
+          "named_identifiers:engineering",
+          "named_identifiers:program",
+          "named_identifiers:prospectus",
+          "named_identifiers:science",
+          "named_identifiers:uap",
+          "named_identifiers:undergraduate",
+          "numbers:18",
+          "numbers:2017"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0029548000002250774,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-017",
+      "question_id": "Q002",
+      "language": "bangla",
+      "question": "প্রসপেক্টাসটি কে প্রকাশ করেছে?",
+      "reference_answer": "প্রসপেক্টাসটি University of Asia Pacific-এর Department of Computer Science & Engineering প্রকাশ করেছে।",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 64,
+          "heading": "4. E. Swokpwski, Calculus, Boston, USA: PWS Publisher.",
+          "entity": null,
+          "excerpt": "4. E. Swokpwski, Calculus, Boston, USA: PWS Publisher.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000064-b0005-c0001",
+          "retrieval_score": 0.01639344262295082
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 70,
+          "heading": "5. L. L. Lapin, Probability and Statistics for Modern",
+          "entity": null,
+          "excerpt": "5. L. L. Lapin, Probability and Statistics for Modern Engineering, Wadsworth Publishing Co Inc. 6. M. R. Spiegel and L. J. Stephens, Statistics, Schaum‘s outlines.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000070-b0005-c0001",
+          "retrieval_score": 0.015873015873015872
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 64,
+      "raw_answer": "প্রসপেক্টাসটি প্রকাশ করেছেন না। এই প্রোগ্রামের প্রশিক্ষণ বইয়ের সম্প্রসারণে প্রসপেক্টাস নামের একটি বই প্রকাশিত হয়েছে না।",
+      "retry_answer": "",
+      "final_answer": "প্রসপেক্টাসটি প্রকাশ করেছেন না। এই প্রোগ্রামের প্রশিক্ষণ বইয়ের সম্প্রসারণে প্রসপেক্টাস নামের একটি বই প্রকাশিত হয়েছে না।",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:asia",
+          "named_identifiers:computer",
+          "named_identifiers:department",
+          "named_identifiers:engineering",
+          "named_identifiers:pacific",
+          "named_identifiers:science"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.13333333333333333,
+        "recall": 0.16666666666666666,
+        "f1": 0.14814814814814814
+      },
+      "tokens_generated": 124,
+      "generation_seconds": 22.53669379999974,
+      "retry_seconds": 0.0,
+      "total_seconds": 22.539289100000133,
+      "tokens_per_second": 5.502138028782262
+    },
+    {
+      "case_id": "S7B-018",
+      "question_id": "Q005",
+      "language": "bangla",
+      "question": "প্রসপেক্টাসের তথ্য সম্পর্কে ডিসক্লেইমারে কী বলা হয়েছে?",
+      "reference_answer": "প্রসপেক্টাসের তথ্য Department of CSE, UAP-এর বিবেচনায় পরিবর্তনযোগ্য।",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:cse",
+          "named_identifiers:department",
+          "named_identifiers:uap"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.09090909090909091,
+        "recall": 0.1111111111111111,
+        "f1": 0.09999999999999999
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0046990000000732834,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-019",
+      "question_id": "Q007",
+      "language": "bangla",
+      "question": "UAP শুরুতে কোন দুইটি ব্যাচেলর ডিগ্রি প্রোগ্রাম অফার করেছিল?",
+      "reference_answer": "UAP শুরুতে Computer Science & Engineering এবং Business Administration-এ চার বছরের ব্যাচেলর ডিগ্রি প্রোগ্রাম অফার করেছিল।",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:administration",
+          "named_identifiers:business",
+          "named_identifiers:computer",
+          "named_identifiers:engineering",
+          "named_identifiers:science",
+          "named_identifiers:uap"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.004423000000315369,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-020",
+      "question_id": "Q009",
+      "language": "bangla",
+      "question": "CSE Department IEB থেকে কী স্বীকৃতি পেয়েছে?",
+      "reference_answer": "CSE Department August 2014 থেকে BSc in CSE প্রোগ্রামের জন্য IEB accreditation পেয়েছে।",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 6,
+          "heading": "IEB Affiliation",
+          "entity": null,
+          "excerpt": "IEB Affiliation Department of CSE has received the Certificate of Accreditation from the Engineers Institution Bangladesh (IEB) for the BSc in CSE program starting from August 2014. This will enable the CSE students to enjoy the privileges offered by Engineers Institution Bangladesh (IEB) including membership.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000006-b0002-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 32,
+          "heading": "3. Network and Communication Research Group (NCRG) of CSE",
+          "entity": null,
+          "excerpt": "3. Network and Communication Research Group (NCRG) of CSE Department is conducting research on real -life, industry-oriented problems. QUBEE will share necessary relevant information, if any. The outcome of the research can be accessed by both parties.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000032-b0002-c0001",
+          "retrieval_score": 0.030090497737556562
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 25,
+          "heading": "Vision",
+          "entity": null,
+          "excerpt": "Vision The department of CSE, UAP is striving for pioneer role in ICT through excellence in education, research and developm ent towards preparing graduates as a global leader with quality education, innovative ideas, extracurricular activities and collaboration between industry and academia.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000025-b0001-c0001",
+          "retrieval_score": 0.029211087420042643
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 6,
+      "raw_answer": "তা হল কোনো স্বীকৃতি নয়। এই স্বীকৃতি পেয়েছে কোনো স্বীকৃতি নয় এবং এটি কোনো স্বীকৃতি নয়। কোনো স্বীকৃতি পেয়েছে না। CSE দপ্ত",
+      "retry_answer": "",
+      "final_answer": "তা হল কোনো স্বীকৃতি নয়। এই স্বীকৃতি পেয়েছে কোনো স্বীকৃতি নয় এবং এটি কোনো স্বীকৃতি নয়। কোনো স্বীকৃতি পেয়েছে না। CSE দপ্ত",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [
+        "POSSIBLY_TRUNCATED"
+      ],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:august",
+          "named_identifiers:cse",
+          "named_identifiers:department",
+          "named_identifiers:ieb",
+          "numbers:2014"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.16666666666666666,
+        "recall": 0.16666666666666666,
+        "f1": 0.16666666666666666
+      },
+      "tokens_generated": 146,
+      "generation_seconds": 31.813042300000234,
+      "retry_seconds": 0.0,
+      "total_seconds": 31.81736379999984,
+      "tokens_per_second": 4.589312729766776
+    },
+    {
+      "case_id": "S7B-021",
+      "question_id": "Q010",
+      "language": "bangla",
+      "question": "UAP কোন আইনের অধীনে কার্যক্রম শুরু করেছিল?",
+      "reference_answer": "UAP Private University Act 1992-এর অধীনে কার্যক্রম শুরু করেছিল।",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:act",
+          "named_identifiers:private",
+          "named_identifiers:uap",
+          "numbers:1992"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.005526599999939208,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-022",
+      "question_id": "Q011",
+      "language": "bangla",
+      "question": "ভূমিকায় UAP কয়টি আন্ডারগ্র্যাজুয়েট ও পোস্টগ্র্যাজুয়েট ডিসিপ্লিন অফার করে বলা হয়েছে?",
+      "reference_answer": "ভূমিকায় বলা হয়েছে UAP নয়টি ডিসিপ্লিনে আন্ডারগ্র্যাজুয়েট এবং আটটি ডিসিপ্লিনে পোস্টগ্র্যাজুয়েট প্রোগ্রাম অফার করে।",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:uap"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.00522610000007262,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-023",
+      "question_id": "Q012",
+      "language": "bangla",
+      "question": "প্রসপেক্টাসে Vice-Chancellor হিসেবে কার নাম দেওয়া আছে?",
+      "reference_answer": "Prof. Dr. Jamilur Reza Choudhury-কে Vice-Chancellor হিসেবে উল্লেখ করা হয়েছে।",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "নির্ভরযোগ্যভাবে উত্তর দেওয়ার জন্য অনুগ্রহ করে কোন কোর্স, প্রোগ্রাম, নীতি বা বিষয় বোঝাচ্ছেন তা নির্দিষ্ট করুন।",
+      "answer_strategy": "ambiguous",
+      "support_status": "ambiguous",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:chancellor",
+          "named_identifiers:choudhury",
+          "named_identifiers:jamilur",
+          "named_identifiers:prof",
+          "named_identifiers:reza",
+          "named_identifiers:vice"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.00208070000007865,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-024",
+      "question_id": "Q013",
+      "language": "bangla",
+      "question": "UAP Administration কোথায় অবস্থিত?",
+      "reference_answer": "UAP Administration 74/A, Green Road, Farmgate, Dhaka-1215, Bangladesh-এ অবস্থিত।",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 11,
+          "heading": "1.6 The Campus",
+          "entity": null,
+          "excerpt": "1.6 The Campus UAP Administration 74/A, Green Road, Farmgate, Dhaka - 1215, Bangladesh PABX:+8802-58157091-4, +8802-58157096 Ext: 107, 114 FAX:+8802-58157097 Email: registrar@uap-bd.edu",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000011-b0003-c0001",
+          "retrieval_score": 0.03225806451612903
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1. Introduction",
+          "entity": null,
+          "excerpt": "1. Introduction University of Asia Pacific (UAP) was established in 1996 with a vision to enhance the opportunities for higher education in Bangladesh. The University, under the Private University Act 1992, started its operation in 1996 by offering four -year Bachelor Degree Programs in Computer Science & Technology and Business Administration only. Now UAP offers undergraduate programs in nine disciplines and post-g…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0001-c0001",
+          "retrieval_score": 0.031024531024531024
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 4,
+          "heading": null,
+          "entity": null,
+          "excerpt": "University of Asia Pacific (UAP) was established in 1996 under the Private University Act 1992 as a private university with the vision of providing quality education and fulf illing the needs of our motherland, Bangladesh. This university started its journ ey in 1996 and offered four years bachelor degree programs in Computer Science & Engineering and Business Administration only, thus the very step of publishing the…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000004-b0001-c0001",
+          "retrieval_score": 0.031009615384615385
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "UAP Administration অবস্থিত 74/A, Green Road, Farmgate, Dhaka - 1215, Bangladesh এ।",
+      "retry_answer": "UAP Administration অবস্থিত 74/A, Green Road, Farmgate, Dhaka - 1215, Bangladesh এ।",
+      "final_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": true,
+      "generation_attempts": 2,
+      "retry_used": true,
+      "raw_language_pass": false,
+      "raw_language_reason": "BANGLA_BODY_TOO_ENGLISH",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": true,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "GENERATION_REJECTED",
+      "semantic_screen_flags": [
+        "BANGLA_BODY_TOO_ENGLISH",
+        "VERY_SHORT_BANGLA_BODY"
+      ],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:administration",
+          "named_identifiers:bangladesh",
+          "named_identifiers:dhaka",
+          "named_identifiers:farmgate",
+          "named_identifiers:green",
+          "named_identifiers:road",
+          "named_identifiers:uap",
+          "numbers:1215",
+          "numbers:74"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 71,
+      "generation_seconds": 17.841090099999747,
+      "retry_seconds": 6.28551460000017,
+      "total_seconds": 17.848506199999974,
+      "tokens_per_second": 3.979577458666666
+    },
+    {
+      "case_id": "S7B-025",
+      "question_id": "Q018",
+      "language": "bangla",
+      "question": "থিওরেটিক্যাল কোর্সে এক ক্রেডিট কীভাবে নির্ধারিত হয়?",
+      "reference_answer": "থিওরেটিক্যাল কোর্সে প্রতি সেমিস্টারে প্রতি সপ্তাহে এক লেকচার এক ক্রেডিটের সমান।",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "নির্ভরযোগ্যভাবে উত্তর দেওয়ার জন্য অনুগ্রহ করে কোন কোর্স, প্রোগ্রাম, নীতি বা বিষয় বোঝাচ্ছেন তা নির্দিষ্ট করুন।",
+      "answer_strategy": "ambiguous",
+      "support_status": "ambiguous",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [],
+        "preserved": true,
+        "applicable": false
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.002036700000644487,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-026",
+      "question_id": "Q019",
+      "language": "bangla",
+      "question": "রেজিস্ট্রেশন প্রক্রিয়ায় Category 1 কী?",
+      "reference_answer": "Category 1 হলো যারা সেমিস্টারের সব নির্ধারিত কোর্সে পাস করেছে এবং কোনো backlog নেই।",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:category",
+          "numbers:1"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.004554300000563671,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-027",
+      "question_id": "Q022",
+      "language": "bangla",
+      "question": "কোনো কোর্সে 40%-এর কম পেলে কী হয়?",
+      "reference_answer": "40%-এর কম নম্বরে F গ্রেড এবং grade point 0.00 হয়।",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 21,
+          "heading": "Numeric Grade Letter Grade Grade Point",
+          "entity": "40%",
+          "excerpt": "Numeric Grade Letter Grade Grade Point 60% and above B 3.00 55% to less than 60% B- 2.75 50% to less than 55% C+ 2.50 45% to less than 50% C 2.25 40% to less than 45% D 2.00 Less than 40% F 0.00 Any student who fails to successfully complete any sessional course has to repeat that course in the following semester. Provisions for Improvement of Grades:",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0002-c0001",
+          "retrieval_score": 0.03252247488101534
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 19,
+          "heading": "S ––",
+          "entity": "40%",
+          "excerpt": "S –– Exempted (For credit transfer courses) E –– Grade ‗F‘: If a student fails to achieve at least 40% marks in a course, he/she will get ‗F‘ grade in that course. B esides, absence in final examination at the end of each academic semester will also result ‗F‘ grade. Grade ‗E‘: A student transferred to UAP from another university or academic institution will earn ‗E‘ grades in the courses exempted at UAP. Grade ‗I‘ :…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000019-b0004-c0001",
+          "retrieval_score": 0.032266458495966696
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 19,
+          "heading": "Numeric Grade Letter Grade Grade Point",
+          "entity": "40%",
+          "excerpt": "Numeric Grade Letter Grade Grade Point 80% and above A+ 4.00 75% to less than 80% A 3.75 70% to less than 75% A- 3.50 65% to less than 70% B+ 3.25 60% to less than 65% B 3.00 55% to less than 60% B- 2.75 50% to less than 55% C+ 2.50 45% to less than 50% C 2.25 40% to less than 45% D 2.00 Less than 40% F 0.00",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000019-b0002-c0001",
+          "retrieval_score": 0.0304147465437788
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "numbers:0.00",
+          "numbers:40%"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.008262100000138162,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-028",
+      "question_id": "Q023",
+      "language": "bangla",
+      "question": "ফাইনাল পরীক্ষায় বসতে কত উপস্থিতি দরকার?",
+      "reference_answer": "ফাইনাল পরীক্ষায় বসতে প্রত্যেক কোর্সে অনুষ্ঠিত ক্লাসের অন্তত 70% উপস্থিতি দরকার।",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Attendance",
+          "entity": null,
+          "excerpt": "Attendance All students are expected to attend classes regularly. The University of Asia Pacific believes that regular attendance is essential for effective learning. A student is required to attend at least 70% of all the classes held in every course in order to sit for the final examination.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0001-c0001",
+          "retrieval_score": 0.01639344262295082
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "numbers:70%"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0030196999996405793,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-029",
+      "question_id": "Q025",
+      "language": "bangla",
+      "question": "ডিগ্রির দিকে normal progress হিসেবে কত CGPA ধরা হয়?",
+      "reference_answer": "CGPA 2.25 বা তার বেশি হলে ডিগ্রির দিকে normal progress ধরা হয়।",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Performance Evaluation",
+          "entity": null,
+          "excerpt": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or be…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 21,
+          "heading": "Category - B",
+          "entity": null,
+          "excerpt": "Category - B 1. A Cumulative Grade Point Average (CGPA) of minimum 2.25 is required for graduation. A candidate whose CGPA is below 2.25 shall have to increase his/her CGPA to the minimum requirement within two consecutive semesters failing which s/he shall be placed under academic probation.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0004-c0001",
+          "retrieval_score": 0.03225806451612903
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 19,
+          "heading": "GPA Calculation:",
+          "entity": null,
+          "excerpt": "…ion: A student's performance is measured by the number of c redits that he/she has completed satisfactorily and the weighted average of the grade points that he/she has maintained. A minimum GPA is required to be maintained for satisfactory progress and a minimum number of earned credits should be acquired in Credits CreditssGradePoGPA   )int( Where grade points are points against letter grades A+, A, A -, B+, B,…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000019-b0005-c0001",
+          "retrieval_score": 0.031024531024531024
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "প্রদত্ত বিশ্ববিদ্যালয়ের নথিতে নির্ভরযোগ্যভাবে উত্তর দেওয়ার মতো পর্যাপ্ত তথ্য পাওয়া যায়নি।",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:cgpa",
+          "numbers:2.25"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0032567999996899744,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-030",
+      "question_id": "Q028",
+      "language": "bangla",
+      "question": "কখন একজন শিক্ষার্থী repeat examination দিতে পারে?",
+      "reference_answer": "তিনটি বা তার কম theory course-এ ফেল করলে এবং তা 10 credit hour-এর বেশি না হলে repeat examination দেওয়া যায়।",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Rules for Repeat Examination",
+          "entity": null,
+          "excerpt": "Rules for Repeat Examination A student wo uld be allowed to appear at the Repeat Examination in case s/he fails in three theory courses or less but not exceeding 10 credit hours. The results of Repeat Examinations would be published within three weeks from the date of publication of the results of the Semester Final",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0006-c0001",
+          "retrieval_score": 0.03252247488101534
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 21,
+          "heading": null,
+          "entity": null,
+          "excerpt": "…xt semester would start. Repeat Examinations on theory courses would be held on 50 percent of marks for each course and the marks for Class Assessment and Mid Semester Examination would be carried. There shall be no repeat examinations for sessional courses. The maximum grade to be obtained by a student in a repeat examination would be ‗B‘ (equivalent to 60%). The following grading system would be followed in the rep…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0001-c0001",
+          "retrieval_score": 0.03252247488101534
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Examination Rules",
+          "entity": null,
+          "excerpt": "Examination Rules Re -examination or Re -scrutiny of Answer Scripts Re-examination of final examination answer scripts may be permissible. A candidate can apply for re -examination of any answer script of final examination to the Controller of Examinati ons through their advisor and the head of the department on payment of Taka 200/ - (Tk. Two Hundred) only per script within 7 (seven) working days from the publicatio…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0005-c0001",
+          "retrieval_score": 0.03125763125763126
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 20,
+      "raw_answer": "একজন শিক্ষার্থী একটি সমাপ্তি পরীক্ষার ফাইল দিতে পারে তিনটি গবেষণা পরীক্ষার বা তার কোনও পরীক্ষার মোট ছয় হাজার মাইল বেশি না। এই পরীক্ষার ফলাফল পরীক্ষার ফলাফলের প্রকাশের পর ত",
+      "retry_answer": "",
+      "final_answer": "একজন শিক্ষার্থী একটি সমাপ্তি পরীক্ষার ফাইল দিতে পারে তিনটি গবেষণা পরীক্ষার বা তার কোনও পরীক্ষার মোট ছয় হাজার মাইল বেশি না। এই পরীক্ষার ফলাফল পরীক্ষার ফলাফলের প্রকাশের পর ত",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLA_BODY_MEANINGFUL",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [
+        "POSSIBLY_TRUNCATED"
+      ],
+      "factual_preservation": {
+        "required": [
+          "numbers:10"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.20833333333333334,
+        "recall": 0.23809523809523808,
+        "f1": 0.22222222222222224
+      },
+      "tokens_generated": 181,
+      "generation_seconds": 32.88833020000038,
+      "retry_seconds": 0.0,
+      "total_seconds": 32.89162490000035,
+      "tokens_per_second": 5.50347186674737
+    },
+    {
+      "case_id": "S7B-031",
+      "question_id": "Q001",
+      "language": "banglish",
+      "question": "Undergraduate prospectus-tar title ki?",
+      "reference_answer": "Title holo UAP-er Department of Computer Science & Engineering-er Prospectus (Undergraduate Program) 2017-18.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 51,
+          "heading": null,
+          "entity": null,
+          "excerpt": "…ast digit, if odd, indicates a theory course and if even, indicates a laboratory course. Core Courses First Year First Semester Course Code Course Title Credits Pre- Requisite",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000051-b0001-c0001",
+          "retrieval_score": 0.03200204813108039
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "UNSUPPORTED_FACTUAL_TOKENS",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:computer",
+          "named_identifiers:department",
+          "named_identifiers:engineering",
+          "named_identifiers:program",
+          "named_identifiers:prospectus",
+          "named_identifiers:science",
+          "named_identifiers:title",
+          "named_identifiers:uap",
+          "named_identifiers:undergraduate",
+          "numbers:18",
+          "numbers:2017"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.002615700000205834,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-032",
+      "question_id": "Q002",
+      "language": "banglish",
+      "question": "Prospectus-ta ke publish koreche?",
+      "reference_answer": "Prospectus-ta University of Asia Pacific-er Department of Computer Science & Engineering publish koreche.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 28,
+          "heading": "1. Research and Publication Unit",
+          "entity": null,
+          "excerpt": "…onals who can make positive contribution in the development of this country. Most of the faculty members and students of UAP are engaged to publish their researches at IJCIT.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000028-b0001-c0001",
+          "retrieval_score": 0.031024531024531024
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "Faculty members and students of UAP are engaged in publishing their research at IJCIT.",
+      "retry_answer": "",
+      "final_answer": "I couldn't find enough information in the provided university documents to answer this reliably.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": "BANGLISH_BODY_PURE_ENGLISH",
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": "UNSUPPORTED_FACTUAL_TOKENS",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": false,
+      "final_language_reason": "BANGLISH_BODY_PURE_ENGLISH",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "GENERATION_REJECTED",
+      "semantic_screen_flags": [
+        "BANGLISH_BODY_PURE_ENGLISH"
+      ],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:asia",
+          "named_identifiers:computer",
+          "named_identifiers:department",
+          "named_identifiers:engineering",
+          "named_identifiers:pacific",
+          "named_identifiers:prospectus",
+          "named_identifiers:science"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.07692307692307693,
+        "recall": 0.09090909090909091,
+        "f1": 0.08333333333333334
+      },
+      "tokens_generated": 18,
+      "generation_seconds": 4.9328502000007575,
+      "retry_seconds": 0.0,
+      "total_seconds": 4.935754199999792,
+      "tokens_per_second": 3.6490060046820876
+    },
+    {
+      "case_id": "S7B-033",
+      "question_id": "Q005",
+      "language": "banglish",
+      "question": "Prospectus-er information niye disclaimer-e ki bola hoyeche?",
+      "reference_answer": "Prospectus-er information Department of CSE, UAP-er discretion-e change hote pare.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 3,
+          "heading": "Disclaimer",
+          "entity": null,
+          "excerpt": "Disclaimer The information contained in this prospectus is subject to change at the discretion of the Department of Computer Science & Engineering, UAP.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000003-b0001-c0001",
+          "retrieval_score": 0.03278688524590164
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "Disclaimers in the prospectus state that information can be changed by the Department of Computer Science & Engineering, UAP.",
+      "retry_answer": "",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": "BANGLISH_BODY_PURE_ENGLISH",
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": "UNSUPPORTED_FACTUAL_TOKENS",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "GENERATION_REJECTED",
+      "semantic_screen_flags": [
+        "BANGLISH_BODY_PURE_ENGLISH"
+      ],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:cse",
+          "named_identifiers:department",
+          "named_identifiers:prospectus",
+          "named_identifiers:uap"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.09090909090909091,
+        "recall": 0.1,
+        "f1": 0.09523809523809525
+      },
+      "tokens_generated": 25,
+      "generation_seconds": 6.0867693000000145,
+      "retry_seconds": 0.0,
+      "total_seconds": 6.093667400000413,
+      "tokens_per_second": 4.107269187941777
+    },
+    {
+      "case_id": "S7B-034",
+      "question_id": "Q007",
+      "language": "banglish",
+      "question": "UAP shurute kon duita bachelor degree program offer korechilo?",
+      "reference_answer": "UAP shurute Computer Science & Engineering ebong Business Administration-e four-year bachelor degree program offer korechilo.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1. Introduction",
+          "entity": null,
+          "excerpt": "1. Introduction University of Asia Pacific (UAP) was established in 1996 with a vision to enhance the opportunities for higher education in Bangladesh. The University, under the Private University Act 1992, started its operation in 1996 by offering four -year Bachelor Degree Programs in Computer Science & Technology and Business Administration only. Now UAP offers undergraduate programs in nine disciplines and post-g…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0001-c0001",
+          "retrieval_score": 0.032018442622950824
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 14,
+          "heading": "1.8 Academic and Technical Collaborations",
+          "entity": null,
+          "excerpt": "1.8 Academic and Technical Collaborations 1. Foreign Academic and Technical collaborations With increasing internationalization of educati on, particularly at the university level, there is a strong compulsion to promote interaction, especially with institution of higher education in the industrial countries. Such interaction provides access to ever -changing scenarios of modern education deli very system and the mos…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000014-b0001-c0001",
+          "retrieval_score": 0.03177805800756621
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 4,
+          "heading": null,
+          "entity": null,
+          "excerpt": "University of Asia Pacific (UAP) was established in 1996 under the Private University Act 1992 as a private university with the vision of providing quality education and fulf illing the needs of our motherland, Bangladesh. This university started its journ ey in 1996 and offered four years bachelor degree programs in Computer Science & Engineering and Business Administration only, thus the very step of publishing the…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000004-b0001-c0001",
+          "retrieval_score": 0.03128054740957967
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "UAP 1996'ta 4 ta tausibotar bachelor degree program offer korchi: Computer Science & Technology, Business Administration.",
+      "retry_answer": "",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": "UNSUPPORTED_FACTUAL_TOKENS",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "GENERATION_REJECTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:administration",
+          "named_identifiers:business",
+          "named_identifiers:computer",
+          "named_identifiers:engineering",
+          "named_identifiers:science",
+          "named_identifiers:uap"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 32,
+      "generation_seconds": 13.485091799999282,
+      "retry_seconds": 0.0,
+      "total_seconds": 13.494882800000596,
+      "tokens_per_second": 2.372990890577527
+    },
+    {
+      "case_id": "S7B-035",
+      "question_id": "Q009",
+      "language": "banglish",
+      "question": "CSE Department IEB theke ki accreditation peyechhe?",
+      "reference_answer": "CSE Department August 2014 theke BSc in CSE program-er jonno IEB accreditation peyechhe.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 6,
+          "heading": "IEB Affiliation",
+          "entity": null,
+          "excerpt": "IEB Affiliation Department of CSE has received the Certificate of Accreditation from the Engineers Institution Bangladesh (IEB) for the BSc in CSE program starting from August 2014. This will enable the CSE students to enjoy the privileges offered by Engineers Institution Bangladesh (IEB) including membership.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000006-b0002-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 32,
+          "heading": "3. Network and Communication Research Group (NCRG) of CSE",
+          "entity": null,
+          "excerpt": "3. Network and Communication Research Group (NCRG) of CSE Department is conducting research on real -life, industry-oriented problems. QUBEE will share necessary relevant information, if any. The outcome of the research can be accessed by both parties.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000032-b0002-c0001",
+          "retrieval_score": 0.02782608695652174
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "CSE Department has received accreditation from Engineers Institution Bangladesh (IEB) for the BSc in CSE program starting from August 2014.",
+      "retry_answer": "CSE দফতর বছর ১৯৮৭ থেকে BSc কোম্পানিয়া সিএস প্রোগ্রামের জন্য ইনস্টিটিউশন বাংলাদেশ ইংরেজ অফিস (IEB) থেকে অক্ষরণ প্রমাণ পায়। এটি সাহচিব করবে CSE শিক্ষার শিক্ষকদের ইংরেজ ইংরেজ অফ",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": true,
+      "generation_attempts": 2,
+      "retry_used": true,
+      "raw_language_pass": false,
+      "raw_language_reason": "BANGLISH_BODY_PURE_ENGLISH",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "GENERATION_REJECTED",
+      "semantic_screen_flags": [
+        "BANGLISH_BODY_PURE_ENGLISH"
+      ],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:august",
+          "named_identifiers:cse",
+          "named_identifiers:department",
+          "named_identifiers:ieb",
+          "numbers:2014"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 211,
+      "generation_seconds": 35.9913260000003,
+      "retry_seconds": 27.74740970000039,
+      "total_seconds": 35.996886099999756,
+      "tokens_per_second": 5.862523653615825
+    },
+    {
+      "case_id": "S7B-036",
+      "question_id": "Q010",
+      "language": "banglish",
+      "question": "UAP kon act-er odhine operation start korechilo?",
+      "reference_answer": "UAP Private University Act 1992-er odhine operation start korechilo.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1. Introduction",
+          "entity": null,
+          "excerpt": "1. Introduction University of Asia Pacific (UAP) was established in 1996 with a vision to enhance the opportunities for higher education in Bangladesh. The University, under the Private University Act 1992, started its operation in 1996 by offering four -year Bachelor Degree Programs in Computer Science & Technology and Business Administration only. Now UAP offers undergraduate programs in nine disciplines and post-g…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0001-c0001",
+          "retrieval_score": 0.03252247488101534
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 4,
+          "heading": null,
+          "entity": null,
+          "excerpt": "University of Asia Pacific (UAP) was established in 1996 under the Private University Act 1992 as a private university with the vision of providing quality education and fulf illing the needs of our motherland, Bangladesh. This university started its journ ey in 1996 and offered four years bachelor degree programs in Computer Science & Engineering and Business Administration only, thus the very step of publishing the…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000004-b0001-c0001",
+          "retrieval_score": 0.031746031746031744
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "UAP operation start korechilo 1996. 1996 shôrô kekhu UAP four-year Bachelor Degree Programs in Computer Science & Technology and Business Administration start korchi.",
+      "retry_answer": "UAP operation start korechilo 1996. 1996 shôrô kekhu UAP four-year Bachelor Degree Programs in Computer Science & Technology and Business Administration start korchi.",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": true,
+      "generation_attempts": 2,
+      "retry_used": true,
+      "raw_language_pass": false,
+      "raw_language_reason": "BANGLISH_BODY_PURE_ENGLISH",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": true,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "GENERATION_REJECTED",
+      "semantic_screen_flags": [
+        "BANGLISH_BODY_PURE_ENGLISH"
+      ],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:act",
+          "named_identifiers:private",
+          "named_identifiers:uap",
+          "numbers:1992"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.09090909090909091,
+        "recall": 0.1111111111111111,
+        "f1": 0.09999999999999999
+      },
+      "tokens_generated": 88,
+      "generation_seconds": 18.55354520000037,
+      "retry_seconds": 7.7632455000002665,
+      "total_seconds": 18.561433300000317,
+      "tokens_per_second": 4.743028841733074
+    },
+    {
+      "case_id": "S7B-037",
+      "question_id": "Q011",
+      "language": "banglish",
+      "question": "Introduction-e UAP koyta undergraduate ar postgraduate discipline offer kore bola hoyeche?",
+      "reference_answer": "Introduction-e bola hoyeche UAP nine discipline-e undergraduate ar eight discipline-e post-graduate program offer kore.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 9,
+          "heading": "1.3 Schools and Departments",
+          "entity": null,
+          "excerpt": "1.3 Schools and Departments At present, UAP has five schools comprising of relevant departments: School of Engineering Department of Computer Science and Engineering Department of Civil Engineering Department of Electrical and Electronic Engineering School of Business Department of Business Administration School of Environmental Science and Engineering Department of Architecture School of Science Department of Pharma…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000009-b0004-c0001",
+          "retrieval_score": 0.031024531024531024
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1. Introduction",
+          "entity": null,
+          "excerpt": "1. Introduction University of Asia Pacific (UAP) was established in 1996 with a vision to enhance the opportunities for higher education in Bangladesh. The University, under the Private University Act 1992, started its operation in 1996 by offering four -year Bachelor Degree Programs in Computer Science & Technology and Business Administration only. Now UAP offers undergraduate programs in nine disciplines and post-g…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0001-c0001",
+          "retrieval_score": 0.030886196246139225
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 14,
+          "heading": "1.8 Academic and Technical Collaborations",
+          "entity": null,
+          "excerpt": "1.8 Academic and Technical Collaborations 1. Foreign Academic and Technical collaborations With increasing internationalization of educati on, particularly at the university level, there is a strong compulsion to promote interaction, especially with institution of higher education in the industrial countries. Such interaction provides access to ever -changing scenarios of modern education deli very system and the mos…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000014-b0001-c0001",
+          "retrieval_score": 0.03007688828584351
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "UAP offers undergraduate programs in nine disciplines. Postgraduate programs are not mentioned directly, but it is implied that UAP offers postgraduate programs as well.",
+      "retry_answer": "",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": "BANGLISH_BODY_PURE_ENGLISH",
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": "UNSUPPORTED_FACTUAL_TOKENS",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "GENERATION_REJECTED",
+      "semantic_screen_flags": [
+        "BANGLISH_BODY_PURE_ENGLISH"
+      ],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:introduction",
+          "named_identifiers:uap"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 31,
+      "generation_seconds": 10.621592099999361,
+      "retry_seconds": 0.0,
+      "total_seconds": 10.629168200000095,
+      "tokens_per_second": 2.918583175492294
+    },
+    {
+      "case_id": "S7B-038",
+      "question_id": "Q012",
+      "language": "banglish",
+      "question": "Prospectus-e Vice-Chancellor hisebe kar naam deya ache?",
+      "reference_answer": "Prof. Dr. Jamilur Reza Choudhury-ke Vice-Chancellor hisebe mention kora hoyeche.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1.2 University Administration",
+          "entity": null,
+          "excerpt": "1.2 University Administration Vice-Chancellor Prof. Dr. Jamilur Reza Choudhury B.Sc.(Engg.), Civil (BUET), M.Sc.(Engg.) ( Advanced Structural Engineering), Ph.D. (University of Southampton), Doctor of Engineering (Honoris Causa) Man chester University, UK. Fellow, Bangladesh Computer Society, Fellow, Bangladesh Academy of Sciences. Fellow, Institution of Engineers (Ba ngladesh) Email: vc@uap -bd.edu Pro Vice- Chancel…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0003-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 11,
+          "heading": "1.5 Academic Council",
+          "entity": null,
+          "excerpt": "1.5 Academic Council Academic council is the highest academic body of the University. It is chaired by the Vice Chancellor of UAP and comprise s of the departmental Heads, Deans and eminent academicians of the country.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000011-b0002-c0001",
+          "retrieval_score": 0.031024531024531024
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 8,
+      "raw_answer": "Vice-Chancellor-e name deya \"Prof. Dr. Jamilur Reza Choudhury\" ache.",
+      "retry_answer": "",
+      "final_answer": "Vice-Chancellor-e name deya \"Prof. Dr. Jamilur Reza Choudhury\" ache.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:chancellor",
+          "named_identifiers:choudhury",
+          "named_identifiers:jamilur",
+          "named_identifiers:prof",
+          "named_identifiers:reza",
+          "named_identifiers:vice"
+        ],
+        "preserved": true,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.4444444444444444,
+        "recall": 0.4,
+        "f1": 0.4210526315789474
+      },
+      "tokens_generated": 25,
+      "generation_seconds": 7.6860483999998905,
+      "retry_seconds": 0.0,
+      "total_seconds": 7.690191800000321,
+      "tokens_per_second": 3.2526467046447896
+    },
+    {
+      "case_id": "S7B-039",
+      "question_id": "Q013",
+      "language": "banglish",
+      "question": "UAP Administration kothay located?",
+      "reference_answer": "UAP Administration 74/A, Green Road, Farmgate, Dhaka-1215, Bangladesh-e located.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 11,
+          "heading": "1.6 The Campus",
+          "entity": null,
+          "excerpt": "1.6 The Campus UAP Administration 74/A, Green Road, Farmgate, Dhaka - 1215, Bangladesh PABX:+8802-58157091-4, +8802-58157096 Ext: 107, 114 FAX:+8802-58157097 Email: registrar@uap-bd.edu",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000011-b0003-c0001",
+          "retrieval_score": 0.03252247488101534
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 8,
+          "heading": "1. Introduction",
+          "entity": null,
+          "excerpt": "1. Introduction University of Asia Pacific (UAP) was established in 1996 with a vision to enhance the opportunities for higher education in Bangladesh. The University, under the Private University Act 1992, started its operation in 1996 by offering four -year Bachelor Degree Programs in Computer Science & Technology and Business Administration only. Now UAP offers undergraduate programs in nine disciplines and post-g…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000008-b0001-c0001",
+          "retrieval_score": 0.031024531024531024
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 4,
+          "heading": null,
+          "entity": null,
+          "excerpt": "University of Asia Pacific (UAP) was established in 1996 under the Private University Act 1992 as a private university with the vision of providing quality education and fulf illing the needs of our motherland, Bangladesh. This university started its journ ey in 1996 and offered four years bachelor degree programs in Computer Science & Engineering and Business Administration only, thus the very step of publishing the…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000004-b0001-c0001",
+          "retrieval_score": 0.03076923076923077
+        }
+      ],
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "page": 11,
+      "raw_answer": "UAP Administration kothay 74/A, Green Road, Farmgate, Dhaka - 1215, Bangladesh pabx: +8802-58157091-4, +8802-58157096 ext: 107, 114 fax: +8802-58157097 email: registrar@uap-bd.edu.",
+      "retry_answer": "",
+      "final_answer": "UAP Administration kothay 74/A, Green Road, Farmgate, Dhaka - 1215, Bangladesh pabx: +8802-58157091-4, +8802-58157096 ext: 107, 114 fax: +8802-58157097 email: registrar@uap-bd.edu.",
+      "answer_strategy": "gguf_generation",
+      "support_status": "supported",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:administration",
+          "named_identifiers:bangladesh",
+          "named_identifiers:dhaka",
+          "named_identifiers:farmgate",
+          "named_identifiers:green",
+          "named_identifiers:road",
+          "named_identifiers:uap",
+          "numbers:1215",
+          "numbers:74"
+        ],
+        "preserved": true,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.3,
+        "recall": 0.6666666666666666,
+        "f1": 0.41379310344827586
+      },
+      "tokens_generated": 99,
+      "generation_seconds": 20.819599700000254,
+      "retry_seconds": 0.0,
+      "total_seconds": 20.82767899999999,
+      "tokens_per_second": 4.755134653237295
+    },
+    {
+      "case_id": "S7B-040",
+      "question_id": "Q018",
+      "language": "banglish",
+      "question": "Theoretical course-e one credit kivabe assigned hoy?",
+      "reference_answer": "Theoretical course-e per week per semester one lecture one credit-er equivalent.",
+      "verified_evidence": [],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "Reliable answer-er jonno kon course, program, policy, ba item bujhacchen seta specify korun.",
+      "answer_strategy": "ambiguous",
+      "support_status": "ambiguous",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": true,
+      "final_grounding_reason": "GENERATION_NOT_USED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:theoretical"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0022964999998293933,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-041",
+      "question_id": "Q019",
+      "language": "banglish",
+      "question": "Registration process-e Category 1 ki?",
+      "reference_answer": "Category 1 holo students jara semester-er shob prescribed course pass koreche ebong kono backlog nei.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 18,
+          "heading": "Category 1:",
+          "entity": null,
+          "excerpt": "Category 1: Students, who have passed all the courses prescribed for the semester and have no backlog of courses. A student of Category -1 is eligible for registration in all courses prescribed for the next or following semesters.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000018-b0002-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 18,
+          "heading": "Category 3:",
+          "entity": null,
+          "excerpt": "Category 3: Students, who have failed to earn 15 credits in a semester, belong to this category. Students of this category are advised to take a t least two courses less in the following semester than those offered for students of Category -1 subject to the registration for a minimum of 15 credits and maximum 24 credit hours. However, they are required to register for such backlog courses as would be prescribed by th…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000018-b0004-c0001",
+          "retrieval_score": 0.03200204813108039
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "Category 1 students are eligible for registration in all courses of the next or following semesters if they have passed all the courses prescribed for the semester and have no backlog of courses.",
+      "retry_answer": "Category 1 শিক্ষার্থীর মতে, সেই শিক্ষার্থীর প্রত্যেক সেই সেমের প্রত্যেক শিক্ষার প্রতি সম্পন্ন এবং প্রত্যেক শিক্ষার ব্যাকল নেই যখন তিনি একটি বাক্স সম্পন্ন হবেন সকল শিক্ষার পর সম্পন্ন হব",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": true,
+      "generation_attempts": 2,
+      "retry_used": true,
+      "raw_language_pass": false,
+      "raw_language_reason": "BANGLISH_BODY_PURE_ENGLISH",
+      "raw_grounding_pass": true,
+      "raw_grounding_reason": "FACTUAL_TOKENS_SUPPORTED",
+      "retry_language_pass": false,
+      "retry_grounding_pass": true,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "GENERATION_REJECTED",
+      "semantic_screen_flags": [
+        "BANGLISH_BODY_PURE_ENGLISH"
+      ],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:category",
+          "numbers:1"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 216,
+      "generation_seconds": 36.827206599999045,
+      "retry_seconds": 27.621630099999493,
+      "total_seconds": 36.83455210000011,
+      "tokens_per_second": 5.865228996217313
+    },
+    {
+      "case_id": "S7B-042",
+      "question_id": "Q022",
+      "language": "banglish",
+      "question": "Kono course-e 40%-er kom pele ki hoy?",
+      "reference_answer": "40%-er kom marks-e F grade ar grade point 0.00 hoy.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 19,
+          "heading": "S ––",
+          "entity": "40%",
+          "excerpt": "S –– Exempted (For credit transfer courses) E –– Grade ‗F‘: If a student fails to achieve at least 40% marks in a course, he/she will get ‗F‘ grade in that course. B esides, absence in final examination at the end of each academic semester will also result ‗F‘ grade. Grade ‗E‘: A student transferred to UAP from another university or academic institution will earn ‗E‘ grades in the courses exempted at UAP. Grade ‗I‘ :…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000019-b0004-c0001",
+          "retrieval_score": 0.03252247488101534
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 21,
+          "heading": "Numeric Grade Letter Grade Grade Point",
+          "entity": "40%",
+          "excerpt": "Numeric Grade Letter Grade Grade Point 60% and above B 3.00 55% to less than 60% B- 2.75 50% to less than 55% C+ 2.50 45% to less than 50% C 2.25 40% to less than 45% D 2.00 Less than 40% F 0.00 Any student who fails to successfully complete any sessional course has to repeat that course in the following semester. Provisions for Improvement of Grades:",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0002-c0001",
+          "retrieval_score": 0.0315136476426799
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 19,
+          "heading": "Numeric Grade Letter Grade Grade Point",
+          "entity": "40%",
+          "excerpt": "Numeric Grade Letter Grade Grade Point 80% and above A+ 4.00 75% to less than 80% A 3.75 70% to less than 75% A- 3.50 65% to less than 70% B+ 3.25 60% to less than 65% B 3.00 55% to less than 60% B- 2.75 50% to less than 55% C+ 2.50 45% to less than 50% C 2.25 40% to less than 45% D 2.00 Less than 40% F 0.00",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000019-b0002-c0001",
+          "retrieval_score": 0.030798389007344232
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "UNSUPPORTED_FACTUAL_TOKENS",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "numbers:0.00",
+          "numbers:40%"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.006709500000397384,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-043",
+      "question_id": "Q023",
+      "language": "banglish",
+      "question": "Final exam-e boshte koto attendance dorkar?",
+      "reference_answer": "Final exam-e boshte prottek course-e held classes-er at least 70% attendance dorkar.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Attendance",
+          "entity": null,
+          "excerpt": "Attendance All students are expected to attend classes regularly. The University of Asia Pacific believes that regular attendance is essential for effective learning. A student is required to attend at least 70% of all the classes held in every course in order to sit for the final examination.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0001-c0001",
+          "retrieval_score": 0.03252247488101534
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "UNSUPPORTED_FACTUAL_TOKENS",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:final",
+          "numbers:70%"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0024260999998659827,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-044",
+      "question_id": "Q025",
+      "language": "banglish",
+      "question": "Degree-r dike normal progress hisebe koto CGPA dhora hoy?",
+      "reference_answer": "CGPA 2.25 or better hole degree-r dike normal progress dhora hoy.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Performance Evaluation",
+          "entity": null,
+          "excerpt": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or be…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+          "retrieval_score": 0.03278688524590164
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 21,
+          "heading": "Category - B",
+          "entity": null,
+          "excerpt": "Category - B 1. A Cumulative Grade Point Average (CGPA) of minimum 2.25 is required for graduation. A candidate whose CGPA is below 2.25 shall have to increase his/her CGPA to the minimum requirement within two consecutive semesters failing which s/he shall be placed under academic probation.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0004-c0001",
+          "retrieval_score": 0.03225806451612903
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 21,
+          "heading": "2. Candidates requiring to increase their CGPA under this category",
+          "entity": null,
+          "excerpt": "2. Candidates requiring to increase their CGPA under this category (Category - B) shall apply to the Controller of Examinations through the head of the department concerned with a payment of @ Tk. 3000/ - (Tk. Three Thousand) per credit hour.",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0005-c0001",
+          "retrieval_score": 0.030536130536130537
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "",
+      "retry_answer": "",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": false,
+      "generation_attempts": 0,
+      "retry_used": false,
+      "raw_language_pass": false,
+      "raw_language_reason": null,
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": null,
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "UNSUPPORTED_FACTUAL_TOKENS",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:cgpa",
+          "numbers:2.25"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 0,
+      "generation_seconds": 0.0,
+      "retry_seconds": 0.0,
+      "total_seconds": 0.0030660999991596327,
+      "tokens_per_second": null
+    },
+    {
+      "case_id": "S7B-045",
+      "question_id": "Q028",
+      "language": "banglish",
+      "question": "Kokhon ekjon student repeat examination dite pare?",
+      "reference_answer": "Tin ta ba tar kom theory course-e fail korle, 10 credit hour exceed na korle, repeat examination deya jay.",
+      "verified_evidence": [
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 21,
+          "heading": null,
+          "entity": null,
+          "excerpt": "…xt semester would start. Repeat Examinations on theory courses would be held on 50 percent of marks for each course and the marks for Class Assessment and Mid Semester Examination would be carried. There shall be no repeat examinations for sessional courses. The maximum grade to be obtained by a student in a repeat examination would be ‗B‘ (equivalent to 60%). The following grading system would be followed in the rep…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0001-c0001",
+          "retrieval_score": 0.03252247488101534
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Rules for Repeat Examination",
+          "entity": null,
+          "excerpt": "Rules for Repeat Examination A student wo uld be allowed to appear at the Repeat Examination in case s/he fails in three theory courses or less but not exceeding 10 credit hours. The results of Repeat Examinations would be published within three weeks from the date of publication of the results of the Semester Final",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0006-c0001",
+          "retrieval_score": 0.03252247488101534
+        },
+        {
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "page": 20,
+          "heading": "Examination Rules",
+          "entity": null,
+          "excerpt": "Examination Rules Re -examination or Re -scrutiny of Answer Scripts Re-examination of final examination answer scripts may be permissible. A candidate can apply for re -examination of any answer script of final examination to the Controller of Examinati ons through their advisor and the head of the department on payment of Taka 200/ - (Tk. Two Hundred) only per script within 7 (seven) working days from the publicatio…",
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0005-c0001",
+          "retrieval_score": 0.030798389007344232
+        }
+      ],
+      "source": null,
+      "page": null,
+      "raw_answer": "Student repeat examination dite pare. Ek jon student er 3 theory course er beshi 10 credit hours er beshi, repeat examination dite pare. Sessional course er repeat examination nai.",
+      "retry_answer": "",
+      "final_answer": "Provided university document-e reliable answer deyar moto enough information paoa jayni.",
+      "answer_strategy": "unsupported",
+      "support_status": "insufficient",
+      "generation_used": true,
+      "generation_attempts": 1,
+      "retry_used": false,
+      "raw_language_pass": true,
+      "raw_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "raw_grounding_pass": false,
+      "raw_grounding_reason": "UNSUPPORTED_FACTUAL_TOKENS",
+      "retry_language_pass": false,
+      "retry_grounding_pass": false,
+      "final_language_pass": true,
+      "final_language_reason": "BANGLISH_MARKERS_PRESENT",
+      "final_grounding_pass": false,
+      "final_grounding_reason": "GENERATION_REJECTED",
+      "semantic_screen_flags": [],
+      "factual_preservation": {
+        "required": [
+          "named_identifiers:tin",
+          "numbers:10"
+        ],
+        "preserved": false,
+        "applicable": true
+      },
+      "automatic_development_proxies": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "tokens_generated": 44,
+      "generation_seconds": 12.275958000000173,
+      "retry_seconds": 0.0,
+      "total_seconds": 12.279245900000205,
+      "tokens_per_second": 3.584241653482309
+    }
+  ],
+  "full_300_summary": {
+    "status": "NOT_RUN_MEMORY_SAFETY_STOP",
+    "reason": "The isolated 3B load left too little system-available RAM to safely add BGE-M3, FAISS, BM25, and the Python pipeline.",
+    "system_available_after_isolated_load_bytes": 43290624,
+    "required_queries": 300,
+    "completed_queries": 0
+  },
+  "full_pipeline_memory": {
+    "status": "NOT_RUN_MEMORY_SAFETY_STOP",
+    "isolated_model_rss_bytes": 3466289152,
+    "system_available_after_isolated_load_bytes": 43290624,
+    "stable_for_full_pipeline": false
+  },
+  "model_decision": {
+    "decision": "KEEP_1_5B",
+    "adopt_3b": false,
+    "reason": "3B improved English and some automatic diagnostics, but Bangla remained semantically unreliable, Banglish remained poor, and isolated model loading left unsafe system memory headroom.",
+    "does_7b_need_testing_on_current_hardware": false,
+    "step8_ready": false,
+    "human_scores_fabricated": false
+  }
+}

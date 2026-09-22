@@ -43,17 +43,29 @@ BANGLISH_MARKERS = {
     "korle",
     "korte",
     "koto",
+    "kotojon",
     "kothay",
+    "ke",
+    "koreche",
+    "korechilo",
     "naki",
     "naam",
     "nibo",
     "neya",
+    "onujayi",
     "onushthito",
     "o",
     "paoa",
+    "peyche",
+    "peyeche",
+    "peyechilo",
+    "peyecchhe",
     "parbo",
     "porano",
     "ta",
+    "theke",
+    "dara",
+    "shurute",
     "hoy",
 }
 
@@ -140,7 +152,7 @@ def detect_language_details(question: str) -> LanguageDetection:
         return LanguageDetection("banglish", "Multiple Latin-script Bangla grammar markers detected.", banglish, english, university)
     if banglish_hits >= 1 and university_hits >= 1:
         return LanguageDetection("banglish", "Banglish grammar plus university terminology detected.", banglish, english, university)
-    if re.search(r"\b[A-Za-z]+-(er|e|gulo)\b", text.lower()):
+    if re.search(r"\b[A-Za-z]+-(er|e|te|ta|ti|tir|gulo|gulor)\b", text.lower()):
         return LanguageDetection("banglish", "Banglish suffix attachment detected.", banglish, english, university)
     if banglish_hits >= 1 and english_hits <= 2:
         return LanguageDetection("banglish", "Latin-script Bangla marker detected with little English grammar.", banglish, english, university)

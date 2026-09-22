@@ -8,7 +8,7 @@ This project is a thesis prototype for a multilingual university RAG chatbot gro
 - Dataset: 100 base questions with English, Bangla, and Banglish variants.
 - Embedding model: `BAAI/bge-m3`.
 - Retrieval: pinned BGE-M3 + FAISS `IndexFlatIP`, local BM25, metadata candidates, and reciprocal-rank fusion (RRF).
-- Generator: local Qwen2.5 GGUF through `llama-cpp-python`.
+- Generator: Qwen2.5-7B-Instruct GGUF `Q4_K_M` through `llama-cpp-python`.
 - UI: Streamlit.
 - Current vector index: 490 structure-aware chunks from 92 evidence-bearing pages.
 
@@ -26,7 +26,8 @@ The question-answer CSV is used for testing and evaluation only. It is not used 
 ```text
 Student Question -> Language Detection -> BGE-M3/FAISS + BM25 + Metadata Candidates
 -> Rank-Based RRF -> Top-K Relevant Chunks -> Step-1 Evidence Validation
--> Fast Extractive Answer or Qwen2.5 GGUF -> Language Validation
+-> Answer Strategy Selection -> Structured Exact/List Answer or Qwen2.5 GGUF
+-> Language + Grounding Validation -> One Controlled Retry or Safe Abstention
 -> Final Answer
 ```
 
@@ -56,7 +57,7 @@ pip install -r requirements.txt
 The required local models are:
 
 - `BAAI/bge-m3`
-- `Qwen/Qwen2.5-1.5B-Instruct`
+- `Qwen/Qwen2.5-7B-Instruct-GGUF` (`Q4_K_M`, both official shards)
 
 ## Commands
 
@@ -146,6 +147,90 @@ python scripts/evaluate_step6_reranker.py
 ```
 
 The expensive real-model smoke test is opt-in with `RUN_REAL_RERANKER_TEST=1`; normal unit tests use mocks and do not load the model.
+
+## Grounded multilingual answering
+
+Step 7 keeps exact facts deterministic and reserves local GGUF generation for supported explanatory questions. The answer strategy is selected only after evidence assessment:
+
+- Exact and reliably extractable facts use natural English, Bangla, or Banglish templates without invoking Qwen.
+- Supported list questions use deterministic structured formatting when extraction is reliable.
+- Supported explanatory questions may use Qwen with ranked, deduplicated, tokenizer-budgeted verified evidence.
+- Unsupported, ambiguous, conflicting, or unextractable exact questions return safe responses instead of asking the model to guess.
+
+Generated answers are checked for the requested language and for unsupported factual tokens. One controlled retry is allowed for a language-only failure when the facts are still grounded; a failed retry is never returned. Citations are derived from verified evidence metadata rather than generated text.
+
+The only active generator is the official Qwen2.5-7B-Instruct `Q4_K_M` split GGUF. `GENERATOR_MODEL_PATH` points to `models/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf`; llama.cpp discovers shard 2 automatically, and startup fails visibly if any required shard is missing. The model is loaded once and cached. Runtime settings are centralized through `GENERATOR_PROFILE`, `GENERATOR_MODEL_PATH`, `GENERATOR_CONTEXT_SIZE`, `GENERATOR_THREADS`, `GENERATOR_BATCH_SIZE`, `GENERATOR_GPU_LAYERS`, `GENERATOR_TEMPERATURE`, `GENERATOR_TOP_P`, `GENERATOR_MAX_TOKENS`, `GENERATOR_USE_MMAP`, and `GENERATOR_USE_MLOCK`.
+
+`DEVELOPMENT_8GB` is the default profile for the current one-PDF, 100-question/300-variant regression workload: context 4096, 8 threads, batch 128, CPU-only, temperature 0, top-p 1, 180 output tokens, mmap enabled, and mlock disabled. This measured profile completed all 300 variants on the current Windows machine, using the pagefile under heavy memory pressure. Do not treat pagefile-backed operation as equivalent to physical RAM.
+
+`FULL_32GB` is the initial profile for the future 70-PDF/6,000-question machine: context 8192, 12 threads, batch 512, with GPU layers still configurable. The large corpus and large dataset have **not** been benchmarked. Multi-PDF discovery, generic document IDs/manifests, structure-aware chunking, and question-count-independent evaluation remain unchanged so migration requires configuration and data changes rather than a source rewrite.
+
+Step 7B remains as historical experiment evidence: it compared the official 3B model against 1.5B with frozen retrieval evidence. Its reports and script are retained, but neither old model is an active runtime option and their local GGUF binaries were removed after the 7B shards passed integrity and load validation.
+
+Run the controlled Step 7B stages explicitly:
+
+```bash
+python scripts/evaluate_step7b_models.py prepare
+python scripts/evaluate_step7b_models.py focused --model 1_5b
+python scripts/evaluate_step7b_models.py focused --model 3b
+python scripts/evaluate_step7b_models.py finalize
+```
+
+See `results/step7b_model_comparison.md` and its score-free blinded review CSV for that historical experiment. The script references old model names only to document/reproduce the experiment; it is not part of the active generator runtime.
+
+Run the Step 7C 7B smoke set or checkpointed 300-variant development evaluation:
+
+```bash
+python scripts/evaluate_step7c.py --smoke-only
+python scripts/evaluate_step7c.py
+python scripts/evaluate_step7c.py --resume
+```
+
+The evaluator atomically checkpoints every five rows, resumes by `(question_id, language)` without duplicates, records explicit error rows, and writes `step7c_300_results.csv`, `step7c_summary.json`, `step7c_report.md`, and a 30-row score-free manual review sample. This is development/regression validation, not the future 6,000-question thesis benchmark.
+
+### Step 7D semantic quality control
+
+Step 7D adds an evidence-derived semantic contract around generation without changing retrieval or the active Qwen model. The contract protects polarity, simple subject/relation/value bindings, exact counts, and multi-condition answers. Bangla and Banglish prompts are short fact-expression prompts; uncertain meaning, unsupported relation values, pure-English Banglish, script leakage, and failed one-shot repairs return a safe abstention.
+
+Run the gated Step 7D stages:
+
+```bash
+python scripts/evaluate_step7d.py smoke
+python scripts/evaluate_step7d.py review
+python scripts/evaluate_step7d.py full
+python scripts/evaluate_step7d.py full --resume
+```
+
+The final one-PDF development run completed 300/300 unique variants with zero runtime errors, answer bank OFF, reranker OFF, and 300/300 output-language consistency. Of 31 generation attempts, 7 were accepted and 24 were conservatively rejected; acceptance is not treated as correctness. The balanced 30-row manual-review CSV deliberately leaves all human score fields blank. See `results/step7d_final_report.md`, `results/step7d_summary.json`, and `results/step7d_manual_review_sample.csv`.
+
+### Step 7E two-stage multilingual realization
+
+Step 7E separates evidence availability from answer-construction failure. `INSUFFICIENT_EVIDENCE` is reserved for genuinely inadequate evidence; verified evidence that cannot be expressed safely returns `GENERATION_REJECTED` with a language-appropriate message. Generation-required questions first produce and validate a canonical English answer. English returns that answer directly; Bangla and Banglish use constrained realization from the canonical answer only. Reliably parsed relations such as establishment, accreditation, location, publication, fees, and named roles may use deterministic multilingual formatting. Structured exact/list answers remain outside the two-stage path.
+
+Run the diagnostic and gated evaluation stages:
+
+```bash
+python scripts/evaluate_step7e.py trace
+python scripts/evaluate_step7e.py classify
+python scripts/evaluate_step7e.py review
+python scripts/evaluate_step7e.py full --resume
+```
+
+The bounded policy permits at most three model calls for a multilingual question: canonical attempt plus either one canonical repair and one realization, or one realization and one targeted realization repair. The same cached Qwen2.5-7B-Instruct Q4_K_M model is reused; no translator or additional neural model is loaded. The final development run completed 300/300 unique variants with zero runtime errors, answer bank OFF, and reranker OFF. This remains a one-PDF development/regression evaluation, not final thesis accuracy. See `results/step7e_final_report.md`, `results/step7e_failure_trace.csv`, `results/step7e_before_after_review.csv`, `results/step7e_manual_review_sample.csv`, and `results/step7e_300_results.csv`.
+
+Run the complete 300-query Step 7 development evaluation with the answer bank and reranker disabled:
+
+```bash
+python scripts/evaluate_step7_generation.py
+```
+
+Run only the small real-model smoke set:
+
+```bash
+python scripts/evaluate_step7_generation.py --smoke-only
+```
+
+The evaluator writes `results/step7_generation_results.csv`, `results/step7_generation_summary.json`, `results/step7_generation_report.md`, `results/step7_manual_review_sample.csv`, and `results/step7_real_model_smoke.json`. These are development/regression artifacts, not final thesis accuracy results. The 30-case synthetic multilingual regression file under `tests/data/` is separate from the canonical thesis dataset.
 
 Run a test query:
 
