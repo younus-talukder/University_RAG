@@ -1,7 +1,7 @@
 {
   "schema_version": 4,
-  "created_at": "2026-09-13T20:56:19.897245+00:00",
-  "corpus_fingerprint": "e7ed003cda0fd4f9127ccde82852fe482e9d39f63f36e5cc66ac65c0ec66b0f2",
+  "created_at": "2026-09-23T19:23:11.064825+00:00",
+  "corpus_fingerprint": "8d25c720865665759d79c3f333f9ba549fc2408e9d8d37c6206fbf2099d83c8e",
   "documents": [
     {
       "document_id": "doc-4d373684ce4879ed066003f5",
@@ -13,7 +13,7 @@
       "page_count": 95,
       "extractable_page_count": 95,
       "empty_page_count": 0,
-      "chunk_count": 490,
+      "chunk_count": 491,
       "ingestion_status": "success",
       "ingestion_errors": [],
       "warnings": [],
@@ -25,10 +25,10 @@
   "partial_document_count": 0,
   "failed_document_count": 0,
   "duplicate_document_count": 0,
-  "chunk_count": 490,
-  "chunking_configuration_id": "abd83af1e9e364d6",
+  "chunk_count": 491,
+  "chunking_configuration_id": "8985b1cf779485b5",
   "chunking_strategy": "semantic_blocks_then_bounded_windows",
-  "chunker_schema_version": "structure-aware-v1.1",
+  "chunker_schema_version": "structure-aware-v1.2",
   "faiss_index_type": "IndexFlatIP",
   "chunk_size": 260,
   "chunk_overlap": 40,
@@ -53,7 +53,7 @@
   "snapshot_complete": true,
   "snapshot_revision": "5617a9f61b028005a4858fdac845db406aefb181",
   "weight_format": "pytorch_bin",
-  "snapshot_inventory_hash": "c56c66d3a6d0dc156312af4250022a881a287e99cf60f5d51986603d3f7a6285",
+  "snapshot_inventory_hash": "83d7a5e049f934269fbe35fa381083e9bebc3c09b4a185e9608e0c2829b5c940",
   "validated_files": [
     "1_Pooling/config.json",
     "config.json",
@@ -62,23 +62,24 @@
     "pytorch_model.bin",
     "sentence_bert_config.json",
     "sentencepiece.bpe.model",
+    "special_tokens_map.json",
     "tokenizer.json",
     "tokenizer_config.json"
   ],
   "embedding_configuration_fingerprint": "36b22721bd5d9633cde18a8286b90cdd25d643b834c08d9a27ce26b1cfa8765e",
-  "index_configuration_fingerprint": "d13cfdecbe66e2383857cc097d51c950524d865c725a71e615e812ae2982160f",
-  "build_metrics": {
-    "ingestion_and_chunking_seconds": 3.214879,
-    "model_load_seconds": 2.39374,
-    "embedding_seconds": 411.373271,
-    "index_creation_seconds": 0.005881,
-    "sparse_index_seconds": 0.067947
-  },
   "sparse_retrieval_enabled": true,
   "sparse_implementation": "local-okapi-bm25-v1",
   "sparse_tokenizer_schema": "unicode-university-v1.2",
   "sparse_configuration_fingerprint": "f2673ba0f18981ddcc07ae5c98d8d2e0a16b45e5f8da1b2322d7ada1e2e8f141",
-  "sparse_chunk_count": 490,
-  "sparse_vocabulary_size": 5567,
-  "sparse_metadata_binding_hash": "c8cda5e84335ceb171ee8c1cb2508984b2cde83309187984c8cec8593e36572a"
+  "sparse_chunk_count": 491,
+  "sparse_vocabulary_size": 5566,
+  "sparse_metadata_binding_hash": "a1cf85e677b64c82f1ab10c20dacad55dd2551091b53b985c9552c73ffef59b7",
+  "index_configuration_fingerprint": "8207af3ec864b70f106ddbe0197faa2ccba786bb034942ea7027f3fcc85ebc88",
+  "build_metrics": {
+    "ingestion_and_chunking_seconds": 3.237788,
+    "model_load_seconds": 2.808917,
+    "embedding_seconds": 419.008052,
+    "index_creation_seconds": 0.009789,
+    "sparse_index_seconds": 0.066459
+  }
 }

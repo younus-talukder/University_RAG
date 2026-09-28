@@ -1,0 +1,187 @@
+{
+  "notice": "DEVELOPMENT AUTOMATIC PROXIES; NOT FINAL HUMAN CORRECTNESS OR CALIBRATED CONFIDENCE",
+  "completion": 300,
+  "index_chunks": 491,
+  "answer_bank_enabled": false,
+  "reranker_enabled": false,
+  "q007_evaluation_authority": "Page 8, Computer Science & Technology; evaluation annotation only",
+  "per_language": {
+    "english": {
+      "total": 100,
+      "states": {
+        "SUPPORTED": 87,
+        "INSUFFICIENT_EVIDENCE": 2,
+        "RETRIEVAL_UNCERTAIN": 1,
+        "AMBIGUOUS_QUERY": 2,
+        "CONFLICTING_EVIDENCE": 1,
+        "GENERATION_REJECTED": 7,
+        "OUT_OF_DOMAIN": 0,
+        "SYSTEM_ERROR": 0
+      },
+      "evidence_levels": {
+        "STRONG": 93,
+        "ADEQUATE": 1,
+        "WEAK": 2,
+        "NONE": 4
+      },
+      "answers_returned": 87,
+      "safe_answer_coverage": 0.87,
+      "abstention_rate": 0.13,
+      "abstentions_by_reason": {
+        "GENERATION_GROUNDING_FAILURE": 6,
+        "FIELD_NOT_SUPPORTED": 2,
+        "AMBIGUOUS_ENTITY": 2,
+        "ENTITY_OWNERSHIP_UNCERTAIN": 1,
+        "GENERATION_SEMANTIC_FAILURE": 1,
+        "CONFLICTING_VALUES": 1
+      },
+      "answer_strategies": {
+        "generation_rejected": 7,
+        "semi_structured_relation": 63,
+        "unsupported": 3,
+        "structured_exact": 21,
+        "gguf_generation": 3,
+        "ambiguous": 2,
+        "conflicting": 1
+      }
+    },
+    "bangla": {
+      "total": 100,
+      "states": {
+        "SUPPORTED": 85,
+        "INSUFFICIENT_EVIDENCE": 6,
+        "RETRIEVAL_UNCERTAIN": 0,
+        "AMBIGUOUS_QUERY": 2,
+        "CONFLICTING_EVIDENCE": 1,
+        "GENERATION_REJECTED": 6,
+        "OUT_OF_DOMAIN": 0,
+        "SYSTEM_ERROR": 0
+      },
+      "evidence_levels": {
+        "STRONG": 91,
+        "ADEQUATE": 0,
+        "WEAK": 1,
+        "NONE": 8
+      },
+      "answers_returned": 85,
+      "safe_answer_coverage": 0.85,
+      "abstention_rate": 0.15,
+      "abstentions_by_reason": {
+        "FIELD_NOT_SUPPORTED": 6,
+        "GENERATION_GROUNDING_FAILURE": 5,
+        "AMBIGUOUS_ENTITY": 2,
+        "GENERATION_SEMANTIC_FAILURE": 1,
+        "CONFLICTING_VALUES": 1
+      },
+      "answer_strategies": {
+        "unsupported": 6,
+        "semi_structured_relation": 61,
+        "structured_exact": 21,
+        "gguf_generation": 3,
+        "generation_rejected": 6,
+        "ambiguous": 2,
+        "conflicting": 1
+      }
+    },
+    "banglish": {
+      "total": 100,
+      "states": {
+        "SUPPORTED": 87,
+        "INSUFFICIENT_EVIDENCE": 0,
+        "RETRIEVAL_UNCERTAIN": 0,
+        "AMBIGUOUS_QUERY": 2,
+        "CONFLICTING_EVIDENCE": 1,
+        "GENERATION_REJECTED": 10,
+        "OUT_OF_DOMAIN": 0,
+        "SYSTEM_ERROR": 0
+      },
+      "evidence_levels": {
+        "STRONG": 96,
+        "ADEQUATE": 1,
+        "WEAK": 1,
+        "NONE": 2
+      },
+      "answers_returned": 87,
+      "safe_answer_coverage": 0.87,
+      "abstention_rate": 0.13,
+      "abstentions_by_reason": {
+        "GENERATION_GROUNDING_FAILURE": 7,
+        "GENERATION_SEMANTIC_FAILURE": 3,
+        "AMBIGUOUS_ENTITY": 2,
+        "CONFLICTING_VALUES": 1
+      },
+      "answer_strategies": {
+        "generation_rejected": 10,
+        "semi_structured_relation": 60,
+        "structured_exact": 23,
+        "gguf_generation": 4,
+        "ambiguous": 2,
+        "conflicting": 1
+      }
+    },
+    "overall": {
+      "total": 300,
+      "states": {
+        "SUPPORTED": 259,
+        "INSUFFICIENT_EVIDENCE": 8,
+        "RETRIEVAL_UNCERTAIN": 1,
+        "AMBIGUOUS_QUERY": 6,
+        "CONFLICTING_EVIDENCE": 3,
+        "GENERATION_REJECTED": 23,
+        "OUT_OF_DOMAIN": 0,
+        "SYSTEM_ERROR": 0
+      },
+      "evidence_levels": {
+        "STRONG": 280,
+        "ADEQUATE": 2,
+        "WEAK": 4,
+        "NONE": 14
+      },
+      "answers_returned": 259,
+      "safe_answer_coverage": 0.8633333333333333,
+      "abstention_rate": 0.13666666666666666,
+      "abstentions_by_reason": {
+        "GENERATION_GROUNDING_FAILURE": 18,
+        "FIELD_NOT_SUPPORTED": 8,
+        "GENERATION_SEMANTIC_FAILURE": 5,
+        "AMBIGUOUS_ENTITY": 6,
+        "ENTITY_OWNERSHIP_UNCERTAIN": 1,
+        "CONFLICTING_VALUES": 3
+      },
+      "answer_strategies": {
+        "generation_rejected": 23,
+        "unsupported": 9,
+        "semi_structured_relation": 184,
+        "structured_exact": 65,
+        "gguf_generation": 10,
+        "ambiguous": 6,
+        "conflicting": 3
+      }
+    }
+  },
+  "false_abstention_review_rows": 41,
+  "unsafe_answer_review_rows": 0,
+  "generation_attempts": 25,
+  "generation_used_cases": 18,
+  "retry_used_cases": 4,
+  "answerability_overhead_seconds_excluding_generation": {
+    "median": 0.0002719000040087849,
+    "p95": 0.0005770999996457249
+  },
+  "latency_seconds": {
+    "median": 0.22975320000114152,
+    "p95": 28.914891100001114
+  },
+  "memory": {
+    "peak_process_bytes": 5762867200,
+    "peak_pagefile_used_bytes_system": 2935545856,
+    "minimum_available_ram_bytes": 6508544
+  },
+  "errors": [],
+  "manual_review_rows": 30,
+  "synthetic": {
+    "out_of_domain": 20,
+    "ambiguity": 8,
+    "conflict": 3
+  }
+}

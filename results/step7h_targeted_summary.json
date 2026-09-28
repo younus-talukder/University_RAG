@@ -1,0 +1,60 @@
+{
+  "completed": 26,
+  "expected": 26,
+  "english_flags": 15,
+  "human_rejects": [
+    [
+      "Q030",
+      "english"
+    ],
+    [
+      "Q006",
+      "banglish"
+    ],
+    [
+      "Q023",
+      "banglish"
+    ]
+  ],
+  "step7g_cases": [
+    [
+      "Q003",
+      "banglish"
+    ],
+    [
+      "Q005",
+      "bangla"
+    ],
+    [
+      "Q007",
+      "bangla"
+    ],
+    [
+      "Q010",
+      "bangla"
+    ],
+    [
+      "Q011",
+      "bangla"
+    ],
+    [
+      "Q019",
+      "bangla"
+    ],
+    [
+      "Q020",
+      "bangla"
+    ],
+    [
+      "Q036",
+      "banglish"
+    ],
+    [
+      "Q085",
+      "banglish"
+    ]
+  ],
+  "failures": [],
+  "gate_passed": true,
+  "fingerprint": "772766d03b013e9096cb"
+}

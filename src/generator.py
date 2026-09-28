@@ -237,6 +237,21 @@ def _invoke_messages(
     return answer
 
 
+def rewrite_query_for_retrieval(question: str) -> str:
+    """Reuse the cached Qwen 7B model for a query only, never an answer."""
+    prompt = (
+        "Rewrite this university question as a concise English search query. "
+        "Do not answer it. Preserve exactly course codes, names, numbers, dates, "
+        "percentages, emails, and the academic field requested. Do not add facts. "
+        "Return only the search query.\nQuestion: " + question
+    )
+    return _invoke_messages(
+        [{"role": "system", "content": "You produce only faithful search queries, not answers."},
+         {"role": "user", "content": prompt}],
+        str(GENERATOR_MODEL_PATH), 64, "retrieval_query_rewrite", "",
+    )
+
+
 def _generate(
     package: VerifiedEvidencePackage,
     model_name: str,

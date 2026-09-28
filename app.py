@@ -38,12 +38,9 @@ def render_sources(sources):
     for i, item in enumerate(sources, start=1):
         source = item.get("relative_path") or item.get("source") or "Unknown source"
         page = item.get("page")
-        score = item.get("score")
         label = f"Source {i}"
         if page is not None:
             label += f" • Page {page}"
-        if score is not None:
-            label += f" • Score {score:.4f}"
         st.markdown(f"**{label}**")
         st.caption(source)
         excerpt = item.get("supporting_excerpt")
@@ -86,6 +83,7 @@ with st.sidebar:
         """
     )
     use_generation = st.checkbox("Use local Qwen generation", value=False)
+    debug_mode = st.checkbox("Show trust/debug details", value=False)
 
 question = st.text_input(
     "Ask a question about the university",
@@ -127,7 +125,23 @@ if st.button("Ask"):
             st.subheader("Answer")
             st.caption(f"Detected Language: {response.get('detected_language', 'unknown')}")
             st.caption(f"Mode: {response.get('answer_mode', response.get('generation_mode', 'unknown'))}")
-            st.caption(f"Evidence status: {response.get('support_status', 'unknown')}")
+            if response.get("answerability_status") == "SUPPORTED":
+                st.caption("Answer supported by verified document evidence")
             st.write(response.get("answer", "No answer was generated."))
-            render_sources(response.get("sources", []))
-            render_debug_context(response.get("retrieved_context", []))
+            if response.get("answerability_status") == "SUPPORTED":
+                render_sources(response.get("sources", []))
+            if debug_mode:
+                with st.expander("Trust decision / debugging", expanded=True):
+                    for key in (
+                        "answerability_status", "answerability_reason", "evidence_level",
+                        "supporting_evidence_count", "independent_support_count",
+                        "retrieval_channels", "best_support_rank", "conflict_detected",
+                        "generation_validation_status", "cross_lingual_fallback_used",
+                        "final_answer_allowed", "answerability_seconds",
+                    ):
+                        st.write(f"{key}: {response.get(key)}")
+                    if response.get("conflict_sources"):
+                        st.write("Conflicting passages:")
+                        for item in response["conflict_sources"]:
+                            st.write(f"{item.get('source')} — page {item.get('page')}: {item.get('excerpt')}")
+                render_debug_context(response.get("retrieved_context", []))

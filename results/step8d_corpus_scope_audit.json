@@ -1,0 +1,44 @@
+{
+  "indexed_chunks": 491,
+  "fields": {
+    "credits": {
+      "course_entities_checked": 49,
+      "unparsed_entities": 0,
+      "divergent_entities": {
+        "HSS101": [
+          {
+            "value": "3.00",
+            "page": 51,
+            "chunk_id": "doc-4d373684ce4879ed066003f5-p000051-b0004-c0001",
+            "source": "curricula_BSc-Curriculum-New.pdf"
+          },
+          {
+            "value": "1.50",
+            "page": 61,
+            "chunk_id": "doc-4d373684ce4879ed066003f5-p000061-b0005-c0001",
+            "source": "curricula_BSc-Curriculum-New.pdf"
+          }
+        ],
+        "CSE304": [
+          {
+            "value": "0.75",
+            "page": 53,
+            "chunk_id": "doc-4d373684ce4879ed066003f5-p000053-b0011-c0001",
+            "source": "curricula_BSc-Curriculum-New.pdf"
+          },
+          {
+            "value": "3.00",
+            "page": 78,
+            "chunk_id": "doc-4d373684ce4879ed066003f5-p000078-b0007-c0001",
+            "source": "curricula_BSc-Curriculum-New.pdf"
+          }
+        ]
+      }
+    },
+    "prerequisite": {
+      "course_entities_checked": 20,
+      "unparsed_entities": 0,
+      "divergent_entities": {}
+    }
+  }
+}

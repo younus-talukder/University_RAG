@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass
+from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, Iterable, Sequence
 
 from .language_detector import Language
-from .query_normalization import extract_course_entities, normalize_retrieval_text
+from .query_normalization import extract_course_entities, is_mark_distribution_query, normalize_retrieval_text
+from .document_metadata import extract_document_metadata, metadata_fields_for_query
+from .course_rows import course_field_value
 
 
 class SupportStatus(str, Enum):
@@ -50,6 +53,7 @@ class Evidence:
     requested_field: str
     matched_field: str | None
     support_status: str
+    continuation_chunk_ids: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -62,6 +66,24 @@ class EvidenceAssessment:
     evidence: tuple[Evidence, ...]
     reason: str
     conflicting_values: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class ConflictIdentity:
+    """Semantic identity of a claim; provenance is retained, not arbitrated."""
+
+    entity_id: str
+    field: str
+    relation: str
+    scope: str
+    qualifiers: tuple[str, ...]
+    document_context: str = ""
+
+    @property
+    def comparison_key(self) -> tuple[str, str, str, str, tuple[str, ...]]:
+        # Different documents or editions may genuinely disagree. Neither
+        # source identity nor recency is a reason to suppress the conflict.
+        return self.entity_id, self.field, self.relation, self.scope, self.qualifiers
 
 
 # Patterns describe document language, not a particular dataset, PDF, or course.
@@ -116,6 +138,7 @@ FIELD_QUERY_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
 ENTITY_DEPENDENT_FIELDS = {
     "credits", "prerequisite", "course_title", "course_code", "course_type",
     "learning_outcome", "objective", "topic", "weekly_content",
+    "publication", "attendance", "percentage",
 }
 
 
@@ -170,6 +193,8 @@ def identify_entities(question: str) -> tuple[RequestedEntity, ...]:
 
 def detect_requested_field(question: str) -> str:
     normalized = normalize_retrieval_text(question)
+    if is_mark_distribution_query(normalized):
+        return "assessment"
     for field, patterns in FIELD_QUERY_PATTERNS:
         if any(re.search(pattern, normalized, re.I) for pattern in patterns):
             return field
@@ -181,9 +206,22 @@ def analyze_query(question: str) -> QueryRequest:
     entities = identify_entities(normalized)
     requested_field = detect_requested_field(normalized)
     has_subject_context = bool(
-        re.search(r"\b(?:program(?:me)?|prospectus|university|department|policy|rule|semester)\b|বিশ্ববিদ্যালয়|বিভাগ|নীতি|নিয়ম", normalized, re.I)
+        re.search(r"\b(?:program(?:me)?|prospectus|university|department|policy|rule|semester|exam(?:ination)?)\b|বিশ্ববিদ্যালয়|বিভাগ|নীতি|নিয়ম|পরীক্ষা|প্রসপেক্টাস", normalized, re.I)
     )
-    ambiguous = requested_field in ENTITY_DEPENDENT_FIELDS and not entities and not has_subject_context
+    # A named policy/rule can identify the fact without identifying a course.
+    # Generic pronouns and bare field names still need a subject.
+    relation_sufficient = bool(
+        requested_field == "credits" and re.search(
+            r"theoretical\s+courses?|theory\s+courses?|থিওরেটিক্যাল\s+কোর্স|তাত্ত্বিক\s+কোর্স", normalized, re.I
+        ) and re.search(r"assign|নির্ধারিত|নির্ধারণ|কীভাবে|কিভাবে|kivabe", normalized, re.I)
+        or requested_field == "percentage" and re.search(
+            r"\bseats?\b|আসন", normalized, re.I
+        ) and re.search(r"reserv|সংরক্ষিত|সংরক্ষণ", normalized, re.I)
+        or requested_field == "attendance" and re.search(
+            r"\bpolicy\b|\brule\b|নীতি|নিয়ম", normalized, re.I
+        )
+    )
+    ambiguous = requested_field in ENTITY_DEPENDENT_FIELDS and not entities and not has_subject_context and not relation_sufficient
     reason = "The requested field needs a specific entity or context." if ambiguous else ""
     return QueryRequest(entities, requested_field, ambiguous, reason)
 
@@ -287,7 +325,10 @@ def _fact_values(field: str, excerpt: str) -> set[str]:
         "course_code": (r"course\s+(?:no\.?\s*/\s*)?(?:course\s+)?code\s*:\s*([A-Za-z][A-Za-z ()-]*\d{2,4}(?:\([A-Za-z0-9]+\))?)",),
         "course_title": (r"course\s+title\s*:\s*(.*?)(?=\s+\d+\.\s+[A-Z]|\s+course\s+(?:type|credit)|$)",),
         "course_type": (r"course\s+type\s*:\s*(.*?)(?=\s+\d+\.\s+[A-Z]|\s+credit|$)",),
-        "prerequisite": (r"pre\s*[- ]?\s*requisites?\s*[:=-]\s*([^.;\n]{1,160})",),
+        "prerequisite": (
+            r"pre\s*[- ]?\s*requisites?\s*[:=-]\s*(None|Nil|No\s+prerequisite|Not\s+applicable|N/?A|[A-Z]{2,8}\s*\d{2,4}(?:\s*,\s*[A-Z]{2,8}\s*\d{2,4})*)\b",
+            r"\b\d+(?:\.\d+)?\s+(Nil|None)\b",
+        ),
         "grade": (r"(?:grade\s*[:=-]?\s*)([A-F][+-]?)",),
         "duration": (r"(\d+(?:\.\d+)?\s*(?:years?|months?|weeks?|days?))",),
         "semester": (r"((?:spring|summer|fall|autumn|winter)\s+\d{4}|(?:semester\s+\d{1,2}|\d{1,2}(?:st|nd|rd|th)\s+semester))",),
@@ -296,16 +337,195 @@ def _fact_values(field: str, excerpt: str) -> set[str]:
     values: set[str] = set()
     for pattern in patterns.get(field, ()):
         for match in re.finditer(pattern, excerpt, re.I):
-            values.add(_normal(match.group(1)).strip(" .;:"))
+            raw = match.group(1).strip()
+            value = _normal(raw).strip(" .;:")
+            # N/A is equivalent only after a verified prerequisite label or
+            # row has bound the value to that field. Never normalize it globally.
+            if field == "prerequisite" and re.fullmatch(
+                r"(?:none|nil|no\s+pre\s*[- ]?\s*requisite|not\s+applicable|n/?a)", raw, re.I
+            ):
+                value = "NO_PREREQUISITE"
+            values.add(value)
     return {value for value in values if value}
 
 
+def _material_qualifiers(text: str) -> tuple[str, ...]:
+    qualifiers: list[str] = []
+    category = re.search(r"\bcategory\s*[- ]?\s*(\d+)\b|ক্যাটাগরি\s*(\d+)", text, re.I)
+    if category:
+        qualifiers.append("category:" + next(value for value in category.groups() if value))
+    for label, pattern in (
+        ("undergraduate", r"\bundergraduate\b|আন্ডারগ্র্যাজুয়েট"),
+        ("postgraduate", r"\bpostgraduate\b|পোস্টগ্র্যাজুয়েট"),
+        ("every_course", r"\b(?:every|each)\s+course\b|প্রতিটি\s+কোর্স|প্রত্যেক\s+কোর্স"),
+        ("per_semester", r"\bper\s+semester\b|প্রতি\s+সেমিস্টার"),
+    ):
+        if re.search(pattern, text, re.I):
+            qualifiers.append(label)
+    return tuple(qualifiers)
+
+
+def _credit_relation(text: str, *, question: bool = False) -> str:
+    theory = re.search(r"\btheoretical\s+courses?\b|\btheory\s+courses?\b|থিওরেটিক্যাল\s+কোর্স|তাত্ত্বিক\s+কোর্স", text, re.I)
+    assignment = re.search(r"\bassign(?:ed|ment)?\b|\bone\s+credit\b|\b1\s+credit\b|কীভাবে|কিভাবে|নির্ধারিত|kivabe", text, re.I)
+    theory_heading = re.search(r"\btheoretical\s+courses?\s*:", text, re.I)
+    if theory and (bool(assignment) if question else bool(theory_heading)):
+        return "theoretical_course_credit_rule"
+    lab = re.search(r"\b(?:laboratory|lab)\s*(?:/field)?\s*(?:courses?|work)?\b|ল্যাব\s+কোর্স", text, re.I)
+    if lab and (bool(assignment) if question else bool(re.search(r"\b(?:laboratory|lab)(?:/field)?(?:/design)?\s*(?:courses?|work)?\s*:", text, re.I))):
+        return "lab_course_credit_rule"
+    if re.search(r"\b(?:semester\s+total|total\s+(?:semester\s+)?credits?)\b|মোট\s+ক্রেডিট", text, re.I):
+        return "semester_credit_total"
+    return "course_credit_value" if question or re.search(r"\b(?:course\s+code|credits?\s*[:=-]|credit\s+value)\b", text, re.I) else "credit_other"
+
+
+def _theoretical_rule_value(text: str) -> str | None:
+    match = re.search(
+        r"(?:theoretical\s+courses?|theory\s+courses?)\s*:\s*(.+?)"
+        r"(?=\b(?:laboratory|lab)\s*(?:/field)?(?:/design)?\b|\btype\s+of\s+courses\b|$)",
+        text, re.I | re.S,
+    )
+    if not match:
+        return None
+    rule = " ".join(match.group(1).split())
+    # Compare the assignment rule, not an illustrative three-credit course.
+    clause = re.split(r"\bThus\b|[.;]", rule, maxsplit=1, flags=re.I)[0]
+    numbered = re.sub(r"\bone\b", "1", clause, flags=re.I)
+    numbered = re.sub(r"\btwo\b", "2", numbered, flags=re.I)
+    numbered = re.sub(r"\bthree\b", "3", numbered, flags=re.I)
+    forward = re.search(
+        r"(\d+)\s+(lecture|hour|class)(?:s)?\s+per\s+week"
+        r"(?:\s+per\s+semester)?.{0,75}?equivalent\s+to\s+(\d+)\s+credits?",
+        numbered, re.I,
+    )
+    reverse = re.search(
+        r"(\d+)\s+credits?\s*(?:=|equals?|(?:is\s+)?equivalent\s+to)\s*"
+        r"(\d+)\s+(lecture|hour|class)(?:s)?(?:\s+per\s+week)?",
+        numbered, re.I,
+    )
+    if forward:
+        amount, unit, credits = forward.groups()
+    elif reverse:
+        credits, amount, unit = reverse.groups()
+    else:
+        return None
+    return f"{amount}:{unit.casefold()}_per_week:{credits}:credit"
+
+
+def _credit_claim_relation(text: str, requested: str) -> tuple[str, str | None]:
+    if requested == "theoretical_course_credit_rule":
+        value = _theoretical_rule_value(text)
+        return requested, value
+    observed = _credit_relation(text)
+    if observed != requested:
+        return observed, None
+    return observed, None
+
+
+def _conflict_identity(question: str, request: QueryRequest, evidence: Evidence,
+                       item: dict[str, Any]) -> tuple[ConflictIdentity, set[str]] | None:
+    field = request.requested_field
+    requested_relation = _credit_relation(question, question=True) if field == "credits" else field
+    value: str | None = None
+    if field == "credits":
+        observed_relation = _credit_relation(evidence.text)
+        if requested_relation == "course_credit_value" and observed_relation == "semester_credit_total":
+            return None
+        owned = (course_field_value(question, "credits", [evidence.text])
+                 if requested_relation == "course_credit_value" and request.primary_entity else None)
+        relation, value = (("course_credit_value", owned) if owned is not None else
+                           _credit_claim_relation(evidence.text, requested_relation))
+        if relation != requested_relation:
+            return None
+        if requested_relation == "theoretical_course_credit_rule" and not value:
+            return None
+    elif field == "prerequisite":
+        relation = "course_prerequisite"
+        owned = course_field_value(question, "prerequisite", [evidence.text]) if request.primary_entity else None
+        if owned is not None:
+            value = "NO_PREREQUISITE" if owned.casefold() in {"nil", "none", "n/a"} else _normal(owned)
+    elif field == "attendance":
+        relation = "attendance_requirement"
+    elif field == "percentage":
+        # Percentages from unrelated policy domains are not comparable.
+        def domain(text: str) -> str:
+            if re.search(r"\battendance\b|উপস্থিতি", text, re.I):
+                return "attendance_requirement"
+            if re.search(r"\bseats?\b.{0,50}\breserv|\breserv.{0,50}\bseats?\b|আসন", text, re.I):
+                return "seat_reservation_percentage"
+            if re.search(r"\bmarks?\b|নম্বর|মার্কস", text, re.I):
+                return "marks_percentage"
+            if re.search(r"\badmission\b|ভর্তি", text, re.I):
+                return "admission_percentage"
+            return "policy_percentage"
+        relation = domain(evidence.text)
+        if relation != domain(question):
+            return None
+    else:
+        relation = field
+    qualifiers = _material_qualifiers(evidence.text)
+    requested_qualifiers = _material_qualifiers(question)
+    for qualifier in requested_qualifiers:
+        if qualifier.startswith("category:") and qualifier not in qualifiers:
+            return None
+    # Theoretical/lab scope is captured in the relation. Generic descriptions
+    # may omit qualifiers; distinct *explicit* scopes must never conflict.
+    scope = ("theoretical_courses" if relation == "theoretical_course_credit_rule" else
+             "laboratory_courses" if relation == "lab_course_credit_rule" else
+             "semester" if relation == "semester_credit_total" else
+             "course" if request.primary_entity else "policy")
+    context = str(item.get("edition") or item.get("effective_date") or item.get("publication_year") or "")
+    identity = ConflictIdentity(request.primary_entity or "", field, relation, scope, qualifiers, context)
+    values = {value} if value else _fact_values(field, evidence.excerpt)
+    if field == "credits" and relation == "course_credit_value":
+        canonical: set[str] = set()
+        for raw in values:
+            try:
+                number = format(Decimal(raw).normalize(), "f")
+                canonical.add(number if "." in number else number + ".0")
+            except InvalidOperation:
+                canonical.add(raw)
+        values = canonical
+    return identity, values
+
+
 def assess_evidence(question: str, retrieved: Sequence[dict[str, Any]]) -> EvidenceAssessment:
+    metadata_fields = metadata_fields_for_query(question)
+    if metadata_fields:
+        request = QueryRequest((), "document_metadata")
+        verified: list[Evidence] = []
+        fact_signatures: set[tuple[str, ...]] = set()
+        for item in retrieved:
+            text = str(item.get("text", ""))
+            values = extract_document_metadata(text)
+            if not all(values.get(field) for field in metadata_fields):
+                continue
+            fact_signatures.add(tuple(values[field].casefold() for field in metadata_fields))
+            verified.append(Evidence(
+                document_id=str(item.get("document_id")) if item.get("document_id") else None,
+                source=str(item.get("source") or "unknown"),
+                relative_path=str(item.get("relative_path")) if item.get("relative_path") else None,
+                page=item.get("page"), chunk_id=item.get("chunk_id"), text=text,
+                excerpt=" ".join(text.split())[:1200], retrieval_score=float(item.get("score", 0.0)),
+                detected_entity=None, matched_entity=None,
+                requested_field="document_metadata", matched_field="document_metadata",
+                support_status=SupportStatus.SUPPORTED.value,
+            ))
+        if len(fact_signatures) > 1:
+            conflicting = tuple(Evidence(**{**asdict(item), "support_status": SupportStatus.CONFLICTING.value}) for item in verified)
+            return EvidenceAssessment(request, SupportStatus.CONFLICTING, conflicting,
+                                      "Labeled document metadata contains conflicting values.")
+        if verified:
+            return EvidenceAssessment(request, SupportStatus.SUPPORTED, tuple(verified),
+                                      "Labeled document metadata contains every requested field.")
+        return EvidenceAssessment(request, SupportStatus.INSUFFICIENT, (),
+                                  "No labeled document metadata contained every requested field.")
     request = analyze_query(question)
     if request.ambiguous:
         return EvidenceAssessment(request, SupportStatus.AMBIGUOUS, (), request.ambiguity_reason)
 
     verified: list[Evidence] = []
+    verified_items: list[dict[str, Any]] = []
     for item in retrieved:
         text = str(item.get("text", ""))
         if not text.strip():
@@ -347,27 +567,47 @@ def assess_evidence(question: str, retrieved: Sequence[dict[str, Any]]) -> Evide
                 support_status=SupportStatus.SUPPORTED.value,
             )
         )
+        verified_items.append(item)
 
     if not verified:
         reason = "No retrieved passage matched both the requested entity and requested field."
         return EvidenceAssessment(request, SupportStatus.INSUFFICIENT, (), reason)
 
-    per_evidence_values: list[set[str]] = []
-    for evidence in verified:
-        per_evidence_values.append(_fact_values(request.requested_field, evidence.excerpt))
-    single_values = {next(iter(values)) for values in per_evidence_values if len(values) == 1}
-    if len(single_values) > 1 and request.requested_field in {
+    claims = [_conflict_identity(question, request, evidence, item)
+              for evidence, item in zip(verified, verified_items)]
+    if request.requested_field == "credits" and _credit_relation(question, question=True) == "theoretical_course_credit_rule":
+        relevant = [(evidence, item, claim) for evidence, item, claim in zip(verified, verified_items, claims)
+                    if claim is not None]
+        if not relevant:
+            return EvidenceAssessment(request, SupportStatus.INSUFFICIENT, (),
+                                      "No passage verified the requested theoretical-course credit rule.")
+        verified = [evidence for evidence, _, _ in relevant]
+        verified_items = [item for _, item, _ in relevant]
+        claims = [claim for _, _, claim in relevant]
+
+    grouped: dict[tuple[str, str, str, str, tuple[str, ...]], list[tuple[int, str]]] = {}
+    for index, claim in enumerate(claims):
+        if claim is None:
+            continue
+        identity, values = claim
+        if len(values) == 1:
+            grouped.setdefault(identity.comparison_key, []).append((index, next(iter(values))))
+    conflicts = [entries for entries in grouped.values()
+                 if len({value for _, value in entries}) > 1]
+    if conflicts and request.requested_field in {
         "credits", "percentage", "attendance", "email", "course_code", "course_title",
         "course_type", "prerequisite", "grade", "duration", "semester", "date",
     }:
+        conflicting_indices = {index for entries in conflicts for index, _ in entries}
+        conflicting_values = {value for entries in conflicts for _, value in entries}
         conflicting = tuple(
             Evidence(**{**asdict(evidence), "support_status": SupportStatus.CONFLICTING.value})
-            for evidence in verified
+            for index, evidence in enumerate(verified) if index in conflicting_indices
         )
         return EvidenceAssessment(
             request, SupportStatus.CONFLICTING, conflicting,
-            "Retrieved passages contain different values for the same entity and field.",
-            tuple(sorted(single_values)),
+            "Retrieved passages contain different values for the same entity, relation, and scope.",
+            tuple(sorted(conflicting_values)),
         )
 
     return EvidenceAssessment(

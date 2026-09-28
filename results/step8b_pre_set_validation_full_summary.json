@@ -1,0 +1,99 @@
+{
+  "notice": "Development automatic safety proxies; not final human or thesis accuracy",
+  "completion": 300,
+  "targeted_gate": {
+    "passed": true,
+    "issues": [],
+    "completion": 15
+  },
+  "unsafe_returned_answers": 0,
+  "per_language": {
+    "english": {
+      "answers_returned": 88,
+      "states": {
+        "GENERATION_REJECTED": 7,
+        "SUPPORTED": 88,
+        "INSUFFICIENT_EVIDENCE": 2,
+        "RETRIEVAL_UNCERTAIN": 1,
+        "CONFLICTING_EVIDENCE": 2
+      },
+      "strategies": {
+        "generation_rejected": 7,
+        "semi_structured_relation": 63,
+        "unsupported": 3,
+        "structured_exact": 21,
+        "gguf_generation": 4,
+        "conflicting": 2
+      }
+    },
+    "bangla": {
+      "answers_returned": 83,
+      "states": {
+        "INSUFFICIENT_EVIDENCE": 6,
+        "SUPPORTED": 83,
+        "RETRIEVAL_UNCERTAIN": 1,
+        "GENERATION_REJECTED": 7,
+        "CONFLICTING_EVIDENCE": 3
+      },
+      "strategies": {
+        "unsupported": 6,
+        "semi_structured_relation": 60,
+        "structured_exact": 20,
+        "gguf_generation": 3,
+        "supported": 1,
+        "generation_rejected": 7,
+        "conflicting": 3
+      }
+    },
+    "banglish": {
+      "answers_returned": 87,
+      "states": {
+        "GENERATION_REJECTED": 10,
+        "SUPPORTED": 87,
+        "CONFLICTING_EVIDENCE": 3
+      },
+      "strategies": {
+        "generation_rejected": 10,
+        "semi_structured_relation": 60,
+        "structured_exact": 23,
+        "gguf_generation": 4,
+        "conflicting": 3
+      }
+    },
+    "overall": {
+      "answers_returned": 258,
+      "states": {
+        "GENERATION_REJECTED": 24,
+        "INSUFFICIENT_EVIDENCE": 8,
+        "SUPPORTED": 258,
+        "RETRIEVAL_UNCERTAIN": 2,
+        "CONFLICTING_EVIDENCE": 8
+      },
+      "strategies": {
+        "generation_rejected": 24,
+        "unsupported": 9,
+        "semi_structured_relation": 183,
+        "structured_exact": 64,
+        "gguf_generation": 11,
+        "supported": 1,
+        "conflicting": 8
+      }
+    }
+  },
+  "generation_attempts": 26,
+  "generation_used_cases": 19,
+  "retry_used_cases": 4,
+  "latency_seconds": {
+    "median": 0.2735157999995863,
+    "p95": 29.04263780000474
+  },
+  "memory": {
+    "peak_rss_bytes": 5703450624,
+    "peak_process_bytes": 5881024512,
+    "minimum_available_ram_bytes": 10260480,
+    "peak_pagefile_used_bytes_system": 4221456384
+  },
+  "errors": [],
+  "answer_bank_enabled": false,
+  "reranker_enabled": false
+}

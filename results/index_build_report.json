@@ -1,7 +1,7 @@
 {
-  "started_at": "2026-09-13T21:08:45.707761+00:00",
-  "corpus_fingerprint": "e7ed003cda0fd4f9127ccde82852fe482e9d39f63f36e5cc66ac65c0ec66b0f2",
-  "chunk_count": 490,
+  "started_at": "2026-09-25T15:52:57.111902+00:00",
+  "corpus_fingerprint": "8d25c720865665759d79c3f333f9ba549fc2408e9d8d37c6206fbf2099d83c8e",
+  "chunk_count": 491,
   "embedding_model": "BAAI/bge-m3",
   "embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
   "embedding_dimension": 1024,
@@ -13,18 +13,18 @@
   "faiss_index_type": "IndexFlatIP",
   "build_success": true,
   "reused": true,
-  "finished_at": "2026-09-13T21:08:45.729704+00:00",
+  "finished_at": "2026-09-25T15:52:57.138478+00:00",
   "document_count": 1,
-  "elapsed_seconds": 0.022068,
+  "elapsed_seconds": 0.026798,
   "build_metrics": {
-    "ingestion_and_chunking_seconds": 3.214879,
-    "model_load_seconds": 2.39374,
-    "embedding_seconds": 411.373271,
-    "index_creation_seconds": 0.005881,
-    "sparse_index_seconds": 0.067947
+    "ingestion_and_chunking_seconds": 3.237788,
+    "model_load_seconds": 2.808917,
+    "embedding_seconds": 419.008052,
+    "index_creation_seconds": 0.009789,
+    "sparse_index_seconds": 0.066459
   },
   "sparse_retrieval_enabled": true,
-  "sparse_vocabulary_size": 5567,
+  "sparse_vocabulary_size": 5566,
   "dense_reused": true,
-  "last_full_build_measured_seconds": 417.055718
+  "last_full_build_measured_seconds": 425.131005
 }

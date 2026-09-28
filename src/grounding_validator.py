@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from decimal import Decimal
 from typing import Any, Sequence
 
 from .semantic_contract import SemanticContract, validate_semantic_contract
@@ -11,7 +12,7 @@ COURSE_CODE_RE = re.compile(r"\b[A-Z]{2,12}(?:\s*\([A-Z]{2,12}\))?\s*\d{2,4}(?:\
 NUMBER_RE = re.compile(r"(?<![\w])\d+(?:\.\d+)?%?(?![\w])")
 ACRONYM_RE = re.compile(r"\b[A-Z]{2,}\b")
 PROPER_WORD_RE = re.compile(r"\b[A-Z][a-z]{2,}\b")
-NON_FACTUAL_CAPITALIZED = {"The", "This", "That", "Course", "University", "Document", "Evidence", "Relevant", "According"}
+NON_FACTUAL_CAPITALIZED = {"The", "This", "That", "Course", "University", "Document", "Evidence", "Relevant", "According", "Prerequisite", "Pre"}
 
 
 def _compact(value: str) -> str:
@@ -21,7 +22,8 @@ def _compact(value: str) -> str:
 def _facts(text: str) -> dict[str, set[str]]:
     emails = {_compact(value) for value in EMAIL_RE.findall(text)}
     codes = {_compact(value) for value in COURSE_CODE_RE.findall(text)}
-    numbers = {_compact(value) for value in NUMBER_RE.findall(text)}
+    numbers = {str(Decimal(value.rstrip("%"))) + ("%" if value.endswith("%") else "")
+               for value in NUMBER_RE.findall(text)}
     acronyms = {_compact(value) for value in ACRONYM_RE.findall(text)}
     proper_words = {_compact(value) for value in PROPER_WORD_RE.findall(text) if value not in NON_FACTUAL_CAPITALIZED}
     return {"emails": emails, "course_codes": codes, "numbers": numbers, "named_identifiers": acronyms | proper_words}

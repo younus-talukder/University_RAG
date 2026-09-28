@@ -1,0 +1,4 @@
+﻿case_id,answerability_status,evidence_level,supporting_evidence_count,independent_support_count,source_count,conflict_sources
+same_document_conflict,CONFLICTING_EVIDENCE,WEAK,2,2,1,"[{""source"": ""a.pdf"", ""page"": 1, ""excerpt"": ""Course Code: ABC 234 Credit Value: 3.0""}, {""source"": ""a.pdf"", ""page"": 2, ""excerpt"": ""Course Code: ABC 234 Credit Value: 4.0""}]"
+cross_document_conflict,CONFLICTING_EVIDENCE,WEAK,2,2,2,"[{""source"": ""a.pdf"", ""page"": 1, ""excerpt"": ""Course Code: ABC 234 Credit Value: 3.0""}, {""source"": ""b.pdf"", ""page"": 1, ""excerpt"": ""Course Code: ABC 234 Credit Value: 4.0""}]"
+cross_document_agreement,SUPPORTED,STRONG,2,2,2,[]

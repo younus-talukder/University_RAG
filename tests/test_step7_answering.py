@@ -163,9 +163,21 @@ class PipelineStrategyTests(unittest.TestCase):
         self.assertFalse(result["generation_used"])
         self.assertEqual(result["source"], "synthetic.pdf")
 
+    def test_english_structured_grounding_failure_is_rejected(self) -> None:
+        with patch.object(pipeline, "validate_grounding", return_value={
+            "grounding_validation_passed": False,
+            "grounding_validation_reason": "WRONG_FIELD_VALUE",
+            "unsupported_facts": ["credit"],
+        }):
+            result, generate, _ = self._run(
+                "How many credits is ABC 123?", [chunk("Course Code: ABC 123 Credit Value: 3.00")]
+            )
+        generate.assert_not_called()
+        self.assertEqual(result["final_status"], "GENERATION_REJECTED")
+
     def test_failed_structured_extraction_returns_safe_distinct_status(self) -> None:
         with (
-            patch.object(pipeline, "evidence_value", return_value=None),
+            patch.object(pipeline, "course_field_value", return_value=None),
             patch.object(pipeline, "build_extractive_answer", return_value="no deterministic value"),
         ):
             result, generate, _ = self._run(

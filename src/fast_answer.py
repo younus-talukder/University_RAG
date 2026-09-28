@@ -7,7 +7,7 @@ from .answer_policy import format_structured_text
 from .language_detector import Language
 from .language_validator import unsupported_answer
 from .evidence import identify_entities
-from .query_normalization import extract_course_entities, normalize_retrieval_text
+from .query_normalization import extract_course_entities, is_mark_distribution_query, normalize_retrieval_text
 
 RuntimeIntent = Literal[
     "topics",
@@ -129,7 +129,7 @@ def _intent_patterns(text: str) -> dict[str, bool]:
         "objective": bool(re.search(r"\b(objective|objectives|purpose|aim|aims|udd?esh|uddeshyo|main objective)\b|\u0989\u09a6\u09cd\u09a6\u09c7\u09b6\u09cd\u09af", text)),
         "weekly": bool(re.search(r"\bweek\s*(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen)\b|\b\d+(?:st|nd|rd|th|\u09ae)?\s+(?:week|\u09b8\u09aa\u09cd\u09a4\u09be\u09b9)\b|\u09b8\u09aa\u09cd\u09a4\u09be\u09b9\s*\d+|\bsoptah\b|\bsoptaho\b", text)),
         "final_exam": bool(re.search(r"\bfinal(?:\s+exam(?:ination)?)?\b|\bterm\s+examination\b|\u09ab\u09be\u0987\u09a8\u09be\u09b2", text)),
-        "mark_distribution": bool(re.search(r"mark\s+distribution|marks?\s+distribution|weighting|allocated|boraddo|percentage|percent|shotangsho|শতাংশ|বরাদ্দ", text)),
+        "mark_distribution": bool(is_mark_distribution_query(text) or re.search(r"weighting|allocated|boraddo|percentage|percent|shotangsho|শতাংশ|বরাদ্দ", text)),
         "assessment": bool(re.search(r"\bassessment\b|class\s+tests?|quizz?es?|assignment|presentation|attendance|grade|grading|score|marks?\b|পরীক্ষা|কুইজ|গ্রেড", text)),
         "prerequisite": bool(re.search(r"\bpre[- ]?requisites?\b|prereq|পূর্বশর্ত", text)),
         "credit": bool(re.search(r"\bcredits?\b|ক্রেডিট", text)),

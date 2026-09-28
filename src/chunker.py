@@ -257,6 +257,81 @@ def _table_row_blocks(page: dict[str, Any], lines: list[str]) -> list[Block]:
     return blocks
 
 
+def reconstruct_split_table_rows(lines: list[str]) -> list[str]:
+    """Join a split prefix/title/value row to one unambiguous code suffix.
+
+    Only a labeled course table with a complete credit/prerequisite pair and
+    one suffix across a repeated header is eligible. Uncertain rows stay raw.
+    """
+    if not re.search(r"Course\s+Code\s+Course\s+Title\s+Credits?", " ".join(lines), re.I):
+        return lines
+    headers = re.compile(r"^(?:Course|Code|Course Title Credits?|Credits?|Pre-?|Requisite|First Year First Semester|Second Year.*Semester|Third Year.*Semester)$", re.I)
+    suffix = re.compile(r"^(\d{2,4}(?:\([A-Za-z0-9]{1,4}\))?)\s*(.*)$")
+    credit = re.compile(r"^\d+(?:\.\d{1,2})$")
+    prerequisite = re.compile(r"^(?:Nil|None|N/A|[A-Za-z]{2,12}\s*\d{2,4})$", re.I)
+    output: list[str] = []
+    index = 0
+    while index < len(lines):
+        prefix = lines[index].strip()
+        inline = re.fullmatch(
+            r"([A-Za-z]{2,12})\s+(.+?)\s+(\d+(?:\.\d{1,2})?)\s+"
+            r"(Nil|None|N/A|[A-Za-z]{2,12}\s*\d{2,4})",
+            prefix, re.I,
+        )
+        if inline and not COURSE_CODE_RE.match(prefix):
+            prefix, inline_title, credit_value, prereq_value = inline.groups()
+            title = [inline_title]
+            continuation = index + 1
+        else:
+            inline = None
+        if (not re.fullmatch(r"[A-Za-z]{2,12}", prefix)
+                or prefix.casefold() in {"course", "code", "title", "credits", "pre", "requisite", "total"}
+                or index + 1 >= len(lines) or (not inline and suffix.match(lines[index + 1].strip()))):
+            output.append(lines[index])
+            index += 1
+            continue
+        if not inline:
+            cursor = index + 1
+            title = []
+            while cursor < len(lines) and cursor <= index + 4 and not credit.fullmatch(lines[cursor].strip()):
+                value = lines[cursor].strip()
+                if not value or headers.fullmatch(value) or COURSE_CODE_RE.search(value) or suffix.match(value):
+                    break
+                title.append(value)
+                cursor += 1
+            if (not title or cursor + 1 >= len(lines) or not credit.fullmatch(lines[cursor].strip())
+                    or not prerequisite.fullmatch(lines[cursor + 1].strip())):
+                output.append(lines[index])
+                index += 1
+                continue
+            credit_value, prereq_value = lines[cursor].strip(), lines[cursor + 1].strip()
+            continuation = cursor + 2
+        while continuation < len(lines) and continuation <= cursor + 9 and headers.fullmatch(lines[continuation].strip()):
+            continuation += 1
+        candidate = suffix.match(lines[continuation].strip()) if continuation < len(lines) else None
+        if not candidate:
+            output.append(lines[index])
+            index += 1
+            continue
+        code_number, tail = candidate.groups()
+        if not tail and continuation + 1 < len(lines):
+            tail = lines[continuation + 1].strip()
+            continuation += 1
+        if not tail or not re.search(r"[A-Za-z]", tail) or COURSE_CODE_RE.search(tail):
+            output.append(lines[index])
+            index += 1
+            continue
+        # A second suffix before the next full course row makes ownership
+        # ambiguous; do not choose one merely because it is first.
+        if any(suffix.match(lines[look].strip()) for look in range(continuation + 1, min(len(lines), continuation + 3))):
+            output.append(lines[index])
+            index += 1
+            continue
+        output.append(f"{prefix} {code_number} {' '.join(title)} {tail} {credit_value} {prereq_value}")
+        index = continuation + 1
+    return output
+
+
 def _heading_blocks(page: dict[str, Any], lines: list[str], start_index: int = 1) -> list[Block]:
     blocks: list[Block] = []
     current: list[str] = []
@@ -294,6 +369,7 @@ def segment_page(page: dict[str, Any]) -> list[Block]:
         lines.pop(0)
     if not lines:
         return []
+    lines = reconstruct_split_table_rows(lines)
     course_blocks = _course_header_blocks(page, lines)
     if course_blocks:
         return course_blocks

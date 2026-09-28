@@ -1,0 +1,412 @@
+{
+  "notice": "STEP 7G DEVELOPMENT EVALUATION; NOT FINAL THESIS ACCURACY",
+  "completion": {
+    "rows": 300,
+    "expected": 300,
+    "complete": true
+  },
+  "run_fingerprint": "de9e71eeb05b4056d322",
+  "index_chunks": 491,
+  "answer_bank_enabled": false,
+  "reranker_enabled": false,
+  "per_language": {
+    "english": {
+      "rows": 100,
+      "answers_returned": 87,
+      "strategies": {
+        "generation_rejected": 8,
+        "semi_structured_relation": 62,
+        "unsupported": 3,
+        "structured_exact": 22,
+        "gguf_generation": 3,
+        "ambiguous": 1,
+        "conflicting": 1
+      },
+      "statuses": {
+        "GENERATION_REJECTED": 8,
+        "ANSWER_RETURNED": 87,
+        "INSUFFICIENT_EVIDENCE": 3,
+        "AMBIGUOUS": 1,
+        "CONFLICTING": 1
+      },
+      "language_consistency": {
+        "passed": 100,
+        "denominator": 100
+      },
+      "grounding_validation": {
+        "passed": 72,
+        "denominator": 87
+      },
+      "generation": {
+        "rows": 5,
+        "attempts": 5,
+        "accepted": 3,
+        "rejected": 2,
+        "retries": 0,
+        "successful_retries": 0,
+        "failed_retries": 0
+      },
+      "runtime_errors": 0
+    },
+    "bangla": {
+      "rows": 100,
+      "answers_returned": 69,
+      "strategies": {
+        "ambiguous": 3,
+        "unsupported": 3,
+        "semi_structured_relation": 61,
+        "structured_exact": 5,
+        "gguf_generation": 3,
+        "generation_rejected": 24,
+        "conflicting": 1
+      },
+      "statuses": {
+        "AMBIGUOUS": 3,
+        "INSUFFICIENT_EVIDENCE": 3,
+        "ANSWER_RETURNED": 69,
+        "GENERATION_REJECTED": 24,
+        "CONFLICTING": 1
+      },
+      "language_consistency": {
+        "passed": 100,
+        "denominator": 100
+      },
+      "grounding_validation": {
+        "passed": 69,
+        "denominator": 69
+      },
+      "generation": {
+        "rows": 5,
+        "attempts": 7,
+        "accepted": 3,
+        "rejected": 2,
+        "retries": 1,
+        "successful_retries": 0,
+        "failed_retries": 1
+      },
+      "runtime_errors": 0
+    },
+    "banglish": {
+      "rows": 100,
+      "answers_returned": 67,
+      "strategies": {
+        "generation_rejected": 31,
+        "semi_structured_relation": 59,
+        "structured_exact": 3,
+        "gguf_generation": 5,
+        "ambiguous": 1,
+        "conflicting": 1
+      },
+      "statuses": {
+        "GENERATION_REJECTED": 31,
+        "ANSWER_RETURNED": 67,
+        "AMBIGUOUS": 1,
+        "CONFLICTING": 1
+      },
+      "language_consistency": {
+        "passed": 100,
+        "denominator": 100
+      },
+      "grounding_validation": {
+        "passed": 67,
+        "denominator": 67
+      },
+      "generation": {
+        "rows": 8,
+        "attempts": 11,
+        "accepted": 5,
+        "rejected": 3,
+        "retries": 1,
+        "successful_retries": 0,
+        "failed_retries": 1
+      },
+      "runtime_errors": 0
+    }
+  },
+  "retrieval_metrics": {
+    "english": {
+      "page_hit_1": {
+        "value": 0.67,
+        "numerator": 67,
+        "denominator": 100
+      },
+      "page_hit_3": {
+        "value": 0.99,
+        "numerator": 99,
+        "denominator": 100
+      },
+      "mrr_3": {
+        "value": 0.8283333333333333,
+        "numerator": 82.83333333333333,
+        "denominator": 100
+      },
+      "entity_hit_1": {
+        "value": 1.0,
+        "numerator": 70,
+        "denominator": 70
+      },
+      "entity_hit_3": {
+        "value": 1.0,
+        "numerator": 70,
+        "denominator": 70
+      },
+      "field_hit_1": {
+        "value": 0.9347826086956522,
+        "numerator": 86,
+        "denominator": 92
+      },
+      "field_hit_3": {
+        "value": 0.9782608695652174,
+        "numerator": 90,
+        "denominator": 92
+      },
+      "supportable_1": {
+        "value": 0.91,
+        "numerator": 91,
+        "denominator": 100
+      },
+      "supportable_3": {
+        "value": 0.94,
+        "numerator": 94,
+        "denominator": 100
+      }
+    },
+    "bangla": {
+      "page_hit_1": {
+        "value": 0.53,
+        "numerator": 53,
+        "denominator": 100
+      },
+      "page_hit_3": {
+        "value": 0.97,
+        "numerator": 97,
+        "denominator": 100
+      },
+      "mrr_3": {
+        "value": 0.74,
+        "numerator": 74.0,
+        "denominator": 100
+      },
+      "entity_hit_1": {
+        "value": 1.0,
+        "numerator": 70,
+        "denominator": 70
+      },
+      "entity_hit_3": {
+        "value": 1.0,
+        "numerator": 70,
+        "denominator": 70
+      },
+      "field_hit_1": {
+        "value": 0.9444444444444444,
+        "numerator": 85,
+        "denominator": 90
+      },
+      "field_hit_3": {
+        "value": 0.9777777777777777,
+        "numerator": 88,
+        "denominator": 90
+      },
+      "supportable_1": {
+        "value": 0.85,
+        "numerator": 85,
+        "denominator": 100
+      },
+      "supportable_3": {
+        "value": 0.88,
+        "numerator": 88,
+        "denominator": 100
+      }
+    },
+    "banglish": {
+      "page_hit_1": {
+        "value": 0.53,
+        "numerator": 53,
+        "denominator": 100
+      },
+      "page_hit_3": {
+        "value": 0.95,
+        "numerator": 95,
+        "denominator": 100
+      },
+      "mrr_3": {
+        "value": 0.735,
+        "numerator": 73.5,
+        "denominator": 100
+      },
+      "entity_hit_1": {
+        "value": 1.0,
+        "numerator": 70,
+        "denominator": 70
+      },
+      "entity_hit_3": {
+        "value": 1.0,
+        "numerator": 70,
+        "denominator": 70
+      },
+      "field_hit_1": {
+        "value": 0.9444444444444444,
+        "numerator": 85,
+        "denominator": 90
+      },
+      "field_hit_3": {
+        "value": 1.0,
+        "numerator": 90,
+        "denominator": 90
+      },
+      "supportable_1": {
+        "value": 0.93,
+        "numerator": 93,
+        "denominator": 100
+      },
+      "supportable_3": {
+        "value": 0.97,
+        "numerator": 97,
+        "denominator": 100
+      }
+    },
+    "overall": {
+      "page_hit_1": {
+        "value": 0.5766666666666667,
+        "numerator": 173,
+        "denominator": 300
+      },
+      "page_hit_3": {
+        "value": 0.97,
+        "numerator": 291,
+        "denominator": 300
+      },
+      "mrr_3": {
+        "value": 0.7677777777777779,
+        "numerator": 230.33333333333337,
+        "denominator": 300
+      },
+      "entity_hit_1": {
+        "value": 1.0,
+        "numerator": 210,
+        "denominator": 210
+      },
+      "entity_hit_3": {
+        "value": 1.0,
+        "numerator": 210,
+        "denominator": 210
+      },
+      "field_hit_1": {
+        "value": 0.9411764705882353,
+        "numerator": 256,
+        "denominator": 272
+      },
+      "field_hit_3": {
+        "value": 0.9852941176470589,
+        "numerator": 268,
+        "denominator": 272
+      },
+      "supportable_1": {
+        "value": 0.8966666666666666,
+        "numerator": 269,
+        "denominator": 300
+      },
+      "supportable_3": {
+        "value": 0.93,
+        "numerator": 279,
+        "denominator": 300
+      }
+    }
+  },
+  "frozen_step7f_retrieval_comparison": {
+    "english": {
+      "page_hit_1": 0.67,
+      "page_hit_3": 0.99,
+      "mrr_3": 0.8283333333333333,
+      "entity_hit_1": 0.9714285714285714,
+      "entity_hit_3": 1.0,
+      "field_hit_1": 0.9347826086956522,
+      "field_hit_3": 0.9782608695652174,
+      "supportable_1": 0.89,
+      "supportable_3": 0.93
+    },
+    "bangla": {
+      "page_hit_1": 0.54,
+      "page_hit_3": 0.97,
+      "mrr_3": 0.745,
+      "entity_hit_1": 0.9714285714285714,
+      "entity_hit_3": 0.9857142857142858,
+      "field_hit_1": 0.9444444444444444,
+      "field_hit_3": 0.9777777777777777,
+      "supportable_1": 0.89,
+      "supportable_3": 0.91
+    },
+    "banglish": {
+      "page_hit_1": 0.53,
+      "page_hit_3": 0.95,
+      "mrr_3": 0.735,
+      "entity_hit_1": 0.9714285714285714,
+      "entity_hit_3": 1.0,
+      "field_hit_1": 0.9444444444444444,
+      "field_hit_3": 1.0,
+      "supportable_1": 0.91,
+      "supportable_3": 0.95
+    },
+    "overall": {
+      "page_hit_1": 0.58,
+      "page_hit_3": 0.97,
+      "mrr_3": 0.7694444444444445,
+      "entity_hit_1": 0.9714285714285714,
+      "entity_hit_3": 0.9952380952380953,
+      "field_hit_1": 0.9411764705882353,
+      "field_hit_3": 0.9852941176470589,
+      "supportable_1": 0.8966666666666666,
+      "supportable_3": 0.93
+    }
+  },
+  "multilingual_parity": {
+    "ENGLISH_AND_BANGLISH": 4,
+    "ALL_THREE_SUPPORTED": 91,
+    "OTHER_MISMATCH": 3,
+    "NONE_SUPPORTED": 2
+  },
+  "latency_seconds": {
+    "mean": 3.5647093889999995,
+    "median": 0.2357900500001051,
+    "p95": 29.89862210000001,
+    "maximum": 195.20310869999958,
+    "total": 1069.4128167
+  },
+  "memory": {
+    "peak_process_rss_bytes": 5308682240,
+    "peak_process_working_set_bytes": 5778276352,
+    "minimum_available_ram_bytes": 17166336,
+    "maximum_system_pagefile_used_bytes": 4992270336
+  },
+  "runtime_errors": [],
+  "quality_checks": {
+    "returned_answers": 223,
+    "returned_language_failures": 0,
+    "returned_grounding_failures": 15,
+    "returned_grounding_failure_reasons": {
+      "SEMANTIC_CONTRACT_UNCERTAIN": 1,
+      "MISSING_REQUIRED_ENTITY": 13,
+      "UNSUPPORTED_FACTUAL_TOKENS": 1
+    },
+    "returned_grounding_failure_question_ids": [
+      "Q030",
+      "Q047",
+      "Q050",
+      "Q052",
+      "Q055",
+      "Q056",
+      "Q062",
+      "Q063",
+      "Q064",
+      "Q069",
+      "Q073",
+      "Q074",
+      "Q076",
+      "Q077",
+      "Q096"
+    ],
+    "manual_review_scored": 0,
+    "engineering_complete_provisional": false,
+    "step8_recommended_now": false
+  }
+}

@@ -1,0 +1,16 @@
+Force rebuild requested. Building staged artifacts.
+answered 1/5 english Q001 elapsed=0.2s eta=0.8s
+answered 2/5 english Q002 elapsed=0.2s eta=0.3s
+answered 3/5 english Q003 elapsed=0.2s eta=0.1s
+answered 4/5 english Q004 elapsed=0.2s eta=0.0s
+answered 5/5 english Q005 elapsed=0.2s eta=0.0s
+answered 6/10 english Q006 elapsed=0.0s eta=0.0s
+answered 7/10 english Q007 elapsed=0.0s eta=0.0s
+answered 8/10 english Q008 elapsed=0.0s eta=0.0s
+answered 9/10 english Q009 elapsed=0.0s eta=0.0s
+answered 10/10 english Q010 elapsed=0.0s eta=0.0s
+............................................................s.................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 238 tests in 1.993s
+
+OK (skipped=1)

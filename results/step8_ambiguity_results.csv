@@ -1,0 +1,9 @@
+﻿case_id,question,answerability_status,answerability_reason,final_answer,expected
+AMB01,What is the credit?,AMBIGUOUS_QUERY,AMBIGUOUS_ENTITY,"Which course, document, program, or policy do you mean?",AMBIGUOUS_QUERY
+AMB02,What is its prerequisite?,AMBIGUOUS_QUERY,AMBIGUOUS_ENTITY,"Which course, document, program, or policy do you mean?",AMBIGUOUS_QUERY
+AMB03,Who published it?,AMBIGUOUS_QUERY,AMBIGUOUS_ENTITY,"Which course, document, program, or policy do you mean?",AMBIGUOUS_QUERY
+AMB04,How much attendance?,AMBIGUOUS_QUERY,AMBIGUOUS_ENTITY,"Which course, document, program, or policy do you mean?",AMBIGUOUS_QUERY
+AMB05,ক্রেডিট কত?,AMBIGUOUS_QUERY,AMBIGUOUS_ENTITY,"আপনি কোন কোর্স, নথি, প্রোগ্রাম বা নীতির কথা বলছেন?",AMBIGUOUS_QUERY
+AMB06,পূর্বশর্ত কী?,AMBIGUOUS_QUERY,AMBIGUOUS_ENTITY,"আপনি কোন কোর্স, নথি, প্রোগ্রাম বা নীতির কথা বলছেন?",AMBIGUOUS_QUERY
+AMB07,Credit koto?,AMBIGUOUS_QUERY,AMBIGUOUS_ENTITY,"Apni kon course, document, program, ba policy-r kotha bolchen?",AMBIGUOUS_QUERY
+AMB08,Prerequisite ki?,AMBIGUOUS_QUERY,AMBIGUOUS_ENTITY,"Apni kon course, document, program, ba policy-r kotha bolchen?",AMBIGUOUS_QUERY

@@ -9,6 +9,12 @@ from functools import lru_cache
 from typing import Any, Callable, Dict
 
 from .answer_policy import effective_answer_field, evidence_value, format_exact_fact, format_structured_text, select_answer_strategy
+from .answer_safety import answer_safety_failures, explicit_email_values, relation_compatible, requested_relation
+from .answerability import (
+    AnswerabilityDecision, AnswerabilityStatus, EvidenceLevel, assess_answerability,
+    clearly_out_of_domain, finalize_answerability, remove_untrusted_directives, safe_response,
+)
+from .course_rows import course_field_value, requested_course_code
 from .answer_bank import find_answer_bank_match
 from .config import TOP_K, VECTOR_DB_DIR
 from .embeddings import EmbeddingModel, get_embedding_model
@@ -19,13 +25,18 @@ from .evidence import (
     response_for_status,
     select_primary_evidence,
 )
+from .evidence_spans import expand_assessment_evidence
+from .document_metadata import metadata_fields_for_query
 from .fast_answer import build_extractive_answer, build_topic_answer, detect_runtime_intent, retrieve_lexical
 from .generator import generate_canonical_answer, realize_canonical_answer
+from .generator import rewrite_query_for_retrieval
+from .crosslingual import canonical_rewrite, crosslingual_assessment, fuse_queries
 from .generation_context import build_verified_evidence_package, evidence_excerpts
 from .grounding_validator import validate_grounding
 from .language_detector import detect_language_details
 from .language_validator import generation_rejected_answer, unsupported_answer, validate_language
 from .realization_validator import validate_realization
+from .relations import extract_relation, realize_relation, validate_relation_grounding
 from .retriever import Retriever
 from .query_normalization import build_query_representations
 from .semantic_contract import build_semantic_contract, repair_instruction
@@ -103,7 +114,7 @@ def _truncate_chunk_for_generation(question: str, chunk_text: str, max_words: in
     return " ".join(words[:max_words]).strip()
 
 
-def answer_question(
+def _answer_question_impl(
     question: str,
     top_k: int = TOP_K,
     status_callback: StatusCallback | None = None,
@@ -122,6 +133,7 @@ def answer_question(
     representations = build_query_representations(question)
     language_detection = detect_language_details(question)
     detected_language = language_detection.language
+    representations = replace(representations, target_language=detected_language)
     runtime_intent = detect_runtime_intent(question)
 
     answer_bank_match = None
@@ -166,6 +178,11 @@ def answer_question(
             "retry_used": False,
             "target_language": detected_language,
             "answer_strategy": "answer_bank",
+            "answerability_status": None,
+            "answerability_reason": "ANSWER_BANK_MODE_NOT_DOCUMENT_ASSESSED",
+            "evidence_level": "NONE",
+            "final_answer_allowed": True,
+            "answerability_seconds": 0.0,
             "latency_seconds": {"retrieval": 0.0, "answering": time.perf_counter() - pipeline_started, "generation": 0.0, "retry": 0.0, "total": time.perf_counter() - pipeline_started},
             "sources": [
                 {
@@ -200,8 +217,9 @@ def answer_question(
         report("Loading embedding model...")
         embedding_model = _get_embedding_model()
         report("Retrieving relevant context...")
-        retriever = Retriever(embedding_model=embedding_model, top_k=top_k)
-        retrieved = retriever.retrieve(question, index_path=index_path, metadata_path=metadata_path)
+        retriever = Retriever(embedding_model=embedding_model, top_k=max(top_k, 30))
+        original_pool = retriever.retrieve(question, index_path=index_path, metadata_path=metadata_path)
+        retrieved = original_pool[:top_k]
     else:
         report("Retrieving relevant context with fast lexical search...")
         retrieved = retrieve_lexical(question, metadata=metadata, top_k=top_k)
@@ -209,6 +227,85 @@ def answer_question(
 
     report("Validating retrieved evidence...")
     assessment = assess_evidence(question, retrieved)
+    initial_support_status = assessment.status.value
+    metadata_evidence_widened = False
+    if (use_generation and assessment.status is SupportStatus.INSUFFICIENT
+            and metadata_fields_for_query(question)):
+        # The dense retriever already supplied a bounded pool. A labeled
+        # front-matter field can sit below top-k without licensing a corpus
+        # scan, an unlabeled publisher guess, or cross-document value mixing.
+        widened = assess_evidence(question, original_pool)
+        if widened.status is not SupportStatus.INSUFFICIENT:
+            assessment, retrieved = widened, original_pool
+            metadata_evidence_widened = True
+    representations = replace(representations,
+                              requested_entity=assessment.request.primary_entity or "",
+                              requested_field=assessment.request.requested_field)
+    initial_top = list(original_pool[:top_k] if use_generation else retrieved)
+    fallback_trace: dict[str, Any] = {
+        "initial_support_status": initial_support_status,
+        "metadata_evidence_widened": metadata_evidence_widened,
+        "initial_top1": initial_top[:1], "initial_top3": initial_top[:3],
+        "fallback_triggered": False, "rewrite_method": "NONE",
+        "canonical_retrieval_query": "", "rewrite_validation": "NOT_ATTEMPTED",
+        "fallback_top1": [], "fallback_top3": [],
+        "merged_support_status": assessment.status.value,
+        "crosslingual_gate_reason": "NOT_ELIGIBLE",
+        "initial_retrieval_seconds": retrieval_seconds,
+        "rewrite_seconds": 0.0, "canonical_retrieval_seconds": 0.0,
+        "multi_query_fusion_seconds": 0.0, "fallback_seconds": 0.0,
+    }
+    if (use_generation and detected_language in {"bangla", "banglish"}
+            and assessment.status is SupportStatus.INSUFFICIENT):
+        fallback_trace["fallback_triggered"] = True
+        fallback_started = time.perf_counter()
+        try:
+            rewrite_started = time.perf_counter()
+            rewrite = canonical_rewrite(question, rewrite_query_for_retrieval)
+            fallback_trace["rewrite_seconds"] = time.perf_counter() - rewrite_started
+            representations = replace(representations,
+                                      canonical_retrieval_query=rewrite.query,
+                                      rewrite_method=rewrite.method,
+                                      retrieval_terms=tuple(rewrite.query.split()))
+            fallback_trace.update({"rewrite_method": rewrite.method,
+                                   "canonical_retrieval_query": rewrite.query,
+                                   "rewrite_validation": rewrite.validation})
+            if rewrite.query:
+                canonical_started = time.perf_counter()
+                canonical_pool = retriever.retrieve(rewrite.query, index_path=index_path,
+                                                    metadata_path=metadata_path)
+                fallback_trace["canonical_retrieval_seconds"] = time.perf_counter() - canonical_started
+                fallback_trace["fallback_top1"] = canonical_pool[:1]
+                fallback_trace["fallback_top3"] = canonical_pool[:3]
+                fusion_started = time.perf_counter()
+                merged = fuse_queries(original_pool, canonical_pool, top_k)
+                reassessed, gate_reason = crosslingual_assessment(question, rewrite, merged)
+                fallback_trace["multi_query_fusion_seconds"] = time.perf_counter() - fusion_started
+                fallback_trace["merged_support_status"] = reassessed.status.value
+                fallback_trace["crosslingual_gate_reason"] = gate_reason
+                if reassessed.status in {SupportStatus.SUPPORTED, SupportStatus.CONFLICTING, SupportStatus.AMBIGUOUS}:
+                    retrieved, assessment = merged, reassessed
+        except (RuntimeError, ValueError, FileNotFoundError) as exc:
+            fallback_trace["crosslingual_gate_reason"] = f"REWRITE_UNAVAILABLE:{type(exc).__name__}"
+        fallback_trace["fallback_seconds"] = time.perf_counter() - fallback_started
+    retrieval_seconds = time.perf_counter() - pipeline_started
+    if assessment.status is SupportStatus.SUPPORTED:
+        assessment = expand_assessment_evidence(assessment, metadata)
+    trust_started = time.perf_counter()
+    trust_relation = extract_relation(question, assessment, retrieved, detected_language) if assessment.status is SupportStatus.SUPPORTED else None
+    intended_relation = requested_relation(question)
+    extracted_relation = trust_relation.relation if trust_relation else None
+    trust_strategy = (select_answer_strategy(assessment.status, assessment.request.requested_field, runtime_intent, question)
+                      if assessment.status is SupportStatus.SUPPORTED else None)
+    trust = assess_answerability(
+        question, assessment, retrieved,
+        cross_lingual_fallback_used=bool(fallback_trace["fallback_triggered"]),
+        requested_relation=intended_relation or extracted_relation,
+        relation_supported=(relation_compatible(intended_relation, extracted_relation)
+                            if trust_relation else None),
+        generation_required=trust_strategy == "gguf_generation" if trust_strategy else None,
+    )
+    answerability_seconds = time.perf_counter() - trust_started
     pre_generation_support_status = assessment.status.value
     pre_generation_support_reason = assessment.reason
     verified = [item.to_dict() for item in assessment.evidence]
@@ -228,8 +325,8 @@ def answer_question(
         for item in verified
     ]
 
-    if assessment.status is not SupportStatus.SUPPORTED:
-        answer = response_for_status(assessment.status, detected_language)
+    if trust.answerability_status is not AnswerabilityStatus.SUPPORTED:
+        answer = safe_response(trust.answerability_status, detected_language)
         validation = validate_language(answer, detected_language)
         sources = [
             {
@@ -256,7 +353,7 @@ def answer_question(
             "generation_mode": assessment.status.value,
             "answer_bank_enabled": use_answer_bank,
             "support_status": assessment.status.value,
-            "final_status": "INSUFFICIENT_EVIDENCE" if assessment.status is SupportStatus.INSUFFICIENT else assessment.status.value.upper(),
+            "final_status": trust.answerability_status.value,
             "support_reason": assessment.reason,
             "requested_entity": assessment.request.primary_entity,
             "requested_field": assessment.request.requested_field,
@@ -279,6 +376,8 @@ def answer_question(
             "retry_used": False,
             "target_language": detected_language,
             "answer_strategy": "unsupported" if assessment.status is SupportStatus.INSUFFICIENT else assessment.status.value,
+            **trust.to_dict(),
+            "answerability_seconds": answerability_seconds,
             "latency_seconds": {"retrieval": retrieval_seconds, "answering": time.perf_counter() - pipeline_started - retrieval_seconds, "generation": 0.0, "retry": 0.0, "total": time.perf_counter() - pipeline_started},
             "sources": sources,
             "evidence": verified,
@@ -296,12 +395,14 @@ def answer_question(
             "retry_semantic_validation": {},
             "retry_grounding_validation": {},
             "final_fallback_reason": assessment.status.value,
+            **fallback_trace,
         }
 
     package = build_verified_evidence_package(question, detected_language, assessment, retrieved)
     semantic_contract = build_semantic_contract(package)
     context = list(evidence_excerpts(package))
-    requested_strategy = select_answer_strategy(assessment.status, assessment.request.requested_field, runtime_intent, question)
+    requested_strategy = trust_strategy
+    relation = trust_relation
     answer_field = effective_answer_field(assessment.request.requested_field, question)
     answer_strategy = requested_strategy
     generation_used = False
@@ -328,13 +429,23 @@ def answer_question(
     final_status = "ANSWER_RETURNED"
 
     answer = ""
-    if requested_strategy == "structured_exact":
+    if relation:
+        answer = realize_relation(relation)
+        answer_mode = "semi_structured_relation"
+        answer_strategy = "semi_structured_relation"
+    elif requested_strategy == "structured_exact":
         if runtime_intent == "final_exam_marks":
             answer = build_extractive_answer(question, verified_retrieved, detected_language, runtime_intent)
-        value = evidence_value(answer_field, context) if not answer else None
+        course_field = bool(answer_field in {"credits", "prerequisite"} and requested_course_code(question))
+        value = (course_field_value(question, answer_field, context) if course_field
+                 else evidence_value(answer_field, context)) if not answer else None
+        if answer_field == "email":
+            listed = explicit_email_values(question, context)
+            if listed:
+                value = ", ".join(listed)
         if value:
             answer = format_exact_fact(assessment.request.primary_entity, answer_field, value, detected_language)
-        if not answer:
+        if not answer and not course_field:
             extracted = build_extractive_answer(question, verified_retrieved, "english", runtime_intent)
             if extracted.startswith((
                 "Course code:", "Course title:", "Course type:", "Credit value:", "Prerequisite:",
@@ -502,17 +613,47 @@ def answer_question(
     if answer and not validation:
         report("Validating response language and factual grounding...")
         validation = validate_language(answer, detected_language)
-        grounding = validate_grounding(answer, package.evidence, semantic_contract)
+        grounding = (validate_relation_grounding(question, relation, assessment, answer) if relation
+                     else validate_grounding(answer, package.evidence, semantic_contract))
         first_language_validation = dict(validation)
         first_grounding_validation = dict(grounding)
 
+    # A recovered distribution answer must not silently drop components of a
+    # multi-percentage source. This is a narrow fallback safety check, not a
+    # change to the original Step-7E answer path.
+    distribution_requested = bool(re.search(r"\bdistribution\b|\bbonton\b|বণ্টন", question, re.I))
+    source_percentages = set(re.findall(r"\b(\d+(?:\.\d+)?)\s*%", " ".join(x.excerpt for x in assessment.evidence)))
+    answer_percentages = set(re.findall(r"\b(\d+(?:\.\d+)?)\s*%", answer))
+    incomplete_distribution = bool(
+        fallback_trace["fallback_triggered"] and distribution_requested
+        and len(source_percentages) > 1 and not source_percentages.issubset(answer_percentages)
+    )
+    if incomplete_distribution:
+        generation_rejection_reason = "INCOMPLETE_DISTRIBUTION_FROM_RECOVERED_EVIDENCE"
+    safety_failures = answer_safety_failures(
+        question, answer, context, extracted_relation=extracted_relation,
+        relation_values=relation.values if relation else (),
+    ) if answer else ()
+    if safety_failures:
+        generation_rejection_reason = ",".join(safety_failures)
     generation_failed = generation_used and (
         not answer
         or not validation.get("validation_passed", False)
         or not grounding.get("grounding_validation_passed", False)
+        or incomplete_distribution or bool(safety_failures)
+    )
+    relation_failed = bool(relation and (not answer or not validation.get("validation_passed", False)
+                                          or not grounding.get("grounding_validation_passed", False)
+                                          or bool(safety_failures)))
+    non_generated_validation_failed = bool(
+        answer and not generation_used
+        and (not validation.get("validation_passed", False)
+             or not grounding.get("grounding_validation_passed", False)
+             or bool(safety_failures))
     )
     structured_extraction_failed = (
-        not answer and requested_strategy in {"structured_exact", "structured_list"}
+        (not answer and requested_strategy in {"structured_exact", "structured_list"})
+        or incomplete_distribution or relation_failed or non_generated_validation_failed
     )
     if assessment.status is SupportStatus.SUPPORTED and (generation_failed or structured_extraction_failed):
         generation_rejection_reason = generation_rejection_reason or str(
@@ -531,6 +672,23 @@ def answer_question(
             "grounding_validation_reason": "GENERATION_REJECTED",
             "unsupported_facts": grounding.get("unsupported_facts", []) if grounding else [],
         }
+
+    semantic_signal = grounding.get("semantic_validation") if grounding else None
+    semantic_passed = semantic_signal is None or bool(semantic_signal.get("passed", False))
+    if relation or requested_strategy in {"structured_exact", "structured_list"}:
+        trust = replace(trust, structured_extractable=bool(answer and final_status == "ANSWER_RETURNED"))
+    trust = finalize_answerability(
+        trust, answer_present=bool(answer and final_status == "ANSWER_RETURNED"),
+        language_passed=bool(validation.get("validation_passed", False)),
+        grounding_passed=bool(grounding.get("grounding_validation_passed", False)),
+        semantic_passed=semantic_passed, generation_used=generation_used,
+        rejection_reason=generation_rejection_reason or "",
+    )
+    if not trust.final_answer_allowed:
+        final_status = AnswerabilityStatus.GENERATION_REJECTED.value
+        answer = safe_response(AnswerabilityStatus.GENERATION_REJECTED, detected_language)
+        answer_mode = "generation_rejected"
+        answer_strategy = "generation_rejected"
 
     primary = select_primary_evidence(answer, assessment.evidence) or (assessment.evidence[0] if assessment.evidence else None)
 
@@ -576,13 +734,22 @@ def answer_question(
         "language_validation_reason": validation.get("validation_reason"),
         "grounding_validation_passed": bool(grounding.get("grounding_validation_passed", False)),
         "grounding_validation_reason": grounding.get("grounding_validation_reason"),
+        "semantic_validation_passed": semantic_passed,
         "generation_rejection_reason": generation_rejection_reason,
         "unsupported_generated_facts": grounding.get("unsupported_facts", []),
         "generation_used": generation_used,
+        "relation_type": relation.relation if relation else None,
+        "relation_extracted": ({"subject": relation.subject, "relation": relation.relation,
+                                "values": list(relation.values), "source": relation.source,
+                                "page": relation.page, "chunk_id": relation.chunk_id,
+                                "evidence_span": relation.evidence_span,
+                                "continuation_chunk_ids": list(relation.continuation_chunk_ids)} if relation else None),
         "generation_attempts": generation_attempts,
         "retry_used": retry_attempted,
         "target_language": detected_language,
         "answer_strategy": answer_strategy,
+        **trust.to_dict(),
+        "answerability_seconds": answerability_seconds,
         "requested_answer_strategy": requested_strategy,
         "generation_error": generation_error,
         "canonical_answer": canonical_answer,
@@ -617,7 +784,59 @@ def answer_question(
         "retry_semantic_validation": retry_grounding_validation.get("semantic_validation", {}),
         "retry_grounding_validation": retry_grounding_validation,
         "final_fallback_reason": final_fallback_reason,
+        **fallback_trace,
     }
+
+
+def _preflight_response(question: str, status: AnswerabilityStatus, reason: str,
+                        started: float, error: str = "") -> Dict[str, Any]:
+    language = detect_language_details(question).language
+    answer = safe_response(status, language)
+    validation = validate_language(answer, language)
+    decision = AnswerabilityDecision(status, reason, EvidenceLevel.NONE)
+    return {
+        "question": question, "answer": answer, "detected_language": language,
+        "answer_mode": status.value.casefold(), "answer_strategy": status.value.casefold(),
+        "support_status": SupportStatus.INSUFFICIENT.value, "final_status": status.value,
+        "source": None, "page": None, "supporting_excerpt": None,
+        "sources": [], "evidence": [], "retrieved_context": [],
+        "generation_used": False, "generation_attempts": 0, "retry_used": False,
+        "generation_validation_status": "NOT_ATTEMPTED",
+        "language_validation_passed": bool(validation["validation_passed"]),
+        "grounding_validation_passed": False,
+        "latency_seconds": {"retrieval": 0.0, "answering": 0.0, "generation": 0.0,
+                            "retry": 0.0, "total": time.perf_counter() - started},
+        "answerability_seconds": time.perf_counter() - started,
+        "runtime_error": error,
+        **decision.to_dict(),
+    }
+
+
+def answer_question(
+    question: str,
+    top_k: int = TOP_K,
+    status_callback: StatusCallback | None = None,
+    use_generation: bool = True,
+    use_answer_bank: bool = False,
+) -> Dict[str, Any]:
+    """Public trust boundary: bypass instructions and failures cannot leak facts."""
+    started = time.perf_counter()
+    if not question or not question.strip():
+        return _preflight_response(question or "", AnswerabilityStatus.AMBIGUOUS_QUERY,
+                                   "EMPTY_QUERY", started)
+    cleaned = remove_untrusted_directives(question)
+    if clearly_out_of_domain(question):
+        return _preflight_response(question, AnswerabilityStatus.OUT_OF_DOMAIN,
+                                   "OUT_OF_DOMAIN", started)
+    try:
+        result = _answer_question_impl(cleaned, top_k=top_k, status_callback=status_callback,
+                                       use_generation=use_generation, use_answer_bank=use_answer_bank)
+    except Exception as exc:
+        return _preflight_response(question, AnswerabilityStatus.SYSTEM_ERROR,
+                                   "SYSTEM_EXCEPTION", started,
+                                   f"{type(exc).__name__}: {exc}")
+    result["question"] = question
+    return result
 
 
 __all__ = ["answer_question"]

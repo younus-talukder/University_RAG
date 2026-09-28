@@ -53,6 +53,12 @@ class QueryRepresentations:
     original_query: str
     normalized_query: str
     retrieval_query: str
+    target_language: str = ""
+    requested_entity: str = ""
+    requested_field: str = ""
+    retrieval_terms: tuple[str, ...] = ()
+    canonical_retrieval_query: str = ""
+    rewrite_method: str = "NONE"
 
 
 def normalize_unicode(text: str) -> str:
@@ -140,6 +146,16 @@ def normalize_retrieval_text(text: str, *, normalize_banglish: bool = True) -> s
     return re.sub(r"\s+", " ", value).strip(" -/")
 
 
+def is_mark_distribution_query(text: str) -> bool:
+    """Recognize an assessment breakdown, not an isolated mark/number word."""
+    value = normalize_retrieval_text(text)
+    return bool(re.search(
+        r"\bmarks?\s+distribution\b|"
+        r"(?:মার্কস?|মার্কের|নম্বর(?:ের)?)\s*(?:কীভাবে\s*|কিভাবে\s*)?বণ্টন",
+        value, re.I,
+    ))
+
+
 def build_query_representations(query: str) -> QueryRepresentations:
     original = str(query)
     normalized = normalize_retrieval_text(original)
@@ -179,6 +195,7 @@ __all__ = [
     "compact_entity",
     "dense_query_for_strategy",
     "extract_course_entities",
+    "is_mark_distribution_query",
     "normalize_retrieval_text",
     "normalize_unicode",
 ]

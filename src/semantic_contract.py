@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Literal, Sequence
 
 from .generation_context import VerifiedEvidencePackage
+from .course_rows import course_field_value, requested_course_code
 
 
 Polarity = Literal["affirmative", "negative", "unknown"]
@@ -61,7 +62,7 @@ NUMBER_WORDS: dict[str, str] = {
     "নয়": "9", "নয়": "9", "দশ": "10",
 }
 NUMBER_WORD_RE = re.compile(
-    r"\b(?:" + "|".join(re.escape(word) for word in NUMBER_WORDS) + r")\b|(?<!\d)\d{1,3}(?!\d)",
+    r"\b(?:" + "|".join(re.escape(word) for word in NUMBER_WORDS) + r")\b|(?<![\w.])\d+(?:\.\d+)?(?!\w)",
     re.I,
 )
 GENERIC_ANCHORS = {
@@ -82,6 +83,10 @@ class FactPlanItem:
 
 @dataclass(frozen=True)
 class SemanticContract:
+    question: str
+    requested_field: str
+    bound_course_code: str | None
+    bound_course_value: str | None
     target_language: str
     required_entities: tuple[str, ...]
     required_relations: tuple[str, ...]
@@ -232,12 +237,22 @@ def build_semantic_contract(package: VerifiedEvidencePackage) -> SemanticContrac
     required_entities = tuple(dict.fromkeys(filter(None, (requested_entity, document_subject))))
     required_values = tuple(dict.fromkeys(anchor for fact in facts for anchor in fact.required_anchors))
     full_evidence = "\n".join(item.excerpt for item in package.evidence)
+    course_code = requested_course_code(package.question) if package.requested_field in {"credits", "prerequisite"} else None
+    course_value = (course_field_value(package.question, package.requested_field,
+                                       [item.excerpt for item in package.evidence]) if course_code else None)
+    if package.requested_field == "prerequisite" and course_value and course_value.casefold() in {"nil", "none", "n/a"}:
+        required_polarity = "negative"
+    course_count = bool(re.search(r"\bhow\s+many\b|\bmaximum\b|\bkoyta\b|কয়টি|কত", package.question, re.I)
+                        and re.search(r"\brepeat(?:ed|ing)?\b|পুনরায়|পুনঃপরীক্ষা", package.question, re.I)
+                        and re.search(r"\bcourses?\b|কোর্স", package.question, re.I))
+    repeat_count = re.search(r"\brepeat\s+(?:up\s+to\s+|a\s+maximum\s+of\s+|at\s+most\s+)(\d+|[A-Za-z]+)\s+courses?\b", full_evidence, re.I) if course_count else None
     relations = tuple(dict.fromkeys(fact.relation for fact in facts))
     relation_set = {fact.relation for fact in facts}
     required_cardinalities = (
+        (course_value,) if course_code and package.requested_field == "credits" and course_value else
+        (NUMBER_WORDS.get(repeat_count.group(1).casefold(), repeat_count.group(1)),) if repeat_count else
         tuple(dict.fromkeys(value for fact in facts[:1] for value in _cardinalities(fact.value or fact.evidence)))
-        if exact_cardinality_required or CONDITION_QUESTION_RE.search(package.question)
-        else ()
+        if (exact_cardinality_required or CONDITION_QUESTION_RE.search(package.question)) and not course_code else ()
     )
     parsed_values = all(fact.value for fact in facts) if relation_set.intersection(STRICT_RELATIONS) else True
     relation_atoms = _atomic_anchors(" ".join(
@@ -257,6 +272,10 @@ def build_semantic_contract(package: VerifiedEvidencePackage) -> SemanticContrac
         and required_polarity != "unknown" and parsed_values
     )
     return SemanticContract(
+        question=package.question,
+        requested_field="course_count" if course_count else package.requested_field,
+        bound_course_code=course_code,
+        bound_course_value=course_value,
         target_language=package.original_language,
         required_entities=required_entities,
         required_relations=relations,
@@ -291,7 +310,44 @@ def validate_semantic_contract(answer: str, contract: SemanticContract) -> dict[
     if contract.required_polarity != "unknown" and answer_polarity != contract.required_polarity:
         details.append(f"expected={contract.required_polarity};answer={answer_polarity}")
         return {"passed": False, "reason": "WRONG_POLARITY", "repairable": True, "details": details}
-
+    if contract.bound_course_code:
+        if not contract.bound_course_value:
+            return {"passed": False, "reason": "UNVERIFIED_COURSE_ROW", "repairable": False, "details": [contract.bound_course_code]}
+        if contract.bound_course_code not in re.sub(r"[^A-Za-z0-9]", "", answer).upper():
+            return {"passed": False, "reason": "MISSING_REQUIRED_ENTITY", "repairable": True, "details": [contract.bound_course_code]}
+        if contract.requested_field == "credits":
+            from decimal import Decimal, InvalidOperation
+            numbers = re.findall(r"(?<![\w.])\d+(?:\.\d+)?(?!\w)", answer)
+            try:
+                if Decimal(contract.bound_course_value) not in {Decimal(value) for value in numbers}:
+                    return {"passed": False, "reason": "WRONG_FIELD_VALUE", "repairable": False, "details": [contract.bound_course_value]}
+            except InvalidOperation:
+                return {"passed": False, "reason": "WRONG_FIELD_VALUE", "repairable": False, "details": [contract.bound_course_value]}
+        elif contract.bound_course_value.casefold() in {"nil", "none", "n/a"}:
+            if not re.search(r"\b(?:nil|none|no\s+(?:listed\s+)?prerequisite|kono\s+prerequisite\s+deya\s+nei)\b|কোনো\s+পূর্বশর্ত\s+দেওয়া\s+নেই", answer, re.I):
+                return {"passed": False, "reason": "WRONG_FIELD_VALUE", "repairable": False, "details": [contract.bound_course_value]}
+        elif re.sub(r"\W+", "", contract.bound_course_value).casefold() not in re.sub(r"\W+", "", answer).casefold():
+            return {"passed": False, "reason": "WRONG_FIELD_VALUE", "repairable": False, "details": [contract.bound_course_value]}
+    if contract.requested_field == "course_count":
+        if not contract.required_cardinalities or not re.search(r"\brepeat\b|পুনরায়|পুনঃপরীক্ষা", answer, re.I) or not re.search(r"\bcourses?\b|কোর্স", answer, re.I):
+            return {"passed": False, "reason": "WRONG_FIELD_VALUE", "repairable": False, "details": ["repeat-course count required"]}
+    if re.search(r"\bestablish(?:ed)?\b|\bfounded\b|প্রতিষ্ঠ|protishth", contract.question, re.I):
+        acronyms = [value for value in re.findall(r"\b[A-Z]{2,8}\b", contract.question)
+                    if value not in {"PDF", "CGPA", "GPA"}]
+        if acronyms:
+            focus = acronyms[0]
+            expansion = re.search(rf"([A-Z][A-Za-z ]{{4,80}}?)\s*\({re.escape(focus)}\)", answer)
+            expanded = expansion.group(1).strip().casefold() if expansion else ""
+            for sentence in _sentences(answer):
+                if not re.search(r"\b(?:established|founded|establish)\b", sentence, re.I):
+                    continue
+                claim = re.search(r"^\s*(?:the\s+)?(.+?)\s+(?:was\s+)?(?:established|founded|establish)\b", sentence, re.I)
+                if not claim:
+                    continue
+                subject = claim.group(1).strip()
+                if re.search(rf"\b{re.escape(focus)}\b", subject) or (expanded and subject.casefold() == expanded):
+                    continue
+                return {"passed": False, "reason": "ENTITY_FOCUS_MISMATCH", "repairable": True, "details": [subject]}
     compact_answer = _normalized_anchor(answer)
     # Only enforce the inferred document subject when the evidence relation was
     # too weak to parse confidently. Explicit requested entities remain governed
@@ -330,6 +386,7 @@ def validate_semantic_contract(answer: str, contract: SemanticContract) -> dict[
     if (
         contract.target_language != "english"
         and contract.confidence == "limited"
+        and not contract.bound_course_value
         and any(relation in STRICT_RELATIONS or relation == "general_claim" for relation in contract.required_relations)
     ):
         return {

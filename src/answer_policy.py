@@ -52,6 +52,10 @@ LIST_FIELDS = frozenset({"topic", "weekly_content", "learning_outcome"})
 
 
 def effective_answer_field(requested_field: str, question: str) -> str:
+    if re.search(r"\b(?:how\s+many|maximum|koyta|কয়টি|কত)\b", question, re.I) and re.search(
+        r"\b(?:repeat(?:ed|ing)?|re[- ]?examination)\b|পুনরায়|পুনঃপরীক্ষা", question, re.I
+    ) and re.search(r"\bcourses?\b|কোর্স", question, re.I):
+        return "course_count"
     if requested_field == "semester" and re.search(r"\b(?:how long|duration|koto)\b|সময়কাল|কতদিন", question, re.I):
         return "duration"
     return requested_field
@@ -66,6 +70,8 @@ def select_answer_strategy(
     status = support_status.value if isinstance(support_status, SupportStatus) else str(support_status)
     if status != SupportStatus.SUPPORTED.value:
         return status if status in {"unsupported", "ambiguous", "conflicting"} else "unsupported"  # type: ignore[return-value]
+    if effective_answer_field(requested_field, question) == "course_count":
+        return "gguf_generation"
     explanatory_form = bool(re.search(r"\b(?:explain|describe|why|how\s+is|how\s+does|kivabe)\b|কীভাবে|কিভাবে|ব্যাখ্যা", question, re.I))
     if explanatory_form and requested_field in {"credits", "attendance", "requirement", "policy"}:
         return "gguf_generation"
@@ -97,6 +103,12 @@ def format_exact_fact(entity: str | None, field: str, value: str, language: Lang
     clean_value = " ".join(str(value).split()).strip().rstrip(".।")
     if not clean_value:
         return ""
+    if field == "prerequisite" and clean_value.casefold() in {"nil", "none", "n/a"} and entity:
+        return {
+            "english": f"{entity_text} has no listed prerequisite.",
+            "bangla": f"{entity_text} কোর্সের কোনো পূর্বশর্ত দেওয়া নেই।",
+            "banglish": f"{entity_text} course-er kono prerequisite deya nei.",
+        }[language]
 
     if language == "english":
         templates = {

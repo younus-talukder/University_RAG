@@ -1,0 +1,63 @@
+{
+  "targeted_completion": 30,
+  "primary_targeted_completion": 24,
+  "credit_exception_completion": 6,
+  "targeted_gate_passed": true,
+  "q018": {
+    "banglish": "SUPPORTED",
+    "bangla": "GENERATION_REJECTED",
+    "english": "SUPPORTED"
+  },
+  "q088": {
+    "banglish": "SUPPORTED",
+    "bangla": "SUPPORTED",
+    "english": "SUPPORTED"
+  },
+  "q088_contributing_passages": 2,
+  "q088_adjudication": "EQUIVALENT_NO_PREREQUISITE",
+  "misleading_status": {
+    "current_false_conflict": 0,
+    "current_false_ambiguity": 0,
+    "prior_false_conflicts_resolved": 8
+  },
+  "unsafe_returned_answers": 0,
+  "unsafe_keys": [],
+  "tests": {
+    "previous": 232,
+    "new": 6,
+    "total": 238,
+    "skipped": 1,
+    "failures": 0,
+    "exit_code": 0
+  },
+  "full_300_rerun": {
+    "performed": false,
+    "prior_step8b_safe_answer_coverage": "258/300 (86.0%), not remeasured"
+  },
+  "corpus_scope_audit": {
+    "indexed_chunks": 491,
+    "credit_course_entities_checked": 49,
+    "prerequisite_course_entities_checked": 20,
+    "divergent_credit_entities": [
+      "CSE304",
+      "HSS101"
+    ],
+    "divergent_prerequisite_entities": []
+  },
+  "manual_review": {
+    "rows": 30,
+    "per_language": {
+      "english": 10,
+      "bangla": 10,
+      "banglish": 10
+    },
+    "human_fields_blank": true
+  },
+  "memory": {
+    "peak_rss_gib": 5.371166229248047,
+    "min_available_mib": 237.44921875,
+    "peak_pagefile_gib": 3.1008338928222656
+  },
+  "step8_engineering_complete": true,
+  "step9_started": false
+}
