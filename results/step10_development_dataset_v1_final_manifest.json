@@ -1,0 +1,43 @@
+{
+  "annotation_version": "v1-final",
+  "column_schema": [
+    "question_id",
+    "course_code",
+    "intent",
+    "difficulty",
+    "english_question",
+    "bangla_question",
+    "banglish_question",
+    "ground_truth_answer_en",
+    "ground_truth_answer_bn",
+    "ground_truth_answer_banglish",
+    "expected_source",
+    "expected_page",
+    "ground_truth_status",
+    "notes"
+  ],
+  "dataset_filename": "questions.csv",
+  "dataset_sha256": "8b2e6c06ffba8d4dee58fd979706f244e5891591c4e8e25d9beffea801e149b2",
+  "development_dataset_version": "v1-final",
+  "evaluation_only": true,
+  "ground_truth_status_distribution": {
+    "verified": 100
+  },
+  "inference_rows_executed": 0,
+  "language_variant_count": 300,
+  "language_variants": {
+    "bangla": 100,
+    "banglish": 100,
+    "english": 100
+  },
+  "q007_adjudication_version": "page4-engineering-confirmed-2026-09-30",
+  "q007_evaluation_annotation": {
+    "bangla_reference": "UAP শুরুতে Computer Science & Engineering এবং Business Administration-এ চার বছরের ব্যাচেলর ডিগ্রি প্রোগ্রাম অফার করেছিল।",
+    "banglish_reference": "UAP shurute Computer Science & Engineering ebong Business Administration-e four-year bachelor degree program offer korechilo.",
+    "english_reference": "UAP initially offered four-year bachelor degree programs in Computer Science & Engineering and Business Administration.",
+    "expected_page": "4",
+    "expected_source": "curricula_BSc-Curriculum-New.pdf",
+    "notes": "Imported from uap_cse_multilingual_rag_dataset.xlsx."
+  },
+  "row_count": 100
+}

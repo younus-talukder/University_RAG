@@ -1,0 +1,4 @@
+﻿language,n,safe_answer_coverage,abstention_rate,unsafe_returned_answer_count
+bangla,100,0.72,0.28,0
+banglish,100,0.81,0.19,0
+english,100,0.84,0.16,0

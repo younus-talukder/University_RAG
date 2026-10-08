@@ -1,0 +1,31 @@
+{
+  "column_schema": [
+    "question_id",
+    "course_code",
+    "intent",
+    "difficulty",
+    "english_question",
+    "bangla_question",
+    "banglish_question",
+    "ground_truth_answer_en",
+    "ground_truth_answer_bn",
+    "ground_truth_answer_banglish",
+    "expected_source",
+    "expected_page",
+    "ground_truth_status",
+    "notes"
+  ],
+  "dataset_filename": "questions.csv",
+  "dataset_path": "C:\\code\\University_RAG\\data\\questions\\questions.csv",
+  "dataset_sha256": "8b2e6c06ffba8d4dee58fd979706f244e5891591c4e8e25d9beffea801e149b2",
+  "errors": [],
+  "language_variant_count": 300,
+  "languages": [
+    "english",
+    "bangla",
+    "banglish"
+  ],
+  "row_count": 100,
+  "valid": true,
+  "warnings": []
+}

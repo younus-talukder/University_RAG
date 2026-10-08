@@ -1,0 +1,4 @@
+﻿language,n,safe_answer_coverage,hit_1,hit_3,mrr_3
+bangla,100,0.84,0.53,0.97,0.74
+banglish,100,0.88,0.53,0.95,0.735
+english,100,0.88,0.67,0.99,0.8283333333333334

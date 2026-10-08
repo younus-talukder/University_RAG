@@ -1,0 +1,2 @@
+﻿difficulty,n,safe_answer_coverage,abstention_rate,unsafe_returned_answer_count,hit_1,hit_3,mrr_3,source_accuracy,page_accuracy,entity_hit_1,entity_hit_3,field_hit_1,field_hit_3,supportable_1,supportable_3,latency_mean_seconds,latency_p95_seconds
+medium,300,0.79,0.21,0,0.41333333333333333,0.8966666666666666,0.6338888888888888,0.97,0.41333333333333333,1.0,1.0,0.9304029304029304,0.9597069597069597,0.6933333333333334,0.8666666666666667,0.041733680666673836,0.05971179999960441

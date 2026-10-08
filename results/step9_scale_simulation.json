@@ -1,0 +1,11 @@
+{
+  "corpus_schema_has_document_count": true,
+  "descriptors": 6000,
+  "inference_results_fabricated": false,
+  "model_config_recorded": true,
+  "note": "Schema and bookkeeping simulation only; no 6,000-question or 70-PDF benchmark was run",
+  "peak_python_allocation_bytes": 443806,
+  "planned_full_checkpoint_batches": 600,
+  "simulation_only": true,
+  "unique_evaluation_ids": 6000
+}

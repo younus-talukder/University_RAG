@@ -10,7 +10,7 @@ This project is a thesis prototype for a multilingual university RAG chatbot gro
 - Retrieval: pinned BGE-M3 + FAISS `IndexFlatIP`, local BM25, metadata candidates, and reciprocal-rank fusion (RRF).
 - Generator: Qwen2.5-7B-Instruct GGUF `Q4_K_M` through `llama-cpp-python`.
 - UI: Streamlit.
-- Current vector index: 490 structure-aware chunks from 92 evidence-bearing pages.
+- Current vector index: 491 structure-aware chunks (exact provenance is in `vector_db/index_manifest.json`).
 
 ## Knowledge And Evaluation Data
 
@@ -243,6 +243,45 @@ Run regression tests:
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+## Dataset-agnostic benchmarks (Step 9)
+
+The primary offline evaluator is `scripts/evaluate_benchmark.py`. It accepts CSV or XLSX datasets and creates a unique folder under `results/benchmarks/` for each run. The current 100-question/300-variant set is `DEVELOPMENT`, not a final thesis benchmark. The evaluator passes only question text and runtime flags to the production pipeline; references, paired translations, expected sources/pages, and human scores are used after inference. No Step 1–8 answer rules are changed by benchmark findings.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\evaluate_benchmark.py --dataset data\questions\questions.csv --output-dir results\benchmarks --classification DEVELOPMENT
+```
+
+The strict profile requires answer bank OFF, reranker OFF, and temperature 0. It runs sequentially with Qwen only when the existing pipeline requires generation. To validate the framework without generation, add `--skip-generation`; such a run is labeled in `run_config.json` and is not interchangeable with a full-generation run. Use `--languages`, `--limit`, `--checkpoint-every`, and `--human-sample-size` for scoped development diagnostics. Run folders never overwrite one another.
+
+Resume an interrupted run with the same dataset and options plus the existing run directory:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\evaluate_benchmark.py --dataset data\questions\questions.csv --output-dir results\benchmarks --classification DEVELOPMENT --resume results\benchmarks\<run_id>
+```
+
+Resume refuses a changed dataset hash, evaluator configuration, corpus/index fingerprint, model configuration, or source-code fingerprint. Complete and partial checkpoints can be reanalyzed without running inference:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\analyze_benchmark.py --run-dir results\benchmarks\<run_id>
+```
+
+Each run records dataset validation, effective configuration, Git state, index and model provenance, result and top-three retrieval CSVs, automatic metrics, multilingual parity, error analysis, thesis-ready tables, a blank human-review sample, and a Markdown report. Expected sources/pages may be single values, semicolon/pipe-separated values, JSON arrays, or paired `expected_evidence` JSON objects. Missing optional labels yield `NOT_AVAILABLE` metrics. `SafeAnswerCoverage` is the fraction of all inference rows with a returned answer passing mandatory trust checks; it is not factual accuracy. Automatic answer overlap is a proxy and is not applied to abstention messages.
+
+For a fresh human-review sample or blinded multi-system sample:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\create_human_review_sample.py --results results\benchmarks\<run_id>\results.csv --sample-size 30 --seed 42 --output results\benchmarks\<run_id>\review.csv
+.\.venv\Scripts\python.exe scripts\create_human_review_sample.py --results <run_a_results.csv> <run_b_results.csv> --sample-size 60 --seed 42 --blinded --blinding-key <private_key.csv> --output <blinded_review.csv>
+```
+
+Reviewers fill 1–5 correctness/relevance/groundedness/completeness/naturalness, `PASS`/`FAIL` semantic consistency, and `ACCEPT`/`PARTIAL`/`REJECT` overall acceptability. Do not manufacture ratings. Import only genuine scored rows:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\import_human_review.py --results results\benchmarks\<run_id>\results.csv --reviews <completed_review.csv> --output-dir results\benchmarks\<run_id>
+```
+
+For a later independent benchmark, prepare its own CSV/XLSX data and index, use `--classification FINAL_BENCHMARK`, and keep the strict profile. The evaluation schema supports multiple document IDs and sources, but no 70-PDF or 6,000-question inference benchmark has been validated on the current machine. See `docs/step9_benchmark.md` for schema, metric definitions, partial-run handling, and the comparison boundary.
 
 Run controlled fast evaluation:
 

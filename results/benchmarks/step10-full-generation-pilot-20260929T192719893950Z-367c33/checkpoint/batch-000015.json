@@ -1,0 +1,609 @@
+{
+  "batch_number": 15,
+  "compatibility_sha256": "4d1b478273b44808588675068659c844fc4f4927a4e096ecdfebcbd19f6896c6",
+  "records": [
+    {
+      "annotation_status": "verified",
+      "answer_returned": false,
+      "answer_safety_failures": [],
+      "answer_strategy": "generation_rejected",
+      "answerability_reason": "GENERATION_GROUNDING_FAILURE",
+      "answerability_seconds": 0.0010466000003361842,
+      "answerability_status": "GENERATION_REJECTED",
+      "available_ram_bytes": 271515648,
+      "base_question_id": "Q024",
+      "best_support_rank": 1,
+      "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0004-c0001",
+      "course_code": "GENERAL",
+      "cross_lingual_fallback_used": false,
+      "detected_language": "bangla",
+      "difficulty": "medium",
+      "document_id": "doc-4d373684ce4879ed066003f5",
+      "error": "",
+      "error_type": "",
+      "evaluation_id": "Q024:bangla",
+      "evidence_level": "STRONG",
+      "expected_evidence": [],
+      "expected_pages": [
+        "20"
+      ],
+      "expected_sources": [
+        "curricula_BSc-Curriculum-New.pdf"
+      ],
+      "extracted_relation": "",
+      "extracted_values": [],
+      "final_answer": "প্রাসঙ্গিক তথ্য পাওয়া গেছে, কিন্তু নির্ভরযোগ্য উত্তর তৈরি করা যায়নি।",
+      "generation_attempts": 0,
+      "generation_seconds": 0.0,
+      "generation_used": false,
+      "grounding_status": false,
+      "independent_support_count": 3,
+      "intent": "general",
+      "language": "bangla",
+      "language_consistency": true,
+      "language_status": true,
+      "latency_seconds": 0.2684445000004416,
+      "page": 21,
+      "pagefile_total_bytes_system": 17179869184,
+      "pagefile_used_bytes_system": 2133868544,
+      "peak_process_bytes": 5797736448,
+      "question": "ডিগ্রি উইথ অনার্সের জন্য কত CGPA দরকার?",
+      "reference_answer": "CGPA 3.75 বা তার বেশি হলে degree with honors দেওয়া হয়।",
+      "reference_available": true,
+      "relative_path": "curricula_BSc-Curriculum-New.pdf",
+      "requested_answer_strategy": "structured_exact",
+      "requested_entity": "",
+      "requested_field": "grade",
+      "requested_relation": "",
+      "retrieval_channels": [
+        "bm25",
+        "dense"
+      ],
+      "retrieval_seconds": 0.26140440000017406,
+      "retrieval_top3": [
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0004-c0001",
+          "dense_rank": 1,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "requirement"
+          ],
+          "metadata_rank": "",
+          "page": 21,
+          "rank": 1,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.03278688524590164,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 1,
+          "text": "Category - B 1. A Cumulative Grade Point Average (CGPA) of minimum 2.25 is required for graduation. A candidate whose CGPA is below 2.25 shall have to increase his/her CGPA to the minimum requirement within two consecutive semesters failing which s/he shall be placed under academic probation."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+          "dense_rank": 2,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "course_code",
+            "credits"
+          ],
+          "metadata_rank": "",
+          "page": 20,
+          "rank": 2,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.03225806451612903,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 2,
+          "text": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or better and is in good standing with the university. Students who fail to maintain this minimum rate of progress will fail to be in good standing. Such circumstances may prevail under one or more of the following conditions:  Semester GPA falls below 2.25,  Cumulative GPA falls below 2.25.  Earned credits fall below 15 times the number of semesters studied."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000019-b0005-c0001",
+          "dense_rank": 3,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "credits",
+            "requirement"
+          ],
+          "metadata_rank": "",
+          "page": 19,
+          "rank": 3,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.015873015873015872,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": "",
+          "text": "GPA Calculation: A student's performance is measured by the number of c redits that he/she has completed satisfactorily and the weighted average of the grade points that he/she has maintained. A minimum GPA is required to be maintained for satisfactory progress and a minimum number of earned credits should be acquired in Credits CreditssGradePoGPA   )int( Where grade points are points against letter grades A+, A, A -, B+, B, B -, C+, C, D and F. Credits are only for those courses attempted at this university."
+        }
+      ],
+      "retry_used": false,
+      "rss_bytes": 3787407360,
+      "run_id": "step10-full-generation-pilot-20260929T192719893950Z-367c33",
+      "semantic_status": true,
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "supporting_evidence_count": 3,
+      "supporting_excerpt": "Category - B 1. A Cumulative Grade Point Average (CGPA) of minimum 2.25 is required for graduation. A candidate whose CGPA is below 2.25 shall have to increase his/her CGPA to the minimum requirement within two consecutive semesters failing which s/he shall be placed under academic probation.",
+      "total_ram_bytes": 8452767744
+    },
+    {
+      "annotation_status": "verified",
+      "answer_returned": true,
+      "answer_safety_failures": [],
+      "answer_strategy": "semi_structured_relation",
+      "answerability_reason": "DIRECT_RELATION_SUPPORT",
+      "answerability_seconds": 0.0004889999991064542,
+      "answerability_status": "SUPPORTED",
+      "available_ram_bytes": 279953408,
+      "base_question_id": "Q024",
+      "best_support_rank": 1,
+      "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+      "course_code": "GENERAL",
+      "cross_lingual_fallback_used": false,
+      "detected_language": "banglish",
+      "difficulty": "medium",
+      "document_id": "doc-4d373684ce4879ed066003f5",
+      "error": "",
+      "error_type": "",
+      "evaluation_id": "Q024:banglish",
+      "evidence_level": "STRONG",
+      "expected_evidence": [],
+      "expected_pages": [
+        "20"
+      ],
+      "expected_sources": [
+        "curricula_BSc-Curriculum-New.pdf"
+      ],
+      "extracted_relation": "honors_cgpa",
+      "extracted_values": [
+        "3.75"
+      ],
+      "final_answer": "Honors degree-r jonno CGPA kompakhe 3.75 lagbe.",
+      "generation_attempts": 0,
+      "generation_seconds": 0.0,
+      "generation_used": false,
+      "grounding_status": true,
+      "independent_support_count": 2,
+      "intent": "general",
+      "language": "banglish",
+      "language_consistency": true,
+      "language_status": true,
+      "latency_seconds": 0.27238839999972697,
+      "page": 20,
+      "pagefile_total_bytes_system": 17179869184,
+      "pagefile_used_bytes_system": 2133606400,
+      "peak_process_bytes": 5797736448,
+      "question": "Degree with honors-er jonno koto CGPA dorkar?",
+      "reference_answer": "CGPA 3.75 or above hole degree with honors deya hoy.",
+      "reference_available": true,
+      "relative_path": "curricula_BSc-Curriculum-New.pdf",
+      "requested_answer_strategy": "structured_exact",
+      "requested_entity": "",
+      "requested_field": "grade",
+      "requested_relation": "honors_cgpa",
+      "retrieval_channels": [
+        "bm25",
+        "dense"
+      ],
+      "retrieval_seconds": 0.2655907999996998,
+      "retrieval_top3": [
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+          "dense_rank": 1,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "course_code",
+            "credits"
+          ],
+          "metadata_rank": "",
+          "page": 20,
+          "rank": 1,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.03278688524590164,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 1,
+          "text": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or better and is in good standing with the university. Students who fail to maintain this minimum rate of progress will fail to be in good standing. Such circumstances may prevail under one or more of the following conditions:  Semester GPA falls below 2.25,  Cumulative GPA falls below 2.25.  Earned credits fall below 15 times the number of semesters studied."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0004-c0001",
+          "dense_rank": 7,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "requirement"
+          ],
+          "metadata_rank": "",
+          "page": 21,
+          "rank": 2,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.030798389007344232,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 3,
+          "text": "Category - B 1. A Cumulative Grade Point Average (CGPA) of minimum 2.25 is required for graduation. A candidate whose CGPA is below 2.25 shall have to increase his/her CGPA to the minimum requirement within two consecutive semesters failing which s/he shall be placed under academic probation."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000044-b0003-c0001",
+          "dense_rank": 4,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "course_code",
+            "email",
+            "date"
+          ],
+          "metadata_rank": "",
+          "page": 44,
+          "rank": 3,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.029910714285714284,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 10,
+          "text": "Lecturer B. Sc. (Engineering) in CSE, BUET, 2016 Email: tushar.kawsar@uapbd.edu, tushar.kawsar@gmail.com Abdul Kawsar Tushar is presently employed as a Lecturer at Department of Computer Science and Engineering of University of Asia Pacific, Dhaka. He completed his graduation with honors from Bangladesh University of Engineering and Technology (BUET) in 2016 and shortly joined CSE, UAP. His thesis was titled ―On Finding Optimal Number of Divisions for Divide and Conquer Method for Finding Conv ex Hull‖ which is a sub -section of Computational Geometry. The list of his published papers include: ―Handwritten Arabic Numeral Recognition using Deep Learning Neural Networks‖, ―Chord Angle Deviation using Tangent (CADT), an Efficient and Robust Contour -based Corner Detector‖, and ―Efficient Bearing Fault Diagnosis by Extracting Intrinsic Fault Information using Envelope Power Spectrum‖, all published in IEEE conference. His research interests include (but are not limited to) Deep Learning, Image Processi ng, and Human Computer Interaction. He secured numerous scholarships throughout his undergraduate life for academic excellence, including multiple Dean's List awards as well as University Merit Scholarships."
+        }
+      ],
+      "retry_used": false,
+      "rss_bytes": 3787624448,
+      "run_id": "step10-full-generation-pilot-20260929T192719893950Z-367c33",
+      "semantic_status": true,
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "supporting_evidence_count": 2,
+      "supporting_excerpt": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or better and is in good standing with the university. Students who fail to maintain this minimum rate of progress will fail to be in good standing. Such circumstances may prevail under one or more of the following conditions:  Semester GPA falls below 2.25,  Cumulative GPA falls below 2.25.  Earned credits fall below 15 times the number of semesters studied.",
+      "total_ram_bytes": 8452767744
+    },
+    {
+      "annotation_status": "verified",
+      "answer_returned": true,
+      "answer_safety_failures": [],
+      "answer_strategy": "semi_structured_relation",
+      "answerability_reason": "DIRECT_RELATION_SUPPORT",
+      "answerability_seconds": 0.00085040000067238,
+      "answerability_status": "SUPPORTED",
+      "available_ram_bytes": 599838720,
+      "base_question_id": "Q025",
+      "best_support_rank": 1,
+      "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+      "course_code": "GENERAL",
+      "cross_lingual_fallback_used": false,
+      "detected_language": "english",
+      "difficulty": "medium",
+      "document_id": "doc-4d373684ce4879ed066003f5",
+      "error": "",
+      "error_type": "",
+      "evaluation_id": "Q025:english",
+      "evidence_level": "STRONG",
+      "expected_evidence": [],
+      "expected_pages": [
+        "20"
+      ],
+      "expected_sources": [
+        "curricula_BSc-Curriculum-New.pdf"
+      ],
+      "extracted_relation": "normal_progress_cgpa",
+      "extracted_values": [
+        "2.25"
+      ],
+      "final_answer": "Normal progress toward a degree requires a CGPA of 2.25 or above.",
+      "generation_attempts": 0,
+      "generation_seconds": 0.0,
+      "generation_used": false,
+      "grounding_status": true,
+      "independent_support_count": 3,
+      "intent": "general",
+      "language": "english",
+      "language_consistency": true,
+      "language_status": true,
+      "latency_seconds": 1.4938253999998778,
+      "page": 20,
+      "pagefile_total_bytes_system": 17179869184,
+      "pagefile_used_bytes_system": 2542055424,
+      "peak_process_bytes": 5797736448,
+      "question": "What CGPA is considered normal progress toward a degree?",
+      "reference_answer": "A CGPA of 2.25 or better is considered normal progress toward a degree.",
+      "reference_available": true,
+      "relative_path": "curricula_BSc-Curriculum-New.pdf",
+      "requested_answer_strategy": "structured_exact",
+      "requested_entity": "",
+      "requested_field": "grade",
+      "requested_relation": "normal_progress_cgpa",
+      "retrieval_channels": [
+        "bm25",
+        "dense"
+      ],
+      "retrieval_seconds": 1.4885168999999223,
+      "retrieval_top3": [
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+          "dense_rank": 1,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "course_code",
+            "credits"
+          ],
+          "metadata_rank": "",
+          "page": 20,
+          "rank": 1,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.03278688524590164,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 1,
+          "text": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or better and is in good standing with the university. Students who fail to maintain this minimum rate of progress will fail to be in good standing. Such circumstances may prevail under one or more of the following conditions:  Semester GPA falls below 2.25,  Cumulative GPA falls below 2.25.  Earned credits fall below 15 times the number of semesters studied."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0004-c0001",
+          "dense_rank": 2,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "requirement"
+          ],
+          "metadata_rank": "",
+          "page": 21,
+          "rank": 2,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.03225806451612903,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 2,
+          "text": "Category - B 1. A Cumulative Grade Point Average (CGPA) of minimum 2.25 is required for graduation. A candidate whose CGPA is below 2.25 shall have to increase his/her CGPA to the minimum requirement within two consecutive semesters failing which s/he shall be placed under academic probation."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000019-b0005-c0001",
+          "dense_rank": 3,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "credits",
+            "requirement"
+          ],
+          "metadata_rank": "",
+          "page": 19,
+          "rank": 3,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.031746031746031744,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 3,
+          "text": "GPA Calculation: A student's performance is measured by the number of c redits that he/she has completed satisfactorily and the weighted average of the grade points that he/she has maintained. A minimum GPA is required to be maintained for satisfactory progress and a minimum number of earned credits should be acquired in Credits CreditssGradePoGPA   )int( Where grade points are points against letter grades A+, A, A -, B+, B, B -, C+, C, D and F. Credits are only for those courses attempted at this university."
+        }
+      ],
+      "retry_used": false,
+      "rss_bytes": 3999748096,
+      "run_id": "step10-full-generation-pilot-20260929T192719893950Z-367c33",
+      "semantic_status": true,
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "supporting_evidence_count": 3,
+      "supporting_excerpt": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or better and is in good standing with the university. Students who fail to maintain this minimum rate of progress will fail to be in good standing. Such circumstances may prevail under one or more of the following conditions:  Semester GPA falls below 2.25,  Cumulative GPA falls below 2.25.  Earned credits fall below 15 times the number of semesters studied.",
+      "total_ram_bytes": 8452767744
+    },
+    {
+      "annotation_status": "verified",
+      "answer_returned": true,
+      "answer_safety_failures": [],
+      "answer_strategy": "semi_structured_relation",
+      "answerability_reason": "DIRECT_RELATION_SUPPORT",
+      "answerability_seconds": 0.0004321999995227088,
+      "answerability_status": "SUPPORTED",
+      "available_ram_bytes": 600924160,
+      "base_question_id": "Q025",
+      "best_support_rank": 1,
+      "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+      "course_code": "GENERAL",
+      "cross_lingual_fallback_used": false,
+      "detected_language": "bangla",
+      "difficulty": "medium",
+      "document_id": "doc-4d373684ce4879ed066003f5",
+      "error": "",
+      "error_type": "",
+      "evaluation_id": "Q025:bangla",
+      "evidence_level": "STRONG",
+      "expected_evidence": [],
+      "expected_pages": [
+        "20"
+      ],
+      "expected_sources": [
+        "curricula_BSc-Curriculum-New.pdf"
+      ],
+      "extracted_relation": "normal_progress_cgpa",
+      "extracted_values": [
+        "2.25"
+      ],
+      "final_answer": "ডিগ্রির পথে স্বাভাবিক অগ্রগতির জন্য CGPA অন্তত 2.25 হতে হবে।",
+      "generation_attempts": 0,
+      "generation_seconds": 0.0,
+      "generation_used": false,
+      "grounding_status": true,
+      "independent_support_count": 3,
+      "intent": "general",
+      "language": "bangla",
+      "language_consistency": true,
+      "language_status": true,
+      "latency_seconds": 0.19012190000012197,
+      "page": 20,
+      "pagefile_total_bytes_system": 17179869184,
+      "pagefile_used_bytes_system": 2542055424,
+      "peak_process_bytes": 5797736448,
+      "question": "ডিগ্রির দিকে normal progress হিসেবে কত CGPA ধরা হয়?",
+      "reference_answer": "CGPA 2.25 বা তার বেশি হলে ডিগ্রির দিকে normal progress ধরা হয়।",
+      "reference_available": true,
+      "relative_path": "curricula_BSc-Curriculum-New.pdf",
+      "requested_answer_strategy": "structured_exact",
+      "requested_entity": "",
+      "requested_field": "grade",
+      "requested_relation": "normal_progress_cgpa",
+      "retrieval_channels": [
+        "bm25",
+        "dense"
+      ],
+      "retrieval_seconds": 0.18619519999992917,
+      "retrieval_top3": [
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+          "dense_rank": 1,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "course_code",
+            "credits"
+          ],
+          "metadata_rank": "",
+          "page": 20,
+          "rank": 1,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.03278688524590164,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 1,
+          "text": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or better and is in good standing with the university. Students who fail to maintain this minimum rate of progress will fail to be in good standing. Such circumstances may prevail under one or more of the following conditions:  Semester GPA falls below 2.25,  Cumulative GPA falls below 2.25.  Earned credits fall below 15 times the number of semesters studied."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0004-c0001",
+          "dense_rank": 2,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "requirement"
+          ],
+          "metadata_rank": "",
+          "page": 21,
+          "rank": 2,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.03225806451612903,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 2,
+          "text": "Category - B 1. A Cumulative Grade Point Average (CGPA) of minimum 2.25 is required for graduation. A candidate whose CGPA is below 2.25 shall have to increase his/her CGPA to the minimum requirement within two consecutive semesters failing which s/he shall be placed under academic probation."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000019-b0005-c0001",
+          "dense_rank": 3,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "credits",
+            "requirement"
+          ],
+          "metadata_rank": "",
+          "page": 19,
+          "rank": 3,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.031024531024531024,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 6,
+          "text": "GPA Calculation: A student's performance is measured by the number of c redits that he/she has completed satisfactorily and the weighted average of the grade points that he/she has maintained. A minimum GPA is required to be maintained for satisfactory progress and a minimum number of earned credits should be acquired in Credits CreditssGradePoGPA   )int( Where grade points are points against letter grades A+, A, A -, B+, B, B -, C+, C, D and F. Credits are only for those courses attempted at this university."
+        }
+      ],
+      "retry_used": false,
+      "rss_bytes": 4000268288,
+      "run_id": "step10-full-generation-pilot-20260929T192719893950Z-367c33",
+      "semantic_status": true,
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "supporting_evidence_count": 3,
+      "supporting_excerpt": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or better and is in good standing with the university. Students who fail to maintain this minimum rate of progress will fail to be in good standing. Such circumstances may prevail under one or more of the following conditions:  Semester GPA falls below 2.25,  Cumulative GPA falls below 2.25.  Earned credits fall below 15 times the number of semesters studied.",
+      "total_ram_bytes": 8452767744
+    },
+    {
+      "annotation_status": "verified",
+      "answer_returned": true,
+      "answer_safety_failures": [],
+      "answer_strategy": "semi_structured_relation",
+      "answerability_reason": "DIRECT_RELATION_SUPPORT",
+      "answerability_seconds": 0.0003879999994751415,
+      "answerability_status": "SUPPORTED",
+      "available_ram_bytes": 602447872,
+      "base_question_id": "Q025",
+      "best_support_rank": 1,
+      "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+      "course_code": "GENERAL",
+      "cross_lingual_fallback_used": false,
+      "detected_language": "banglish",
+      "difficulty": "medium",
+      "document_id": "doc-4d373684ce4879ed066003f5",
+      "error": "",
+      "error_type": "",
+      "evaluation_id": "Q025:banglish",
+      "evidence_level": "STRONG",
+      "expected_evidence": [],
+      "expected_pages": [
+        "20"
+      ],
+      "expected_sources": [
+        "curricula_BSc-Curriculum-New.pdf"
+      ],
+      "extracted_relation": "normal_progress_cgpa",
+      "extracted_values": [
+        "2.25"
+      ],
+      "final_answer": "Degree-r normal progress-er jonno CGPA kompakhe 2.25 lagbe.",
+      "generation_attempts": 0,
+      "generation_seconds": 0.0,
+      "generation_used": false,
+      "grounding_status": true,
+      "independent_support_count": 3,
+      "intent": "general",
+      "language": "banglish",
+      "language_consistency": true,
+      "language_status": true,
+      "latency_seconds": 0.19080740000026708,
+      "page": 20,
+      "pagefile_total_bytes_system": 17179869184,
+      "pagefile_used_bytes_system": 2542055424,
+      "peak_process_bytes": 5797736448,
+      "question": "Degree-r dike normal progress hisebe koto CGPA dhora hoy?",
+      "reference_answer": "CGPA 2.25 or better hole degree-r dike normal progress dhora hoy.",
+      "reference_available": true,
+      "relative_path": "curricula_BSc-Curriculum-New.pdf",
+      "requested_answer_strategy": "structured_exact",
+      "requested_entity": "",
+      "requested_field": "grade",
+      "requested_relation": "normal_progress_cgpa",
+      "retrieval_channels": [
+        "bm25",
+        "dense"
+      ],
+      "retrieval_seconds": 0.18676030000005994,
+      "retrieval_top3": [
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000020-b0003-c0001",
+          "dense_rank": 1,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "course_code",
+            "credits"
+          ],
+          "metadata_rank": "",
+          "page": 20,
+          "rank": 1,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.03278688524590164,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 1,
+          "text": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or better and is in good standing with the university. Students who fail to maintain this minimum rate of progress will fail to be in good standing. Such circumstances may prevail under one or more of the following conditions:  Semester GPA falls below 2.25,  Cumulative GPA falls below 2.25.  Earned credits fall below 15 times the number of semesters studied."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0004-c0001",
+          "dense_rank": 2,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "requirement"
+          ],
+          "metadata_rank": "",
+          "page": 21,
+          "rank": 2,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.03225806451612903,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 2,
+          "text": "Category - B 1. A Cumulative Grade Point Average (CGPA) of minimum 2.25 is required for graduation. A candidate whose CGPA is below 2.25 shall have to increase his/her CGPA to the minimum requirement within two consecutive semesters failing which s/he shall be placed under academic probation."
+        },
+        {
+          "chunk_id": "doc-4d373684ce4879ed066003f5-p000021-b0005-c0001",
+          "dense_rank": 6,
+          "document_id": "doc-4d373684ce4879ed066003f5",
+          "field_types": [
+            "credits"
+          ],
+          "metadata_rank": "",
+          "page": 21,
+          "rank": 3,
+          "relative_path": "curricula_BSc-Curriculum-New.pdf",
+          "score": 0.030536130536130537,
+          "source": "curricula_BSc-Curriculum-New.pdf",
+          "sparse_rank": 5,
+          "text": "2. Candidates requiring to increase their CGPA under this category (Category - B) shall apply to the Controller of Examinations through the head of the department concerned with a payment of @ Tk. 3000/ - (Tk. Three Thousand) per credit hour."
+        }
+      ],
+      "retry_used": false,
+      "rss_bytes": 4000358400,
+      "run_id": "step10-full-generation-pilot-20260929T192719893950Z-367c33",
+      "semantic_status": true,
+      "source": "curricula_BSc-Curriculum-New.pdf",
+      "supporting_evidence_count": 3,
+      "supporting_excerpt": "Performance Evaluation The performance of a student will be evaluated in terms of semester GPA and cumulative grade point average (CGPA), which is the grade point average for the semesters under consideration. A candidate will be awarded a degree with honors if his/her CGPA is 3.75 or above. A student will be considered to be making normal progress towards a degree if his/her CGPA for all work attempted is 2.25 or better and is in good standing with the university. Students who fail to maintain this minimum rate of progress will fail to be in good standing. Such circumstances may prevail under one or more of the following conditions:  Semester GPA falls below 2.25,  Cumulative GPA falls below 2.25.  Earned credits fall below 15 times the number of semesters studied.",
+      "total_ram_bytes": 8452767744
+    }
+  ]
+}

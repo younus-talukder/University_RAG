@@ -1,0 +1,72 @@
+{
+  "step": 9,
+  "title": "Dataset-agnostic evaluation and benchmark framework",
+  "engineering_complete": true,
+  "ready_for_step10": true,
+  "step10_implemented": false,
+  "production_rag_changed": false,
+  "committed": false,
+  "development_run": {
+    "run_id": "step9-development-final-20260929T185115270858Z-84c03a",
+    "run_classification": "DEVELOPMENT",
+    "run_mode": "skip_generation",
+    "base_rows": 100,
+    "expected_inference_rows": 300,
+    "completed_inference_rows": 300,
+    "run_complete": true,
+    "runtime_errors": 0,
+    "safe_answer_coverage": 0.79,
+    "safe_answer_coverage_count": 237,
+    "safe_answer_coverage_is_accuracy": false,
+    "abstention_rate": 0.21,
+    "known_unsafe_returned_answer_count": 0,
+    "generation_attempts": 0,
+    "generation_skipped": true,
+    "retrieval_hit_at_1": 0.41333333333333333,
+    "retrieval_hit_at_3": 0.8966666666666666,
+    "retrieval_mrr_at_3": 0.6338888888888888,
+    "mean_latency_seconds": 0.041885355000007,
+    "p95_latency_seconds": 0.0602231000002575,
+    "results_csv": "results/benchmarks/step9-development-final-20260929T185115270858Z-84c03a/results.csv",
+    "report": "results/benchmarks/step9-development-final-20260929T185115270858Z-84c03a/benchmark_report.md"
+  },
+  "resume_test": {
+    "run_id": "step9-development-validation-20260929T184029147737Z-eda40f",
+    "interrupted_after_rows": 10,
+    "resumed_to_rows": 300,
+    "duplicate_evaluation_ids": 0,
+    "unit_test_compared_resumed_and_uninterrupted_metrics": true
+  },
+  "dataset_sha256": "8b2e6c06ffba8d4dee58fd979706f244e5891591c4e8e25d9beffea801e149b2",
+  "corpus_fingerprint": "8d25c720865665759d79c3f333f9ba549fc2408e9d8d37c6206fbf2099d83c8e",
+  "index_configuration_fingerprint": "8207af3ec864b70f106ddbe0197faa2ccba786bb034942ea7027f3fcc85ebc88",
+  "code_sha256_at_final_run": "672cbfdf2598cbaebe4a1ecb061d8f113689daec99b045c5168be10e2e008538",
+  "q007_evaluation_label": "page 4, Computer Science & Engineering; runtime unchanged",
+  "scale_simulation": {
+    "descriptors": 6000,
+    "unique_ids": 6000,
+    "planned_checkpoint_batches_at_interval_10": 600,
+    "inference_run": false,
+    "seventy_pdf_run": false
+  },
+  "test_suite": {
+    "previous_tests": 238,
+    "new_tests": 33,
+    "total_tests": 271,
+    "failures": 0,
+    "skipped": 1
+  },
+  "future_runtime_estimate": {
+    "historical_step8b_full_generation_300_seconds": 1229.05698089997,
+    "straight_line_6000_hours": 6.82809433833318,
+    "label": "ESTIMATE ONLY; historical one-PDF full-generation run, not a 70-PDF/6000-question measurement",
+    "current_step9_skip_generation_same_mode_6000_hours": 0.0698089250000117,
+    "current_step9_full_generation_estimate": "NOT_AVAILABLE"
+  },
+  "limitations": [
+    "The final Step 9 300-row run skipped generation because the 8 GB machine had less than 1 GB of free physical RAM before the run.",
+    "No new full-generation 300-row run was performed under the Step 9 evaluator.",
+    "No 6000-question inference or 70-PDF benchmark was performed.",
+    "Automatic answer overlap is a proxy, not human correctness or final thesis accuracy."
+  ]
+}

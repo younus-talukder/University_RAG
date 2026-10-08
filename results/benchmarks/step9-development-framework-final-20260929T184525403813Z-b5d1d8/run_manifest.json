@@ -1,0 +1,92 @@
+{
+  "code_version": {
+    "code_sha256": "712c10979b9dcb8b2ad9dd83ba7caf4bc39d67b0f060b7cc138a78d455ee57dc",
+    "git_commit": "6c23ad85b2d9f5c0b18a898e72e568106a383989",
+    "modified_file_count": 68,
+    "working_tree_dirty": true
+  },
+  "compatibility_sha256": "b847208973dafbe4fc5c37777da128c94268f3b3d37883690ff535f7cc490d19",
+  "completed_rows": 300,
+  "corpus_index": {
+    "chunk_count": 491,
+    "chunker_schema_version": "structure-aware-v1.2",
+    "chunking_configuration_id": "8985b1cf779485b5",
+    "corpus_fingerprint": "8d25c720865665759d79c3f333f9ba549fc2408e9d8d37c6206fbf2099d83c8e",
+    "document_count": 1,
+    "embedding_model": "BAAI/bge-m3",
+    "embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+    "faiss_index_type": "IndexFlatIP",
+    "index_configuration_fingerprint": "8207af3ec864b70f106ddbe0197faa2ccba786bb034942ea7027f3fcc85ebc88",
+    "manifest_path": "C:\\code\\University_RAG\\vector_db\\index_manifest.json",
+    "manifest_sha256": "c0d29490d13de5883644a2ed9b6ce072977baf9a24f604bc1fd4dc66083f7e5e",
+    "sparse_configuration_fingerprint": "f2673ba0f18981ddcc07ae5c98d8d2e0a16b45e5f8da1b2322d7ada1e2e8f141",
+    "sparse_implementation": "local-okapi-bm25-v1",
+    "sparse_tokenizer_schema": "unicode-university-v1.2"
+  },
+  "created_at_utc": "2026-09-29T18:45:25.403813+00:00",
+  "dataset": {
+    "column_schema": [
+      "question_id",
+      "course_code",
+      "intent",
+      "difficulty",
+      "english_question",
+      "bangla_question",
+      "banglish_question",
+      "ground_truth_answer_en",
+      "ground_truth_answer_bn",
+      "ground_truth_answer_banglish",
+      "expected_source",
+      "expected_page",
+      "ground_truth_status",
+      "notes"
+    ],
+    "dataset_filename": "questions.csv",
+    "dataset_path": "C:\\code\\University_RAG\\data\\questions\\questions.csv",
+    "dataset_sha256": "8b2e6c06ffba8d4dee58fd979706f244e5891591c4e8e25d9beffea801e149b2",
+    "errors": [],
+    "language_variant_count": 300,
+    "languages": [
+      "english",
+      "bangla",
+      "banglish"
+    ],
+    "row_count": 100,
+    "valid": true,
+    "warnings": []
+  },
+  "expected_evaluation_rows": 300,
+  "last_updated_at_utc": "2026-09-29T18:45:45.268017+00:00",
+  "leakage_audit": {
+    "answer_bank_enabled": false,
+    "passed": true,
+    "reference_fields_passed_to_runtime": [],
+    "runtime_input_fields": [
+      "question"
+    ]
+  },
+  "model_runtime": {
+    "answer_bank_enabled": false,
+    "batch_size": 128,
+    "context_size": 4096,
+    "generator_model_name": "qwen2.5-7b-instruct-q4_k_m",
+    "gguf_shard_filenames": [
+      "qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf",
+      "qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf"
+    ],
+    "gpu_layers": 0,
+    "max_tokens": 180,
+    "model_hashes": "NOT_AVAILABLE",
+    "profile": "DEVELOPMENT_8GB",
+    "quantization": "Q4_K_M",
+    "reranker_enabled": false,
+    "temperature": 0.0,
+    "threads": 8,
+    "top_p": 1.0,
+    "use_mlock": false,
+    "use_mmap": true
+  },
+  "run_classification": "DEVELOPMENT",
+  "run_complete": true,
+  "run_id": "step9-development-framework-final-20260929T184525403813Z-b5d1d8"
+}
