@@ -31,7 +31,7 @@ from .evidence_spans import expand_assessment_evidence
 from .document_metadata import metadata_fields_for_query
 from .fast_answer import build_extractive_answer, build_topic_answer, detect_runtime_intent, retrieve_lexical
 from .generator import generate_canonical_answer, realize_canonical_answer
-from .generator import rewrite_query_for_retrieval
+from .generator import capture_generation_prompts, rewrite_query_for_retrieval
 from .crosslingual import canonical_rewrite, crosslingual_assessment, fuse_queries
 from .generation_context import build_verified_evidence_package, evidence_excerpts
 from .grounding_validator import validate_grounding
@@ -44,6 +44,7 @@ from .query_normalization import build_query_representations
 from .semantic_contract import build_semantic_contract, repair_instruction
 from .semistructured_realizer import realize_semistructured
 from .same_page_evidence import assess_unique_same_page_course_passage
+from .repair_flags import enabled_repairs, repair_enabled
 from .vector_store import load_index
 
 
@@ -131,6 +132,10 @@ def _widen_bounded_evidence(question: str, assessment: Any,
     if widened.status is SupportStatus.SUPPORTED and len(widened.evidence) == 1:
         return widened, bounded, True
     return assessment, retrieved, False
+
+
+def _repair_trace_hook(repair_trace: dict[str, Any]) -> None:
+    """Observation point for development harnesses; does nothing in production."""
 
 
 def _answer_question_impl(
@@ -232,6 +237,7 @@ def _answer_question_impl(
             "FAISS index is missing. Build the index first using the ingestion/build scripts."
         ) from exc
 
+    repair_trace: dict[str, Any] = {"flags": list(enabled_repairs())}
     if use_generation:
         report("Loading embedding model...")
         embedding_model = _get_embedding_model()
@@ -344,6 +350,8 @@ def _answer_question_impl(
             retrieved = [selected, *[item for item in retrieved[:top_k]
                                     if item.get("chunk_id") != selected.get("chunk_id")]]
             fallback_trace["same_page_owner_widened"] = True
+    fallback_trace["repair_trace"] = repair_trace
+    _repair_trace_hook(repair_trace)
     fallback_trace["final_candidate_chunk_ids"] = [str(item.get("chunk_id") or "") for item in retrieved]
     if assessment.status is SupportStatus.SUPPORTED:
         assessment = expand_assessment_evidence(assessment, metadata)
@@ -890,14 +898,18 @@ def answer_question(
     if clearly_out_of_domain(question):
         return _preflight_response(question, AnswerabilityStatus.OUT_OF_DOMAIN,
                                    "OUT_OF_DOMAIN", started)
+    prompts: list[dict[str, Any]] = []
     try:
-        result = _answer_question_impl(cleaned, top_k=top_k, status_callback=status_callback,
-                                       use_generation=use_generation, use_answer_bank=use_answer_bank)
+        with capture_generation_prompts(prompts):
+            result = _answer_question_impl(cleaned, top_k=top_k, status_callback=status_callback,
+                                           use_generation=use_generation, use_answer_bank=use_answer_bank)
     except Exception as exc:
         return _preflight_response(question, AnswerabilityStatus.SYSTEM_ERROR,
                                    "SYSTEM_EXCEPTION", started,
                                    f"{type(exc).__name__}: {exc}")
     result["question"] = question
+    # Instrumentation only: the exact chat messages sent to the generator.
+    result["generation_prompts"] = prompts
     return result
 
 

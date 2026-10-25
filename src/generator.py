@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 import time
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -33,6 +35,9 @@ else:
 
 GENERATOR_CACHE: dict[tuple[str, int, int, int, int, bool, bool], object] = {}
 GENERATION_TELEMETRY: list[dict[str, Any]] = []
+# Per-request sink for the exact chat messages sent to the model. Unset (None)
+# outside capture_generation_prompts(), so nothing is recorded by default.
+_PROMPT_SINK: ContextVar[list[dict[str, Any]] | None] = ContextVar("generation_prompt_sink", default=None)
 # Compatibility aliases retained for Step-7 evaluation imports.
 FIXED_N_CTX = GENERATOR_CONTEXT_SIZE
 FIXED_N_THREADS = GENERATOR_THREADS
@@ -188,6 +193,16 @@ def get_generation_telemetry() -> tuple[dict[str, Any], ...]:
     return tuple(dict(item) for item in GENERATION_TELEMETRY)
 
 
+@contextmanager
+def capture_generation_prompts(sink: list[dict[str, Any]]):
+    """Record every chat request (stage + exact messages) made inside the block."""
+    token = _PROMPT_SINK.set(sink)
+    try:
+        yield sink
+    finally:
+        _PROMPT_SINK.reset(token)
+
+
 def _invoke_messages(
     messages: list[dict[str, str]],
     model_name: str,
@@ -208,6 +223,9 @@ def _invoke_messages(
     prompt_tokens = sum(counter(message["content"]) for message in messages) + CONTEXT_RESERVE_TOKENS
     if prompt_tokens + max_new_tokens > FIXED_N_CTX:
         raise ValueError("Generation prompt and output allowance exceed the configured model context window.")
+    sink = _PROMPT_SINK.get()
+    if sink is not None:
+        sink.append({"stage": stage, "max_tokens": max_new_tokens, "messages": [dict(message) for message in messages]})
     started = time.perf_counter()
     try:
         response = generator.create_chat_completion(
@@ -404,5 +422,5 @@ __all__ = [
     "CONTEXT_RESERVE_TOKENS", "FIXED_N_CTX", "FIXED_N_THREADS", "GENERATOR_CACHE", "MAX_NEW_TOKENS",
     "SYSTEM_PROMPT", "TEMPERATURE", "TOP_P", "build_prompt", "generate_answer", "generate_canonical_answer",
     "realize_canonical_answer", "regenerate_answer_for_language",
-    "get_generation_telemetry", "reset_generation_telemetry",
+    "capture_generation_prompts", "get_generation_telemetry", "reset_generation_telemetry",
 ]
