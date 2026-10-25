@@ -45,7 +45,7 @@ from .query_normalization import build_query_representations
 from .semantic_contract import build_semantic_contract, repair_instruction
 from .semistructured_realizer import realize_semistructured
 from .same_page_evidence import assess_unique_same_page_course_passage, assess_unique_same_page_labeled_field_passage
-from .section_context import annotate_section_context
+from .section_context import annotate_section_context, strip_section_labels
 from .document_ownership import annotate_document_ownership, classify_documents, single_course_owner
 from .repair_flags import enabled_repairs, repair_enabled
 from .vector_store import load_index
@@ -425,6 +425,10 @@ def _answer_question_impl(
     fallback_trace["repair_trace"] = repair_trace
     _repair_trace_hook(repair_trace)
     fallback_trace["final_candidate_chunk_ids"] = [str(item.get("chunk_id") or "") for item in retrieved]
+    if repair_enabled("TABLE_HEADER_CONTEXT"):
+        # R3 labels are gate-side context only; everything after the evidence
+        # decision (extractors, validators, generator) sees the original text.
+        assessment, retrieved = strip_section_labels(assessment, retrieved)
     if assessment.status is SupportStatus.SUPPORTED:
         assessment = expand_assessment_evidence(assessment, metadata)
     trust_started = time.perf_counter()

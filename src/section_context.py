@@ -8,11 +8,17 @@ earlier chunk or on an earlier page. This module walks the index's own
 document and returns it as a label. The label is provenance only: it never
 supplies a course code (labels containing a course label or code are refused),
 and every gate still judges the passage.
+
+The label is gate-side context only. ``strip_section_labels`` removes it after
+the evidence decision, so extractors, validators and the generator see the
+original passage text (a live check showed a labeled table row persuading the
+generator to read column headers as the answer).
 """
 
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from typing import Any, Sequence
 
 from .query_normalization import extract_course_entities
@@ -63,12 +69,11 @@ def governing_section(item: dict[str, Any], by_id: dict[str, dict[str, Any]]) ->
 
 def annotate_section_context(pool: Sequence[dict[str, Any]], metadata: Sequence[dict[str, Any]], *,
                              label_text: bool = True) -> list[dict[str, Any]]:
-    """Copy pool items with their governing heading.
+    """Copy pool items with their governing section label and header chunk id.
 
-    The heading always goes to ``heading`` (shown to the generator, never to a
-    validator). With ``label_text`` it is also prefixed to the text the gates
-    judge; callers must not do that for broad (general-field) questions, where
-    a column label such as "Teaching Strategy(s)" would count as matched query
+    With ``label_text`` the label is prefixed to the text the gates judge;
+    callers must not do that for broad (general-field) questions, where a
+    column label such as "Teaching Strategy(s)" would count as matched query
     terms on every row of every such table.
     """
     by_id = {str(item.get("chunk_id")): item for item in metadata if item.get("chunk_id")}
@@ -80,8 +85,25 @@ def annotate_section_context(pool: Sequence[dict[str, Any]], metadata: Sequence[
             continue
         label, header_id = found
         text = f"[{label}] {item.get('text', '')}" if label_text else item.get("text", "")
-        annotated.append({**item, "text": text, "heading": label, "section_header_chunk_id": header_id})
+        annotated.append({**item, "text": text, "section_label": label, "section_header_chunk_id": header_id})
     return annotated
 
 
-__all__ = ["annotate_section_context", "governing_section"]
+def _strip(text: str, label: str | None) -> str:
+    prefix = f"[{label}] " if label else ""
+    return text[len(prefix):] if prefix and text.startswith(prefix) else text
+
+
+def strip_section_labels(assessment, retrieved: Sequence[dict[str, Any]]):
+    """Remove gate-side labels from verified evidence and retrieved items."""
+    labels = {str(item.get("chunk_id")): item.get("section_label") for item in retrieved if item.get("section_label")}
+    if not labels:
+        return assessment, list(retrieved)
+    evidence = tuple(replace(e, text=_strip(e.text, labels.get(str(e.chunk_id))), excerpt=_strip(e.excerpt, labels.get(str(e.chunk_id))))
+                     for e in assessment.evidence)
+    items = [{**item, "text": _strip(str(item.get("text") or ""), item.get("section_label"))} if item.get("section_label") else item
+             for item in retrieved]
+    return replace(assessment, evidence=evidence), items
+
+
+__all__ = ["annotate_section_context", "governing_section", "strip_section_labels"]

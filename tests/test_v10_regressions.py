@@ -75,7 +75,7 @@ def test_table_row_carries_its_header_from_the_same_page(flags_on):
     metadata = _index()
     row = next(item for item in metadata if "Problem-Based Learning Project Scheduling" in item["text"])
     labeled = annotate_section_context([row], metadata)[0]
-    assert labeled["heading"].startswith("18. Teaching-Learning Strategies:")
+    assert labeled["section_label"].startswith("18. Teaching-Learning Strategies:")
     assert labeled["section_header_chunk_id"] != row["chunk_id"]
 
 
@@ -84,7 +84,7 @@ def test_table_row_carries_its_header_from_an_earlier_page(flags_on):
     row = next(item for item in metadata if "Conduct hands-on lab exam covering Labs 1-6" in item["text"])
     labeled = annotate_section_context([row], metadata)[0]
     header = next(item for item in metadata if item["chunk_id"] == labeled["section_header_chunk_id"])
-    assert labeled["heading"].startswith("16. Class Schedule/Lesson Plan/Weekly plan:")
+    assert labeled["section_label"].startswith("16. Class Schedule/Lesson Plan/Weekly plan:")
     assert header["document_id"] == row["document_id"] and header["page"] < row["page"]
 
 

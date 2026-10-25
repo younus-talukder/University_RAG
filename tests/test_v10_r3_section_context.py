@@ -58,10 +58,21 @@ def test_section_label_does_not_grant_course_ownership():
     assert result.status is SupportStatus.INSUFFICIENT
 
 
-def test_general_questions_get_heading_for_the_prompt_but_not_for_the_gate():
+def test_general_questions_get_no_gate_text_label():
     chunks = _chain("16. Class Schedule/Lesson Plan/Weekly plan: Topics Specific Outcome(s) Teaching Strategy(s)",
                     "ER Diagram Week 6 Lecture, multimedia CLO3")
     plain = annotate_section_context([chunks[1]], chunks, label_text=False)[0]
-    assert plain["text"] == chunks[1]["text"] and plain["heading"].startswith("16. Class Schedule")
+    assert plain["text"] == chunks[1]["text"] and plain["section_label"].startswith("16. Class Schedule")
     question = "Feasibility study-r sathe kon teaching strategy ache?"
     assert assess_evidence(question, [plain]).status is SupportStatus.INSUFFICIENT
+
+
+def test_labels_are_stripped_before_anything_after_the_gate():
+    from src.section_context import strip_section_labels
+    chunks = _chain("11. Course Objectives and Course Summary:", "1. Course No. / Course Code: CSE 212 2. Teach DDL and DML operations.")
+    labeled = annotate_section_context([chunks[1]], chunks)
+    assessment = assess_evidence("Which database operations are named in the CSE 212 objectives?", labeled)
+    assert assessment.status is SupportStatus.SUPPORTED and assessment.evidence[0].text.startswith("[11.")
+    stripped, items = strip_section_labels(assessment, labeled)
+    assert stripped.evidence[0].text == chunks[1]["text"] and items[0]["text"] == chunks[1]["text"]
+    assert "[11." not in stripped.evidence[0].excerpt and items[0]["section_header_chunk_id"] == chunks[0]["chunk_id"]
