@@ -1,4 +1,4 @@
-"""R1 (and later R5b): detect documents that describe exactly one course.
+"""R5b / R1: detect documents that describe exactly one course.
 
 A course-outline PDF labels its course once ("Course No. / Course Code: CSE 212")
 and every later page belongs to that course. A curriculum, prospectus or any
@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any, Sequence
 
 from .query_normalization import extract_course_entities
+from .same_page_evidence import distinctive_match
 
 COURSE_HEADER = re.compile(
     r"\bCourse\s+(?:No\.?\s*/\s*)?(?:Course\s+)?Code\s*:\s*([A-Za-z]{2,8}\s*\d{2,4}(?:\s*\([A-Za-z]\))?)\b", re.I)
@@ -68,4 +69,30 @@ def single_course_owner(code: str, ownership: dict[str, DocumentOwnership]) -> s
     return owners[0] if len(owners) == 1 else None
 
 
-__all__ = ["DocumentOwnership", "classify_documents", "single_course_owner"]
+def annotate_document_ownership(pool: Sequence[dict[str, Any]], ownership: dict[str, DocumentOwnership],
+                                question: str | None = None) -> list[dict[str, Any]]:
+    """Mark chunks of single-course documents with their owner course code.
+
+    A chunk that itself names a different course code is never marked. With a
+    question, a chunk is marked only if it is distinctively relevant to it
+    (same_page_evidence.distinctive_match), because inherited ownership would
+    otherwise let the broad field patterns accept any passage of the document.
+    """
+    annotated = []
+    for item in pool:
+        owner = ownership.get(str(item.get("document_id") or item.get("source") or ""))
+        if owner is None or owner.status != "SINGLE_COURSE":
+            annotated.append(item)
+            continue
+        mentioned = {entity.compact for entity in extract_course_entities(str(item.get("text") or ""))}
+        if mentioned - {owner.course_code}:
+            annotated.append(item)
+            continue
+        if question is not None and not distinctive_match(question, owner.course_code, str(item.get("text") or "")):
+            annotated.append(item)
+            continue
+        annotated.append({**item, "document_owner_course": owner.course_code})
+    return annotated
+
+
+__all__ = ["DocumentOwnership", "annotate_document_ownership", "classify_documents", "single_course_owner"]

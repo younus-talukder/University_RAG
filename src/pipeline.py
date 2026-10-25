@@ -46,7 +46,7 @@ from .semantic_contract import build_semantic_contract, repair_instruction
 from .semistructured_realizer import realize_semistructured
 from .same_page_evidence import assess_unique_same_page_course_passage, assess_unique_same_page_labeled_field_passage
 from .section_context import annotate_section_context
-from .document_ownership import classify_documents, single_course_owner
+from .document_ownership import annotate_document_ownership, classify_documents, single_course_owner
 from .repair_flags import enabled_repairs, repair_enabled
 from .vector_store import load_index
 
@@ -151,11 +151,13 @@ def _document_ownership(metadata: list[dict[str, Any]]):
 
 def _prepare_pool(question: str, pool: list[dict[str, Any]], metadata: list[dict[str, Any]],
                   repair_trace: dict[str, Any], label: str) -> list[dict[str, Any]]:
-    """Annotate pool items for the enabled repairs (R3). Never reorders; gates are untouched."""
+    """Annotate pool items for the enabled repairs (R3, R5b). Never reorders; gates are untouched."""
     request = analyze_query(question)
     if repair_enabled("TABLE_HEADER_CONTEXT"):
         pool = annotate_section_context(pool, metadata, label_text=request.requested_field != "general")
         repair_trace[f"{label}_section_labels"] = sum(1 for item in pool if item.get("section_header_chunk_id"))
+    if repair_enabled("SINGLE_COURSE_DOCUMENT_OWNERSHIP") and request.requested_field != "general":
+        pool = annotate_document_ownership(pool, _document_ownership(metadata), question)
     return pool
 
 

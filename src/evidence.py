@@ -256,6 +256,11 @@ def _entity_occurs(entity: RequestedEntity, text: str) -> bool:
 
 def _course_is_subject(entity: RequestedEntity, text: str, metadata: dict[str, Any] | None = None) -> bool:
     requested = entity.normalized
+    # R5b: a chunk of a single-course document that names no other course
+    # inherits that document's course (annotate_document_ownership).
+    if (metadata and metadata.get("document_owner_course") == requested
+            and repair_enabled("SINGLE_COURSE_DOCUMENT_OWNERSHIP")):
+        return True
     if metadata and metadata.get("entity_type") == "course" and metadata.get("entity_id"):
         structured_entity = re.sub(r"[^A-Za-z0-9]", "", str(metadata["entity_id"])).upper()
         if structured_entity == requested and _entity_occurs(entity, text):
