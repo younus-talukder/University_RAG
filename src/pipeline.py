@@ -18,7 +18,7 @@ from .course_rows import course_field_value, requested_course_code
 from .course_title_evidence import assess_course_title, bound_course_title_value
 from .document_textbook_evidence import assess_document_textbook
 from .answer_bank import find_answer_bank_match
-from .config import TOP_K, VECTOR_DB_DIR
+from .config import RRF_K, RRF_METADATA_WEIGHT, TOP_K, VECTOR_DB_DIR
 from .embeddings import EmbeddingModel, get_embedding_model
 from .evidence import (
     SupportStatus,
@@ -46,6 +46,7 @@ from .semantic_contract import build_semantic_contract, repair_instruction
 from .semistructured_realizer import realize_semistructured
 from .same_page_evidence import assess_unique_same_page_course_passage, assess_unique_same_page_labeled_field_passage
 from .section_context import annotate_section_context
+from .document_ownership import classify_documents, single_course_owner
 from .repair_flags import enabled_repairs, repair_enabled
 from .vector_store import load_index
 
@@ -136,6 +137,18 @@ def _widen_bounded_evidence(question: str, assessment: Any,
     return assessment, retrieved, False
 
 
+_OWNERSHIP_CACHE: dict[tuple[Any, ...], Any] = {}
+
+
+def _document_ownership(metadata: list[dict[str, Any]]):
+    # load_index returns a fresh list per call, so key on the index identity.
+    key = (len(metadata), metadata[0].get("chunk_id") if metadata else None, metadata[-1].get("chunk_id") if metadata else None)
+    if key not in _OWNERSHIP_CACHE:
+        _OWNERSHIP_CACHE.clear()
+        _OWNERSHIP_CACHE[key] = classify_documents(metadata)
+    return _OWNERSHIP_CACHE[key]
+
+
 def _prepare_pool(question: str, pool: list[dict[str, Any]], metadata: list[dict[str, Any]],
                   repair_trace: dict[str, Any], label: str) -> list[dict[str, Any]]:
     """Annotate pool items for the enabled repairs (R3). Never reorders; gates are untouched."""
@@ -144,6 +157,25 @@ def _prepare_pool(question: str, pool: list[dict[str, Any]], metadata: list[dict
         pool = annotate_section_context(pool, metadata, label_text=request.requested_field != "general")
         repair_trace[f"{label}_section_labels"] = sum(1 for item in pool if item.get("section_header_chunk_id"))
     return pool
+
+
+def _course_anchored_order(question: str, pool: list[dict[str, Any]], metadata: list[dict[str, Any]],
+                           repair_trace: dict[str, Any], label: str) -> list[dict[str, Any]]:
+    """R1: order used only to pick the top-k passages (never for joins or widening)."""
+    if not repair_enabled("COURSE_ANCHORED_RETRIEVAL"):
+        return pool
+    codes = [entity.normalized for entity in analyze_query(question).entities if entity.kind == "course_code"]
+    if len(codes) != 1:
+        return pool
+    owner = single_course_owner(codes[0], _document_ownership(metadata))
+    if not owner:
+        return pool
+    # Boost by one top-ranked metadata-channel RRF contribution; never filter.
+    bonus = RRF_METADATA_WEIGHT / (RRF_K + 1)
+    ranked = sorted(enumerate(pool), key=lambda pair: (
+        -(float(pair[1].get("score") or 0.0) + (bonus if str(pair[1].get("document_id")) == owner else 0.0)), pair[0]))
+    repair_trace[f"{label}_course_anchor_document"] = owner
+    return [item for _, item in ranked]
 
 
 def _repair_trace_hook(repair_trace: dict[str, Any]) -> None:
@@ -258,7 +290,8 @@ def _answer_question_impl(
         original_pool = retriever.retrieve(question, index_path=index_path, metadata_path=metadata_path)
         if repair_trace["flags"]:
             original_pool = _prepare_pool(question, original_pool, metadata, repair_trace, "original")
-        retrieved = original_pool[:top_k]
+        selection_pool = _course_anchored_order(question, original_pool, metadata, repair_trace, "original")
+        retrieved = selection_pool[:top_k]
     else:
         report("Retrieving relevant context with fast lexical search...")
         retrieved = retrieve_lexical(question, metadata=metadata, top_k=top_k)
@@ -338,12 +371,13 @@ def _answer_question_impl(
                                                     metadata_path=metadata_path)
                 if repair_trace["flags"]:
                     canonical_pool = _prepare_pool(question, canonical_pool, metadata, repair_trace, "canonical")
+                canonical_pool = _course_anchored_order(question, canonical_pool, metadata, repair_trace, "canonical")
                 fallback_trace["canonical_candidate_chunk_ids"] = [str(item.get("chunk_id") or "") for item in canonical_pool]
                 fallback_trace["canonical_retrieval_seconds"] = time.perf_counter() - canonical_started
                 fallback_trace["fallback_top1"] = canonical_pool[:1]
                 fallback_trace["fallback_top3"] = canonical_pool[:3]
                 fusion_started = time.perf_counter()
-                merged = fuse_queries(original_pool, canonical_pool, top_k)
+                merged = fuse_queries(selection_pool, canonical_pool, top_k)
                 reassessed, gate_reason = crosslingual_assessment(question, rewrite, merged)
                 fallback_trace["multi_query_fusion_seconds"] = time.perf_counter() - fusion_started
                 fallback_trace["merged_support_status"] = reassessed.status.value
