@@ -5,6 +5,8 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Iterable
 
+from .repair_flags import repair_enabled
+
 
 BENGALI_DIGITS = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
 
@@ -24,6 +26,13 @@ NON_COURSE_PREFIXES = {
     "ABOVE", "AND", "AT", "BELOW", "CLO", "FOR", "FROM", "GRADE",
     "IN", "IS", "LEVEL", "MANY", "OF", "ON", "OR", "PAGE", "SEMESTER",
     "THE", "TO", "WEEK", "WITH", "YEAR",
+}
+# R0 (FIX_COURSE_CODE_EXTRACTOR): assessment and document-part words followed by
+# a number ("Quiz 04", "Lab 10", "CT 02") are never course codes. The evidence
+# gate keeps them as their own literal entity (see evidence.identify_entities).
+NON_COURSE_ASSESSMENT_PREFIXES = {
+    "ASSIGNMENT", "CHAPTER", "CT", "EXAM", "FINAL", "LAB", "LECTURE", "MID", "MIDTERM",
+    "PART", "PHASE", "PLO", "PO", "QUIZ", "ROOM", "SECTION", "SL", "TERM", "TEST", "UNIT",
 }
 
 COMPOSITE_COURSE_RE = re.compile(
@@ -98,8 +107,9 @@ def extract_course_entities(text: str) -> tuple[CourseEntity, ...]:
         matches.append(CourseEntity(match.group(0), canonical, re.sub(r"[^A-Za-z0-9]", "", canonical).upper(), match.span()))
         occupied.append(match.span())
 
+    excluded = NON_COURSE_PREFIXES | (NON_COURSE_ASSESSMENT_PREFIXES if repair_enabled("FIX_COURSE_CODE_EXTRACTOR") else set())
     for match in SIMPLE_COURSE_RE.finditer(value):
-        if not available(match.span()) or match.group(1).upper() in NON_COURSE_PREFIXES:
+        if not available(match.span()) or match.group(1).upper() in excluded:
             continue
         prefix, number, parenthesized_suffix, direct_suffix = match.groups()
         suffix = parenthesized_suffix or direct_suffix

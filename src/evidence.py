@@ -7,9 +7,11 @@ from enum import Enum
 from typing import Any, Iterable, Sequence
 
 from .language_detector import Language
-from .query_normalization import extract_course_entities, is_mark_distribution_query, normalize_retrieval_text
+from .query_normalization import (NON_COURSE_ASSESSMENT_PREFIXES, extract_course_entities, is_mark_distribution_query,
+                                  normalize_retrieval_text)
 from .document_metadata import extract_document_metadata, metadata_fields_for_query
 from .course_rows import course_field_value
+from .repair_flags import repair_enabled
 
 
 class SupportStatus(str, Enum):
@@ -171,6 +173,13 @@ def identify_entities(question: str) -> tuple[RequestedEntity, ...]:
         course_spans.append(span)
     for match in re.finditer(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", question):
         add("email", match.group(0))
+    if repair_enabled("FIX_COURSE_CODE_EXTRACTOR"):
+        # R0: "Quiz-04", "CT 2", "Lab 10" name one assessment item; the passage
+        # must name the same item (number compared without leading zeros).
+        # Only tokens the course-code pattern would misread (2-4 digits) change meaning.
+        for match in re.finditer(r"(?<![A-Za-z0-9])([A-Za-z]{2,10})\s*[- ]?\s*(\d{2,4})(?![0-9])", question):
+            if match.group(1).upper() in NON_COURSE_ASSESSMENT_PREFIXES:
+                add("assessment_item", match.group(0), f"{match.group(1).casefold()}:{int(match.group(2))}")
     for match in re.finditer(r"\b(?:spring|summer|fall|autumn|winter)\s+\d{4}\b|\b\d{1,2}(?:st|nd|rd|th)?\s+semester\b|\bsemester\s+\d{1,2}\b|\b\d{1,2}\s*তম\s*সেমিস্টার\b", question, re.I):
         add("semester", match.group(0))
     for match in re.finditer(r"\bsection\s+[A-Za-z0-9-]+\b|\bসেকশন\s+[A-Za-z0-9-]+\b", question, re.I):
@@ -236,6 +245,9 @@ def analyze_query(question: str) -> QueryRequest:
 
 
 def _entity_occurs(entity: RequestedEntity, text: str) -> bool:
+    if entity.kind == "assessment_item":
+        prefix, number = entity.normalized.split(":")
+        return bool(re.search(rf"(?<![A-Za-z]){re.escape(prefix)}\s*[-_ ]?\s*0*{number}(?![0-9])", text, re.I))
     if entity.kind == "course_code":
         compact_text = re.sub(r"[^A-Za-z0-9]", "", text).upper()
         return entity.normalized in compact_text
