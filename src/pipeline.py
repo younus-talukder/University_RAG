@@ -22,6 +22,7 @@ from .config import TOP_K, VECTOR_DB_DIR
 from .embeddings import EmbeddingModel, get_embedding_model
 from .evidence import (
     SupportStatus,
+    analyze_query,
     answer_claim_is_bound,
     assess_evidence,
     response_for_status,
@@ -44,6 +45,7 @@ from .query_normalization import build_query_representations
 from .semantic_contract import build_semantic_contract, repair_instruction
 from .semistructured_realizer import realize_semistructured
 from .same_page_evidence import assess_unique_same_page_course_passage, assess_unique_same_page_labeled_field_passage
+from .section_context import annotate_section_context
 from .repair_flags import enabled_repairs, repair_enabled
 from .vector_store import load_index
 
@@ -132,6 +134,16 @@ def _widen_bounded_evidence(question: str, assessment: Any,
     if widened.status is SupportStatus.SUPPORTED and len(widened.evidence) == 1:
         return widened, bounded, True
     return assessment, retrieved, False
+
+
+def _prepare_pool(question: str, pool: list[dict[str, Any]], metadata: list[dict[str, Any]],
+                  repair_trace: dict[str, Any], label: str) -> list[dict[str, Any]]:
+    """Annotate pool items for the enabled repairs (R3). Never reorders; gates are untouched."""
+    request = analyze_query(question)
+    if repair_enabled("TABLE_HEADER_CONTEXT"):
+        pool = annotate_section_context(pool, metadata, label_text=request.requested_field != "general")
+        repair_trace[f"{label}_section_labels"] = sum(1 for item in pool if item.get("section_header_chunk_id"))
+    return pool
 
 
 def _repair_trace_hook(repair_trace: dict[str, Any]) -> None:
@@ -244,6 +256,8 @@ def _answer_question_impl(
         report("Retrieving relevant context...")
         retriever = Retriever(embedding_model=embedding_model, top_k=max(top_k, 30))
         original_pool = retriever.retrieve(question, index_path=index_path, metadata_path=metadata_path)
+        if repair_trace["flags"]:
+            original_pool = _prepare_pool(question, original_pool, metadata, repair_trace, "original")
         retrieved = original_pool[:top_k]
     else:
         report("Retrieving relevant context with fast lexical search...")
@@ -322,6 +336,8 @@ def _answer_question_impl(
                 canonical_started = time.perf_counter()
                 canonical_pool = retriever.retrieve(rewrite.query, index_path=index_path,
                                                     metadata_path=metadata_path)
+                if repair_trace["flags"]:
+                    canonical_pool = _prepare_pool(question, canonical_pool, metadata, repair_trace, "canonical")
                 fallback_trace["canonical_candidate_chunk_ids"] = [str(item.get("chunk_id") or "") for item in canonical_pool]
                 fallback_trace["canonical_retrieval_seconds"] = time.perf_counter() - canonical_started
                 fallback_trace["fallback_top1"] = canonical_pool[:1]
