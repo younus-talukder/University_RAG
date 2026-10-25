@@ -46,8 +46,82 @@ def assess_unique_same_page_course_passage(
     if (request.ambiguous or request.requested_field != "general"
             or len(request.entities) != 1 or request.entities[0].kind != "course_code"):
         return None
+    return _unique_same_page_join(question, request, original_pool, metadata, limit)
+
+
+# R5a (SAME_PAGE_LABELED_FIELD_JOIN): the same ownership rule for a labeled field
+# (objective, CLO, weekly plan, ...). The joined passage must still pass the
+# unchanged entity + field gate in assess_evidence.
+LABELED_FIELD_EXCLUDED = {"general", "course_title", "document_metadata"}
+
+
+def assess_unique_same_page_labeled_field_passage(
+    question: str,
+    original_pool: Sequence[dict[str, Any]],
+    metadata: Sequence[dict[str, Any]],
+    *,
+    limit: int = 15,
+) -> tuple[EvidenceAssessment, dict[str, Any]] | None:
+    request = analyze_query(question)
+    if (request.ambiguous or request.requested_field in LABELED_FIELD_EXCLUDED
+            or len(request.entities) != 1 or request.entities[0].kind != "course_code"):
+        return None
+    return _unique_same_page_join(question, request, original_pool, metadata, limit, strict=True)
+
+
+# Strict mode (R5a only): function words never count as distinctive terms, every
+# identifier family the question names (PLO, CLO, CT, ...) must occur in the
+# candidate itself, and only candidates that already pass the unchanged gate
+# compete for the single-winner rule.
+_FUNCTION_WORDS = {"are", "and", "for", "its", "was", "were", "has", "had", "can", "per", "any", "all", "not", "but"}
+_ACRONYM = re.compile(r"(?<![A-Za-z])([A-Z]{2,6})(?:s|-?\d+)?(?![A-Za-z])")
+
+
+def _acronyms(question: str, code_value: str) -> set[str]:
+    code_letters = {token.upper() for token in re.findall(r"[A-Za-z]{2,}", code_value)}
+    return {token for token in _ACRONYM.findall(question)} - code_letters
+
+
+_NUMBERED_FAMILIES = {"CLO", "PLO", "PO", "CO", "CT"}
+_NUMBERED_ID = re.compile(r"(?<![A-Za-z])([A-Za-z]{2,8})\s*-?\s*0*(\d{1,2})(?!\d)")
+
+
+def distinctive_match(question: str, code_value: str, text: str) -> bool:
+    """Strict relevance test for passages that carry no course code of their own.
+
+    At least two distinctive question terms (and at least half of them), every
+    identifier family (PLO, CLO, ...) and every numbered identifier ("CLO2",
+    "Week 7") named by the question must occur in the passage; a family asked
+    for without a number must occur with one.
+    """
+    terms = _terms(question, code_value) - _FUNCTION_WORDS
+    # "CLO" is present in "CLO2": a word may be followed by its number.
+    present = {term for term in terms if re.search(rf"\b{re.escape(term)}(?=\b|\d)", text, re.I)}
+    if len(present) < 2 or len(present) * 2 < len(terms):
+        return False
+    if any(not re.search(rf"(?<![A-Za-z]){acronym}(?![a-z])", text) for acronym in _acronyms(question, code_value)):
+        return False
+    code_letters = {token.casefold() for token in re.findall(r"[A-Za-z]{2,}", code_value)}
+    # An outcome/assessment identifier family named without a number ("Which
+    # PLO ...") is the value being asked for, so the passage must contain a
+    # numbered member of it ("PLO3").
+    numbered = {prefix.upper() for prefix, _ in _NUMBERED_ID.findall(question)}
+    for acronym in (_acronyms(question, code_value) & _NUMBERED_FAMILIES) - numbered:
+        if not re.search(rf"(?<![A-Za-z]){acronym}\s*-?\s*\d", text):
+            return False
+    for prefix, number in _NUMBERED_ID.findall(question):
+        if prefix.casefold() in code_letters:
+            continue
+        if not re.search(rf"(?<![A-Za-z]){re.escape(prefix)}\s*-?\s*0*{int(number)}(?!\d)", text, re.I):
+            return False
+    return True
+
+
+def _unique_same_page_join(question, request, original_pool, metadata, limit, strict=False):
     code = request.entities[0].normalized
     terms = _terms(question, request.entities[0].value)
+    if strict:
+        terms -= _FUNCTION_WORDS
     if len(terms) < 2:
         return None
 
@@ -73,7 +147,11 @@ def assess_unique_same_page_course_passage(
         present = {term for term in terms if re.search(rf"\b{re.escape(term)}\b", text, re.I)}
         if len(present) < 2 or len(present) * 2 < len(terms):
             continue
+        if strict and not distinctive_match(question, request.entities[0].value, text):
+            continue
         header = next(entry for entry in page_headers if entry[1] != str(item.get("chunk_id")))
+        if strict and assess_evidence(question, [{**item, "text": f"{header[2]} {text}"}]).status is not SupportStatus.SUPPORTED:
+            continue
         candidates.append((len(present), rank, item, header[1], header[2]))
     if not candidates:
         return None
@@ -90,4 +168,4 @@ def assess_unique_same_page_course_passage(
     return replace(assessment, evidence=(evidence,)), joined
 
 
-__all__ = ["assess_unique_same_page_course_passage"]
+__all__ = ["assess_unique_same_page_course_passage", "assess_unique_same_page_labeled_field_passage", "distinctive_match"]

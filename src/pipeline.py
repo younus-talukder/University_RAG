@@ -43,7 +43,7 @@ from .retriever import Retriever
 from .query_normalization import build_query_representations
 from .semantic_contract import build_semantic_contract, repair_instruction
 from .semistructured_realizer import realize_semistructured
-from .same_page_evidence import assess_unique_same_page_course_passage
+from .same_page_evidence import assess_unique_same_page_course_passage, assess_unique_same_page_labeled_field_passage
 from .repair_flags import enabled_repairs, repair_enabled
 from .vector_store import load_index
 
@@ -350,6 +350,14 @@ def _answer_question_impl(
             retrieved = [selected, *[item for item in retrieved[:top_k]
                                     if item.get("chunk_id") != selected.get("chunk_id")]]
             fallback_trace["same_page_owner_widened"] = True
+    if (use_generation and assessment.status is SupportStatus.INSUFFICIENT
+            and repair_enabled("SAME_PAGE_LABELED_FIELD_JOIN")):
+        same_page = assess_unique_same_page_labeled_field_passage(question, original_pool, metadata)
+        if same_page is not None:
+            assessment, selected = same_page
+            retrieved = [selected, *[item for item in retrieved[:top_k]
+                                    if item.get("chunk_id") != selected.get("chunk_id")]]
+            repair_trace["same_page_labeled_field_join"] = [selected.get("chunk_id"), selected.get("same_page_owner_chunk_id")]
     fallback_trace["repair_trace"] = repair_trace
     _repair_trace_hook(repair_trace)
     fallback_trace["final_candidate_chunk_ids"] = [str(item.get("chunk_id") or "") for item in retrieved]
