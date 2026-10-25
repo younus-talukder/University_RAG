@@ -408,6 +408,18 @@ def _answer_question_impl(
             retrieved = [selected, *[item for item in retrieved[:top_k]
                                     if item.get("chunk_id") != selected.get("chunk_id")]]
             repair_trace["same_page_labeled_field_join"] = [selected.get("chunk_id"), selected.get("same_page_owner_chunk_id")]
+    if (use_generation and assessment.status is SupportStatus.INSUFFICIENT
+            and repair_enabled("DEEPER_GATE_CHECKED_SELECTION")
+            and assessment.request.requested_field != "course_title"):
+        # R2: judge further pool candidates one at a time with the unchanged gate.
+        for depth, candidate in enumerate(original_pool[top_k:], start=top_k + 1):
+            deeper = assess_evidence(question, [candidate])
+            if deeper.status is SupportStatus.SUPPORTED and len(deeper.evidence) == 1:
+                assessment = deeper
+                retrieved = [candidate, *[item for item in retrieved[:top_k - 1]
+                                          if item.get("chunk_id") != candidate.get("chunk_id")]]
+                repair_trace["deeper_selection_depth"] = depth
+                break
     fallback_trace["repair_trace"] = repair_trace
     _repair_trace_hook(repair_trace)
     fallback_trace["final_candidate_chunk_ids"] = [str(item.get("chunk_id") or "") for item in retrieved]
