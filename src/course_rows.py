@@ -33,7 +33,7 @@ def _row_values(text: str, code: str, field: str) -> list[str]:
         next_row = re.search(r"\bCourse\s+Code\s*:", clean[match.end():], re.I)
         end = match.end() + next_row.start() if next_row else len(clean)
         row = clean[match.end():end]
-        pattern = (r"\bCredit(?:s|\s+Value)?\s*:\s*(\d+(?:\.\d+)?)\b" if field == "credits"
+        pattern = (r"\bCredit(?:s|\s+Value|\s+Hours?)?\s*:\s*(\d+(?:\.\d+)?)\b" if field == "credits"
                    else rf"\b{_LABEL}\s*[:=-]?\s*({_PREREQUISITE})\b")
         value = re.search(pattern, row, re.I)
         if value:

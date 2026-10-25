@@ -6,6 +6,7 @@ from typing import Any, Literal, Sequence
 
 from .generation_context import VerifiedEvidencePackage
 from .course_rows import course_field_value, requested_course_code
+from .course_title_evidence import title_value_from_excerpts
 
 
 Polarity = Literal["affirmative", "negative", "unknown"]
@@ -143,7 +144,10 @@ def _relation_sentence(sentence: str, wanted: str | None) -> str | None:
     if wanted and any(cue in lowered for cue in RELATION_CUES[wanted]):
         return wanted
     for relation, cues in RELATION_CUES.items():
-        if any(cue in lowered for cue in cues):
+        # Short general-claim verbs must be words. Substring matching treats
+        # "Analysis" as an "is" claim in a labeled course title.
+        if (any(re.search(rf"\b{re.escape(cue)}\b", lowered) for cue in cues)
+                if relation == "general_claim" else any(cue in lowered for cue in cues)):
             return relation
     return None
 
@@ -240,6 +244,8 @@ def build_semantic_contract(package: VerifiedEvidencePackage) -> SemanticContrac
     course_code = requested_course_code(package.question) if package.requested_field in {"credits", "prerequisite"} else None
     course_value = (course_field_value(package.question, package.requested_field,
                                        [item.excerpt for item in package.evidence]) if course_code else None)
+    if package.requested_field == "course_title":
+        course_value = title_value_from_excerpts([item.excerpt for item in package.evidence])
     if package.requested_field == "prerequisite" and course_value and course_value.casefold() in {"nil", "none", "n/a"}:
         required_polarity = "negative"
     course_count = bool(re.search(r"\bhow\s+many\b|\bmaximum\b|\bkoyta\b|কয়টি|কত", package.question, re.I)
@@ -305,6 +311,12 @@ def _atomic_anchors(text: str) -> set[str]:
 def validate_semantic_contract(answer: str, contract: SemanticContract) -> dict[str, Any]:
     if not answer.strip():
         return {"passed": False, "reason": "EMPTY_ANSWER", "repairable": False, "details": []}
+    if contract.requested_field == "course_title":
+        title = contract.bound_course_value
+        if not title:
+            return {"passed": False, "reason": "UNVERIFIED_COURSE_TITLE", "repairable": False, "details": []}
+        if re.sub(r"\W+", "", title).casefold() not in re.sub(r"\W+", "", answer).casefold():
+            return {"passed": False, "reason": "WRONG_FIELD_VALUE", "repairable": False, "details": [title]}
     details: list[str] = []
     answer_polarity = detect_polarity(answer)
     if contract.required_polarity != "unknown" and answer_polarity != contract.required_polarity:

@@ -55,7 +55,9 @@ def expand_assessment_evidence(
                         text = candidate
                         linked = [str(following["chunk_id"])]
         if len(text) <= max_chars:
-            expanded.append(replace(evidence, excerpt=text, continuation_chunk_ids=tuple(linked)))
+            expanded.append(replace(evidence, excerpt=text,
+                                    continuation_chunk_ids=tuple(dict.fromkeys(
+                                        (*evidence.continuation_chunk_ids, *linked)))))
         else:
             expanded.append(evidence)
     return replace(assessment, evidence=tuple(expanded))

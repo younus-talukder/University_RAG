@@ -17,3 +17,18 @@ models/*.tmp
 models/*.part
 models/*.gguf
 inspection_report.txt
+
+# --- Stage A v10: never commit models, indexes, datasets, PDFs or Drive outputs ---
+# (files already tracked at 5d7614a, e.g. vector_db/* and data/questions/*, stay tracked;
+#  ignore rules only stop NEW files of these kinds from being added)
+/models/
+/vector_db/
+*.gguf
+*.faiss
+*.pkl
+*.pdf
+/data/documents/
+/data/questions/
+*.xlsx
+/drive/
+/content/

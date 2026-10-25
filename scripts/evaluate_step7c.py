@@ -34,6 +34,14 @@ REPORT_MD = ROOT_DIR / "results" / "step7c_report.md"
 MANUAL_CSV = ROOT_DIR / "results" / "step7c_manual_review_sample.csv"
 SMOKE_JSON = ROOT_DIR / "results" / "step7c_smoke_summary.json"
 SMOKE_CSV = ROOT_DIR / "results" / "step7c_smoke_results.csv"
+
+
+def _process_rss_bytes() -> int | str:
+    """Keep optional process telemetry from breaking checkpointed evaluation."""
+    try:
+        return psutil.Process().memory_info().rss
+    except (psutil.Error, OSError):
+        return "NOT_AVAILABLE"
 RESUME_TEST_CSV = ROOT_DIR / "results" / "step7c_resume_test.csv"
 SMOKE_IDS = {
     "english": ("Q002", "Q005", "Q007", "Q009", "Q010"),
@@ -134,7 +142,7 @@ def evaluate(rows: list[dict[str, Any]], output_path: Path, initial_rows: list[d
             "prompt_tokens": prompt_tokens,
             "completion_tokens": completion_tokens,
             "tokens_per_second": completion_tokens / float(result.get("latency_seconds", {}).get("generation", 0.0)) if completion_tokens and float(result.get("latency_seconds", {}).get("generation", 0.0)) else 0.0,
-            "rss_bytes": psutil.Process().memory_info().rss,
+            "rss_bytes": _process_rss_bytes(),
             "available_ram_bytes": memory.available,
             "swap_used_bytes": swap.used,
             "error": error or result.get("generation_error", "") or "",

@@ -10,9 +10,42 @@ import re
 from typing import Sequence
 
 from .query_normalization import extract_course_entities, is_mark_distribution_query, normalize_retrieval_text
+from .evidence import detect_requested_field
 
 EMAIL = r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}"
 EMAIL_LIST = re.compile(rf"\bE-?mail\s*:\s*((?:{EMAIL}(?:\s*[,;]+\s*|\s+and\s+)?)+)", re.I)
+ABSENCE_CLAIM = re.compile(
+    r"\b(?:not|never)\s+(?:explicitly\s+)?(?:specified|listed|mentioned|provided|given|found)\b"
+    r"|\b(?:provide|deya|ullekh)\s+koreche\s+na\b"
+    r"|উল্লেখিত\s+হয়নি|দেওয়া\s+হয়নি",
+    re.I,
+)
+BOILERPLATE_WORDS = {
+    "course", "code", "document", "evidence", "provided", "listed", "answer",
+    "relevant", "information", "holo", "ache", "from", "with", "that", "this",
+    "which", "what", "where", "when", "does", "such", "about", "area",
+}
+
+
+def _content_words(text: str) -> set[str]:
+    return {
+        word.casefold() for word in re.findall(r"[A-Za-z]{4,}|[\u0980-\u09ff]{3,}", text)
+        if word.casefold() not in BOILERPLATE_WORDS
+    }
+
+
+def _association_anchor(question: str) -> set[str]:
+    """Keep the subject of an explicit pairing tied to the cited passage.
+
+    The question, rather than a dataset reference or a translated answer, supplies
+    the subject. Non-Latin anchors are left to the existing evidence contract.
+    """
+    text = normalize_retrieval_text(question)
+    paired = re.search(r"\bpaired\s+with\s+(.+?)[?.!]?$", text, re.I)
+    companion = re.search(r"^(.+?)\s+(?:sathe|with)\b", text, re.I)
+    phrase = paired.group(1) if paired else companion.group(1) if companion else ""
+    return {term.casefold() for term in re.findall(r"[A-Za-z]{4,}", phrase)
+            if term.casefold() not in BOILERPLATE_WORDS and term.casefold() not in {"paired", "course"}}
 
 
 def requested_relation(question: str) -> str | None:
@@ -69,8 +102,35 @@ def explicit_email_values(question: str, excerpts: Sequence[str]) -> tuple[str, 
 
 def answer_safety_failures(question: str, answer: str, excerpts: Sequence[str], *,
                            extracted_relation: str | None = None,
-                           relation_values: Sequence[str] = ()) -> tuple[str, ...]:
+                           relation_values: Sequence[str] = (),
+                           cited_excerpt: str | None = None) -> tuple[str, ...]:
     failures: list[str] = []
+    # A local passage cannot establish that a requested fact is absent from
+    # the document. Treat such wording as an abstention attempt, not a fact.
+    if ABSENCE_CLAIM.search(answer):
+        failures.append("UNVERIFIED_ABSENCE_CLAIM")
+    # A broad question needs a fact from its cited passage beyond words already
+    # present in the question. An entity label alone is never that fact.
+    requested_field = detect_requested_field(question)
+    answer_field = detect_requested_field(answer)
+    clo_missing = bool(re.search(r"\bCLOs?\b", question, re.I)
+                       and not re.search(r"\bCLO\s*\d+\b", answer, re.I))
+    if (requested_field != "general" and answer_field != "general"
+            and answer_field != requested_field and not clo_missing):
+        failures.append("WRONG_FIELD_ANSWER")
+    cited_text = cited_excerpt if cited_excerpt is not None else " ".join(excerpts)
+    if excerpts and requested_field == "general":
+        novel_answer = _content_words(answer) - _content_words(question)
+        source_content = _content_words(cited_text) - _content_words(question)
+        if not novel_answer or len(novel_answer & source_content) < min(2, len(novel_answer)):
+            failures.append("REQUESTED_FACT_NOT_IN_CITED_EVIDENCE")
+        anchor = _association_anchor(question)
+        if anchor and not anchor.intersection(_content_words(cited_text)):
+            failures.append("REQUESTED_RELATION_NOT_ON_CITED_PASSAGE")
+    # Asking for named outcome identifiers cannot be answered with a neighboring
+    # week topic, even when the topic appears on the same page.
+    if clo_missing:
+        failures.append("REQUESTED_FIELD_MISSING")
     wanted = requested_relation(question)
     if not relation_compatible(wanted, extracted_relation):
         failures.append("RELATION_MISMATCH")

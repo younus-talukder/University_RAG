@@ -46,7 +46,7 @@ LANGUAGE_STYLES: Mapping[Language, LanguageStyle] = {
 
 EXACT_FIELDS = frozenset({
     "credits", "prerequisite", "percentage", "course_code", "course_title", "course_type",
-    "email", "date", "duration", "semester", "grade", "attendance",
+    "email", "date", "duration", "semester", "grade", "attendance", "textbook",
 })
 LIST_FIELDS = frozenset({"topic", "weekly_content", "learning_outcome"})
 
@@ -117,6 +117,7 @@ def format_exact_fact(entity: str | None, field: str, value: str, language: Lang
             "percentage": f"The requested percentage for {entity_text} is {clean_value.rstrip('%')}%",
             "course_code": f"The course code is {clean_value}",
             "course_title": f"The course title is {clean_value}",
+            "textbook": f"The textbook is {clean_value}",
             "course_type": f"The course type is {clean_value}",
             "email": f"The email address is {clean_value}",
             "date": f"The relevant date is {clean_value}",
@@ -134,6 +135,7 @@ def format_exact_fact(entity: str | None, field: str, value: str, language: Lang
             "percentage": f"{subject} বিষয়টির প্রাসঙ্গিক percentage {clean_value.rstrip('%')}%",
             "course_code": f"কোর্সটির code হলো {clean_value}",
             "course_title": f"কোর্সটির title হলো {clean_value}",
+            "textbook": f"পাঠ্যবই হলো {clean_value}",
             "course_type": f"কোর্সটির type হলো {clean_value}",
             "email": f"প্রাসঙ্গিক email address হলো {clean_value}",
             "date": f"প্রাসঙ্গিক তারিখ হলো {clean_value}",
@@ -151,6 +153,7 @@ def format_exact_fact(entity: str | None, field: str, value: str, language: Lang
         "percentage": f"{subject} item-er relevant percentage {clean_value.rstrip('%')}%",
         "course_code": f"Course-er code holo {clean_value}",
         "course_title": f"Course-er title holo {clean_value}",
+        "textbook": f"textbook holo {clean_value}",
         "course_type": f"Course-er type holo {clean_value}",
         "email": f"Relevant email address holo {clean_value}",
         "date": f"Relevant date holo {clean_value}",
@@ -199,7 +202,7 @@ def format_structured_text(answer: str, language: Language) -> str:
 def evidence_value(field: str, excerpts: Sequence[str]) -> str | None:
     course_code = r"[A-Za-z]{2,12}(?:\s*\([A-Za-z]{2,12}\))?\s*\d{2,4}(?:\s*\([A-Za-z0-9]+\))?"
     patterns: Mapping[str, tuple[str, ...]] = {
-        "credits": (r"(?:credit(?:\s+value)?|credits?)\s*[:=-]?\s*(\d+(?:\.\d+)?)",),
+        "credits": (r"\bcredits?(?:\s+(?:value|hours?))?\s*[:=-]\s*(\d+(?:\.\d+)?)",),
         "percentage": (r"(\d+(?:\.\d+)?)\s*%",),
         "attendance": (r"attendance[^.\n]{0,100}?(\d+(?:\.\d+)?\s*%)", r"(\d+(?:\.\d+)?\s*%)[^.\n]{0,100}?attendance"),
         "email": (r"([\w.+-]+@[\w.-]+\.[A-Za-z]{2,})",),

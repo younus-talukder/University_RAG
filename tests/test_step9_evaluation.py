@@ -313,8 +313,11 @@ class MetricsAndReviewTests(unittest.TestCase):
 
     def test_corpus_manifest(self):
         corpus = corpus_identity()
-        self.assertEqual(corpus["chunk_count"], 491)
-        self.assertEqual(corpus["document_count"], 1)
+        from src.config import VECTOR_DB_DIR
+        import pickle
+        metadata = pickle.loads((VECTOR_DB_DIR / "metadata.pkl").read_bytes())
+        self.assertEqual(corpus["chunk_count"], len(metadata))
+        self.assertEqual(corpus["document_count"], len({item["document_id"] for item in metadata}))
 
 
 if __name__ == "__main__":

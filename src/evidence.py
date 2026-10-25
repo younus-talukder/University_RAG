@@ -90,7 +90,7 @@ class ConflictIdentity:
 FIELD_PATTERNS: dict[str, tuple[str, ...]] = {
     "credits": (r"\bcredits?\b", r"credit\s+value", r"ক্রেডিট"),
     "prerequisite": (r"\bpre\s*[- ]?\s*requisites?\b", r"\bprereq\b", r"পূর্বশর্ত"),
-    "course_title": (r"course\s+title", r"\btitle\b", r"শিরোনাম", r"নাম"),
+    "course_title": (r"course\s+title", r"\btitle\b", r"শিরোনাম", r"(?:কোর্সের|কোর্সটির|কোর্স)\s+নাম"),
     "course_code": (r"course\s+(?:no\.?|code|number)", r"\bcode\b", r"কোড"),
     "semester": (r"\bsemesters?\b", r"\bterm\b", r"সেমিস্টার"),
     "attendance": (r"\battendance\b", r"উপস্থিতি", r"হাজিরা"),
@@ -105,7 +105,8 @@ FIELD_PATTERNS: dict[str, tuple[str, ...]] = {
     "date": (r"\bdates?\b", r"\bwhen\b", r"তারিখ", r"কবে"),
     "course_type": (r"course\s+type", r"\btype\b", r"ধরন"),
     "objective": (r"\bobjectives?\b", r"course\s+summary", r"উদ্দেশ্য", r"uddesh"),
-    "learning_outcome": (r"\bclo\s*\d*\b", r"course\s+learning\s+outcomes?"),
+    "learning_outcome": (r"\bclo(?:s|\s*\d+)?\b", r"course\s+learning\s+outcomes?"),
+    "textbook": (r"\btext\s*books?\b", r"পাঠ্যবই"),
     "weekly_content": (r"\bweek\s*\d+\b", r"weekly\s+plan", r"সপ্তাহ"),
     "assessment": (r"\bassessment\b", r"\bexam(?:ination)?\b", r"\bmarks?\b", r"পরীক্ষা", r"নম্বর"),
 }
@@ -113,6 +114,7 @@ FIELD_PATTERNS: dict[str, tuple[str, ...]] = {
 
 FIELD_QUERY_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("learning_outcome", FIELD_PATTERNS["learning_outcome"]),
+    ("textbook", FIELD_PATTERNS["textbook"]),
     ("prerequisite", FIELD_PATTERNS["prerequisite"]),
     ("attendance", FIELD_PATTERNS["attendance"]),
     ("email", FIELD_PATTERNS["email"]),
@@ -137,7 +139,7 @@ FIELD_QUERY_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 ENTITY_DEPENDENT_FIELDS = {
     "credits", "prerequisite", "course_title", "course_code", "course_type",
-    "learning_outcome", "objective", "topic", "weekly_content",
+    "learning_outcome", "textbook", "objective", "topic", "weekly_content",
     "publication", "attendance", "percentage",
 }
 
@@ -198,6 +200,13 @@ def detect_requested_field(question: str) -> str:
     for field, patterns in FIELD_QUERY_PATTERNS:
         if any(re.search(pattern, normalized, re.I) for pattern in patterns):
             return field
+    # Banglish often asks for a course's "naam" without the English word
+    # "title". Bind this to course_title only for an explicit course entity;
+    # a teacher's name is a different fact.
+    if (extract_course_entities(normalized)
+            and re.search(r"\b(?:naam|nam)\b", normalized, re.I)
+            and not re.search(r"\b(?:teacher|instructor|faculty|professor|lecturer)\b", normalized, re.I)):
+        return "course_title"
     return "general"
 
 
@@ -269,6 +278,9 @@ def _course_is_subject(entity: RequestedEntity, text: str, metadata: dict[str, A
 
 def _field_occurs(field: str, text: str, question: str) -> bool:
     if field == "general":
+        if (re.search(r"\b(?:explain|describe)\b|ব্যাখ্যা|ব্যাখ্যা\s*করুন", question, re.I)
+                and re.search(r"\b(?:overview|description|summary)\b", text, re.I)):
+            return True
         query_terms = {
             token for token in re.findall(r"[A-Za-z\u0980-\u09ff]{3,}", _normal(question))
             if token not in {"what", "which", "where", "when", "who", "how", "university", "document"}
@@ -318,7 +330,7 @@ def _support_excerpt(text: str, field: str, entities: Sequence[RequestedEntity],
 
 def _fact_values(field: str, excerpt: str) -> set[str]:
     patterns: dict[str, tuple[str, ...]] = {
-        "credits": (r"(?:credit(?:\s+value)?|credits?)\s*[:=-]?\s*(\d+(?:\.\d+)?)",),
+        "credits": (r"\bcredits?(?:\s+(?:value|hours?))?\s*[:=-]\s*(\d+(?:\.\d+)?)",),
         "percentage": (r"(\d+(?:\.\d+)?)\s*%",),
         "attendance": (r"attendance[^.\n]{0,100}?(\d+(?:\.\d+)?)\s*%", r"(\d+(?:\.\d+)?)\s*%[^.\n]{0,100}?attendance"),
         "email": (r"([\w.+-]+@[\w.-]+\.[A-Za-z]{2,})",),
@@ -541,12 +553,9 @@ def assess_evidence(question: str, retrieved: Sequence[dict[str, Any]]) -> Evide
         ]
         if request.entities and len(matched_entities) != len(request.entities):
             continue
-        if request.requested_field == "general" and request.entities:
-            field_matches = True
-        else:
-            field_matches = _field_occurs(request.requested_field, text, question) or _structured_field_occurs(
-                request.requested_field, text, item
-            )
+        field_matches = _field_occurs(request.requested_field, text, question) or _structured_field_occurs(
+            request.requested_field, text, item
+        )
         if not field_matches:
             continue
         excerpt = _support_excerpt(text, request.requested_field, request.entities)

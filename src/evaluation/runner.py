@@ -24,18 +24,43 @@ def _bool(value: Any) -> bool:
 
 
 def _telemetry() -> dict[str, Any]:
+    rss: int | str = "NOT_AVAILABLE"
+    peak_rss: int | str = "NOT_AVAILABLE"
     try:
         import psutil
-        process = psutil.Process()
-        memory = process.memory_info()
+        try:
+            memory = psutil.Process().memory_info()
+            rss = memory.rss
+            peak_rss = getattr(memory, "peak_wset", memory.rss)
+        except Exception:
+            # Some container PID namespaces expose /proc/self but make the
+            # numeric PID returned by os.getpid() invisible to psutil.
+            try:
+                for line in Path("/proc/self/status").read_text(encoding="utf-8").splitlines():
+                    if line.startswith("VmRSS:"):
+                        rss = int(line.split()[1]) * 1024
+                        break
+            except (OSError, ValueError, IndexError):
+                pass
+            try:
+                import resource
+                peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                peak_rss = int(peak if os.name == "nt" else peak * 1024)
+            except (ImportError, OSError, ValueError):
+                pass
         virtual = psutil.virtual_memory()
-        swap = psutil.swap_memory()
-        return {"rss_bytes": memory.rss,
-                "peak_process_bytes": getattr(memory, "peak_wset", memory.rss),
+        try:
+            swap = psutil.swap_memory()
+            swap_used, swap_total = swap.used, swap.total
+        except Exception:
+            swap_used = swap_total = "NOT_AVAILABLE"
+        return {"rss_bytes": rss, "peak_process_bytes": peak_rss,
                 "total_ram_bytes": virtual.total, "available_ram_bytes": virtual.available,
-                "pagefile_used_bytes_system": swap.used,
-                "pagefile_total_bytes_system": swap.total}
-    except (ImportError, OSError):
+                "pagefile_used_bytes_system": swap_used,
+                "pagefile_total_bytes_system": swap_total}
+    except Exception:
+        # Process telemetry can be unavailable inside Colab/container PID
+        # namespaces; it must not prevent checkpointed evaluation.
         return {"rss_bytes": "NOT_AVAILABLE", "peak_process_bytes": "NOT_AVAILABLE",
                 "total_ram_bytes": "NOT_AVAILABLE", "available_ram_bytes": "NOT_AVAILABLE",
                 "pagefile_used_bytes_system": "NOT_AVAILABLE",
@@ -127,6 +152,11 @@ def infer_one(descriptor: dict[str, Any], run_id: str, *, top_k: int = 3,
         "retrieval_channels": response.get("retrieval_channels") or [],
         "best_support_rank": response.get("best_support_rank") or "",
         "cross_lingual_fallback_used": _bool(response.get("cross_lingual_fallback_used")),
+        "bounded_evidence_widened": _bool(response.get("bounded_evidence_widened")),
+        "same_page_owner_widened": _bool(response.get("same_page_owner_widened")),
+        "initial_candidate_chunk_ids": response.get("initial_candidate_chunk_ids") or [],
+        "canonical_candidate_chunk_ids": response.get("canonical_candidate_chunk_ids") or [],
+        "final_candidate_chunk_ids": response.get("final_candidate_chunk_ids") or [],
         "generation_used": _bool(response.get("generation_used")),
         "generation_attempts": int(response.get("generation_attempts") or 0),
         "retry_used": _bool(response.get("retry_used")),

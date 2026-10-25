@@ -15,6 +15,8 @@ from .answerability import (
     clearly_out_of_domain, finalize_answerability, remove_untrusted_directives, safe_response,
 )
 from .course_rows import course_field_value, requested_course_code
+from .course_title_evidence import assess_course_title, bound_course_title_value
+from .document_textbook_evidence import assess_document_textbook
 from .answer_bank import find_answer_bank_match
 from .config import TOP_K, VECTOR_DB_DIR
 from .embeddings import EmbeddingModel, get_embedding_model
@@ -41,6 +43,7 @@ from .retriever import Retriever
 from .query_normalization import build_query_representations
 from .semantic_contract import build_semantic_contract, repair_instruction
 from .semistructured_realizer import realize_semistructured
+from .same_page_evidence import assess_unique_same_page_course_passage
 from .vector_store import load_index
 
 
@@ -112,6 +115,22 @@ def _truncate_chunk_for_generation(question: str, chunk_text: str, max_words: in
             return " ".join(selected).strip()
 
     return " ".join(words[:max_words]).strip()
+
+
+def _widen_bounded_evidence(question: str, assessment: Any,
+                            retrieved: list[dict[str, Any]],
+                            original_pool: list[dict[str, Any]]) -> tuple[Any, list[dict[str, Any]], bool]:
+    if (assessment.status is not SupportStatus.INSUFFICIENT
+            or not assessment.request.entities
+            or assessment.request.requested_field in {"general", "course_title"}):
+        return assessment, retrieved, False
+    bounded = original_pool[:15]
+    widened = assess_evidence(question, bounded)
+    # A single independently bound passage avoids choosing among values that
+    # the generic conflict parser may not normalize (for example Credit Hour).
+    if widened.status is SupportStatus.SUPPORTED and len(widened.evidence) == 1:
+        return widened, bounded, True
+    return assessment, retrieved, False
 
 
 def _answer_question_impl(
@@ -227,7 +246,19 @@ def _answer_question_impl(
 
     report("Validating retrieved evidence...")
     assessment = assess_evidence(question, retrieved)
+    if assessment.request.requested_field == "course_title" and assessment.request.entities:
+        assessment = assess_course_title(question, retrieved, metadata)
     initial_support_status = assessment.status.value
+    textbook_value = None
+    document_textbook_lookup = False
+    if (use_generation and assessment.status is SupportStatus.INSUFFICIENT
+            and assessment.request.requested_field == "textbook"):
+        textbook_assessment, textbook_chunk, textbook_value = assess_document_textbook(
+            question, retrieved, metadata)
+        if textbook_assessment.status is SupportStatus.SUPPORTED and textbook_chunk:
+            assessment = textbook_assessment
+            retrieved = [*retrieved, textbook_chunk]
+            document_textbook_lookup = True
     metadata_evidence_widened = False
     if (use_generation and assessment.status is SupportStatus.INSUFFICIENT
             and metadata_fields_for_query(question)):
@@ -238,6 +269,13 @@ def _answer_question_impl(
         if widened.status is not SupportStatus.INSUFFICIENT:
             assessment, retrieved = widened, original_pool
             metadata_evidence_widened = True
+    bounded_evidence_widened = False
+    if use_generation:
+        # Reuse the frozen retriever's bounded pool only when the existing
+        # entity/field and conflict checks verify a passage below top-k.
+        # Never select a passage by its dataset label or annotated page.
+        assessment, retrieved, bounded_evidence_widened = _widen_bounded_evidence(
+            question, assessment, retrieved, original_pool)
     representations = replace(representations,
                               requested_entity=assessment.request.primary_entity or "",
                               requested_field=assessment.request.requested_field)
@@ -245,6 +283,10 @@ def _answer_question_impl(
     fallback_trace: dict[str, Any] = {
         "initial_support_status": initial_support_status,
         "metadata_evidence_widened": metadata_evidence_widened,
+        "bounded_evidence_widened": bounded_evidence_widened,
+        "document_textbook_lookup": document_textbook_lookup,
+        "initial_candidate_chunk_ids": [str(item.get("chunk_id") or "") for item in original_pool] if use_generation else [],
+        "canonical_candidate_chunk_ids": [],
         "initial_top1": initial_top[:1], "initial_top3": initial_top[:3],
         "fallback_triggered": False, "rewrite_method": "NONE",
         "canonical_retrieval_query": "", "rewrite_validation": "NOT_ATTEMPTED",
@@ -274,6 +316,7 @@ def _answer_question_impl(
                 canonical_started = time.perf_counter()
                 canonical_pool = retriever.retrieve(rewrite.query, index_path=index_path,
                                                     metadata_path=metadata_path)
+                fallback_trace["canonical_candidate_chunk_ids"] = [str(item.get("chunk_id") or "") for item in canonical_pool]
                 fallback_trace["canonical_retrieval_seconds"] = time.perf_counter() - canonical_started
                 fallback_trace["fallback_top1"] = canonical_pool[:1]
                 fallback_trace["fallback_top3"] = canonical_pool[:3]
@@ -289,10 +332,25 @@ def _answer_question_impl(
             fallback_trace["crosslingual_gate_reason"] = f"REWRITE_UNAVAILABLE:{type(exc).__name__}"
         fallback_trace["fallback_seconds"] = time.perf_counter() - fallback_started
     retrieval_seconds = time.perf_counter() - pipeline_started
+    fallback_trace["final_candidate_chunk_ids"] = [str(item.get("chunk_id") or "") for item in retrieved]
+    if assessment.request.requested_field == "course_title" and assessment.request.entities:
+        # A cross-language retrieval rewrite cannot relax the factual binding.
+        assessment = assess_course_title(question, retrieved, metadata)
+    fallback_trace["same_page_owner_widened"] = False
+    if use_generation and assessment.status is SupportStatus.INSUFFICIENT:
+        same_page = assess_unique_same_page_course_passage(question, original_pool, metadata)
+        if same_page is not None:
+            assessment, selected = same_page
+            retrieved = [selected, *[item for item in retrieved[:top_k]
+                                    if item.get("chunk_id") != selected.get("chunk_id")]]
+            fallback_trace["same_page_owner_widened"] = True
+    fallback_trace["final_candidate_chunk_ids"] = [str(item.get("chunk_id") or "") for item in retrieved]
     if assessment.status is SupportStatus.SUPPORTED:
         assessment = expand_assessment_evidence(assessment, metadata)
     trust_started = time.perf_counter()
-    trust_relation = extract_relation(question, assessment, retrieved, detected_language) if assessment.status is SupportStatus.SUPPORTED else None
+    trust_relation = (extract_relation(question, assessment, retrieved, detected_language)
+                      if assessment.status is SupportStatus.SUPPORTED
+                      and assessment.request.requested_field != "course_title" else None)
     intended_relation = requested_relation(question)
     extracted_relation = trust_relation.relation if trust_relation else None
     trust_strategy = (select_answer_strategy(assessment.status, assessment.request.requested_field, runtime_intent, question)
@@ -437,15 +495,17 @@ def _answer_question_impl(
         if runtime_intent == "final_exam_marks":
             answer = build_extractive_answer(question, verified_retrieved, detected_language, runtime_intent)
         course_field = bool(answer_field in {"credits", "prerequisite"} and requested_course_code(question))
-        value = (course_field_value(question, answer_field, context) if course_field
-                 else evidence_value(answer_field, context)) if not answer else None
+        value = (textbook_value if answer_field == "textbook" else
+                 bound_course_title_value(assessment) if answer_field == "course_title" else
+                 course_field_value(question, answer_field, context) if course_field else
+                 evidence_value(answer_field, context)) if not answer else None
         if answer_field == "email":
             listed = explicit_email_values(question, context)
             if listed:
                 value = ", ".join(listed)
         if value:
             answer = format_exact_fact(assessment.request.primary_entity, answer_field, value, detected_language)
-        if not answer and not course_field:
+        if not answer and not course_field and answer_field != "course_title":
             extracted = build_extractive_answer(question, verified_retrieved, "english", runtime_intent)
             if extracted.startswith((
                 "Course code:", "Course title:", "Course type:", "Credit value:", "Prerequisite:",
@@ -630,9 +690,11 @@ def _answer_question_impl(
     )
     if incomplete_distribution:
         generation_rejection_reason = "INCOMPLETE_DISTRIBUTION_FROM_RECOVERED_EVIDENCE"
+    citation_candidate = select_primary_evidence(answer, assessment.evidence) if answer else None
     safety_failures = answer_safety_failures(
         question, answer, context, extracted_relation=extracted_relation,
         relation_values=relation.values if relation else (),
+        cited_excerpt=citation_candidate.excerpt if citation_candidate else "",
     ) if answer else ()
     if safety_failures:
         generation_rejection_reason = ",".join(safety_failures)

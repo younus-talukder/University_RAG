@@ -196,6 +196,11 @@ def crosslingual_assessment(original_question: str, rewrite: Rewrite, merged: Se
     if not rewrite.query or rewrite.validation not in {"VALIDATED", "VALIDATED_CACHED"}:
         return original, "REWRITE_NOT_VALIDATED"
     candidate = assess_evidence(rewrite.query, merged)
+    # A canonical retrieval query may broaden wording, but its evidence must
+    # still answer the field asked in the original language. A course-code hit
+    # cannot license an answer to a textbook, title, or other field question.
+    if candidate.request.requested_field != original.request.requested_field:
+        return original, "REQUESTED_FIELD_CHANGED"
     if candidate.status is SupportStatus.CONFLICTING:
         return candidate, "CANONICAL_QUERY_CONFLICT"
     if candidate.status is not SupportStatus.SUPPORTED:

@@ -13,7 +13,7 @@ from src.generation_context import VerifiedEvidenceItem, VerifiedEvidencePackage
 class GeneratorConfigurationTests(unittest.TestCase):
     def test_defaults_use_7b_development_profile_and_portable_first_shard(self) -> None:
         settings = load_generator_settings({})
-        self.assertEqual(Path(settings.model_path), MODEL_DIR / "qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf")
+        self.assertEqual(Path(settings.model_path), (MODEL_DIR / "qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf").resolve())
         self.assertEqual(settings.profile, "DEVELOPMENT_8GB")
         self.assertEqual(settings.context_size, 4096)
         self.assertEqual(settings.threads, 8)
