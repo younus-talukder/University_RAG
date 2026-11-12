@@ -83,7 +83,7 @@ _LABELS = [
     ('synopsis', r'Course\s+Synopsis'),
     ('objectives', r'Course\s+Objectives(?:\s+and\s+Course\s+Summary)?'),
     ('clo', r'Course\s+Learning\s+Outcomes?'),
-    ('co_mapping', r'(?:CLO\s*(?:to|[-–>])\s*PLO|CO\s*(?:to|[-–>])\s*PO|Mapping\s+of\s+CLO)'),
+    ('co_mapping', r'(?:CLO\s*(?:to|[-–>])\s*PLO|CO\s*(?:to|[-–>])\s*PO|Mapping\s*(?:/|of)?\s*Alignment\s+of\s+CLOs?\s+with\s+Program\s+Learning\s+Outcomes?\s*\(PLO\)|Mapping\s+of\s+CLO)'),
     ('content', r'Course\s+Content'),
     ('topic_clo', r'(?:Topic\s*(?:to|[-–>])\s*CLO|CLO\s+Mapping)'),
     ('weekly_plan', r'(?:Class\s+Schedule\s*/\s*Lesson\s+Plan\s*/\s*Weekly\s+plan|Weekly\s+Plan)'),
@@ -140,10 +140,17 @@ def parse_pages(pdf: str, pages: Iterable[str]) -> tuple[str, list[Card]]:
             # A label followed immediately by a new label is BLANK, not None.
             if not value:
                 value = 'BLANK'
-                span = _raw_span(raw, offsets, flat, m.start(), m.end())
+                span = _raw_span(raw, offsets, flat, max(0, m.start() - 90), min(len(flat), m.end() + 90))
             else:
-                span = _raw_span(raw, offsets, flat, m.end(), end)
+                span = _raw_span(raw, offsets, flat, max(0, m.start() - 90), min(len(flat), end + 90))
             cards.append(Card(course, field, value, pdf, page_number, span, template))
+            if field == 'teacher' and value != 'BLANK':
+                people = [x.strip() for x in (value.split(';') if ';' in value else value.split(',')) if x.strip()]
+                for j, person in enumerate(people, 1):
+                    pos = flat.find(person, m.end(), end)
+                    if pos >= 0:
+                        local_span = _raw_span(raw, offsets, flat, max(0, pos - 80), min(len(flat), pos + len(person) + 80))
+                        cards.append(Card(course, 'teacher_person', person, pdf, page_number, local_span, template, list_index=j))
         # Row anchors: A lecture content follows its anchor; B weekly topic precedes it.
         if template == 'A':
             anchors = list(_LECTURE.finditer(flat))
@@ -165,6 +172,50 @@ def parse_pages(pdf: str, pages: Iterable[str]) -> tuple[str, list[Card]]:
                                       _raw_span(raw, offsets, flat, start, a.start()), template,
                                       row_key=a.group(0)))
                 previous = a.end()
+        # Generic numbered book items, preserving each item's full plain-text value.
+        book_head = re.search(r'\b(?:Text\s*Book|Required\s+Reference(?:s|\(s\))?|Recommended\s+Reference(?:s|\(s\))?)\s*:?', flat, re.I)
+        if book_head:
+            section_end = re.search(r'\b(?:Appendix|Special\s+Instructions|Grading\s+Policy|Part\s+[A-D])\b', flat[book_head.end():], re.I)
+            stop = book_head.end() + section_end.start() if section_end else len(flat)
+            region = flat[book_head.end():stop]
+            items = list(re.finditer(r'(?<!\w)(\d{1,2})\s*\.\s+(?=[A-Z“"(])', region))
+            for j, item in enumerate(items):
+                start = book_head.end() + item.start()
+                end = book_head.end() + (items[j + 1].start() if j + 1 < len(items) else len(region))
+                value = flat[book_head.end() + item.end():end].strip()
+                if value:
+                    cards.append(Card(course, 'book_item', value, pdf, page_number,
+                                      _raw_span(raw, offsets, flat, max(0, start - 65), min(len(flat), end + 65)),
+                                      template, list_index=int(item.group(1))))
+        # One card per percentage-bearing assessment row or policy item.
+        weight_head = re.search(r'\b(?:Weighting\s+COs?\s+with\s+Assessment\s+methods|Part\s+C\s*[-–]\s*Assessment\s+and\s+Evaluation|Evaluation\s+Policy)\b', flat, re.I)
+        if weight_head:
+            limit_match = re.search(r'\b(?:Grading\s+Policy|Course\s+Content|Part\s+D|Text\s*Book|Appendix)\b', flat[weight_head.end():], re.I)
+            stop = weight_head.end() + limit_match.start() if limit_match else len(flat)
+            region = flat[weight_head.end():stop]
+            for j, pct in enumerate(re.finditer(r'(?<!\w)\d+(?:\.\d+)?\s*%', region), 1):
+                start = max(0, pct.start() - 65)
+                end = min(len(region), pct.end() + 50)
+                value = region[start:end].strip()
+                cards.append(Card(course, 'assessment_weight', value, pdf, page_number,
+                                  _raw_span(raw, offsets, flat, weight_head.end() + start, weight_head.end() + end),
+                                  template, list_index=j, row_key=f'weight-{j}'))
+        # A CO→PO or B CLO→PLO mapping row is kept as one ordered link card.
+        map_head = re.search(r'\b(?:CO\s+No\.?|Mapping\s*/\s*Alignment\s+of\s+CLOs?\s+with\s+Program\s+Learning\s+Outcomes?)', flat, re.I)
+        if map_head:
+            limit_match = re.search(r'\b(?:Weighting\s+COs?|Part\s+[BCD]|\d{1,2}\.\s+(?:Course\s+Content|Class\s+Schedule))\b', flat[map_head.end():], re.I)
+            stop = map_head.end() + limit_match.start() if limit_match else len(flat)
+            region = flat[map_head.end():stop]
+            links = list(re.finditer(r'(?<!\w)(CLO|CO)\s*(\d+)\b', region, re.I))
+            for j, link in enumerate(links):
+                start = map_head.end() + link.start()
+                end = map_head.end() + (links[j + 1].start() if j + 1 < len(links) else len(region))
+                value = flat[start:end].strip()
+                if value and (re.search(r'\b(?:PLO|PO)\s*\d+\b|\b\d+\s*/\s*(?:Apply|Understand|Analyze|Create|Evaluate|Remember)\b', value, re.I) or re.search(r'\b(?:CLO\s*\d+\s+[a-z]\b|CO\s*\d+.+?\b\d+\s+Cognitive)', value, re.I)):
+                    field = 'clo_plo_link' if link.group(1).upper() == 'CLO' else 'co_po_link'
+                    cards.append(Card(course, field, value, pdf, page_number,
+                                      _raw_span(raw, offsets, flat, max(0, start - 60), min(len(flat), end + 60)),
+                                      template, list_index=int(link.group(2)), row_key=link.group(0)))
         # Keep CO/CLO ordering with one card per numbered statement fragment.
         rows = list(_LIST.finditer(flat))
         for i, row in enumerate(rows):

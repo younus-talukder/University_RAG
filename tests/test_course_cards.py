@@ -68,3 +68,35 @@ def test_numbered_policy_without_separator_and_week_topic(monkeypatch):
     _, cards = parse_pages('synthetic.pdf', [text])
     assert any(c.field == 'weekly_topic' and 'Limits and continuity' in c.value for c in cards)
     assert any(c.field == 'evaluation_policy' and 'Mid-Term Examination 20%' in c.value for c in cards)
+
+
+def test_template_a_weights_and_co_po_links(monkeypatch):
+    monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS', '1')
+    page = ('Course Outline Program: Computer Science and Engineering Course Code: CSE 426 '
+            'CO No. CO Statements Corresponding POs Bloom’s taxonomy domain/level '
+            'CO 1 Understand the objectives and terminology associated with Computer Graphics. '
+            '1 Cognitive / Understand Lecture, Group discussion Quiz '
+            'CO 2 Apply the techniques and algorithms of Computer Graphics. 5 Cognitive / Apply '
+            'Weighting COs with Assessment methods: Assessment Type % weight CO1 CO2 CO3 '
+            'Assessment 30% 50% Assignment 10% Mid 20% Project 20% 40% Report and Viva 10%')
+    template, cards = parse_pages('synthetic.pdf', [page])
+    assert template == 'A'
+    assert any(c.field == 'co_po_link' and c.row_key == 'CO 1' and 'Cognitive / Understand' in c.value for c in cards)
+    assert any(c.field == 'assessment_weight' and '20%' in c.value for c in cards)
+
+
+def test_template_b_weights_and_clo_plo_links(monkeypatch):
+    monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS', '1')
+    page = ('Course Outline Part A – Introduction 1. Course No. / Course Code: CSE 316 '
+            '13. Mapping / Alignment of CLOs with Program Learning Outcomes (PLO): '
+            'CLO No. Corresponding PLOs Bloom’s taxonomy domain/level Delivery methods and activities '
+            'CLO 1 a 1/Apply Lab demonstrations Lab Evaluation '
+            'CLO 2 c 1/Apply Programming exercises Lab Evaluation '
+            'Part C – Assessment and Evaluation Assessment Type % Weight CLO 1 CLO 2 '
+            'Lab Evaluation (Assembly + Mini Projects) 20% 8 12 '
+            '20. Evaluation Policy 1. Lab Evaluation 20% 2. Project 80%')
+    template, cards = parse_pages('synthetic.pdf', [page])
+    assert template == 'B'
+    assert any(c.field == 'clo_plo_link' and c.row_key == 'CLO 1' and '1/Apply' in c.value for c in cards)
+    assert any(c.field == 'assessment_weight' and '20%' in c.value for c in cards)
+    assert any(c.field == 'assessment_weight' and '80%' in c.value for c in cards)
