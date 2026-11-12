@@ -394,10 +394,22 @@ def parse_tiered_pages(pdf: str, pages: Iterable[str], layouts: Iterable[str] | 
         from .course_cards_mapping import mapping_cards
         column_cards,_ = mapping_cards(pdf,pages,list(layouts))
         raw_atomic += column_cards
+    from .course_cards import match_text
+    from .course_cards_statements import _source_region, statement_rejection
+    statement_region=_source_region(template,pages)
+    mapping_values={(c.get('page'),match_text(str(c.get('value','')))) for c in raw_atomic if c.get('field') in {'clo_plo_link','co_po_link'}}
     kept=[];rejected=[];seen=set()
     for card in raw_atomic:
         if card.get('field') in {'co','clo'} and re.search(r'\b(?:Part\s+[A-D]|\d{1,2}\s*\.\s*(?:Class\s+Schedule|Mapping|Assessment|Course\s+Content)|Weighting\s+COs|Appendix)\b',str(card.get('value','')),re.I):
+            rejected.append(dict(card,tier='atomic',span_status='statement_rejected',reject_reason='section_or_table_heading'))
             continue
+        if card.get('field') in {'co','clo'}:
+            reason=statement_rejection(card,template,pages,statement_region)
+            if reason is None and (card.get('page'),match_text(str(card.get('value','')))) in mapping_values:
+                reason='duplicate_mapping_link'
+            if reason is not None:
+                rejected.append(dict(card,tier='atomic',span_status='statement_rejected',reject_reason=reason))
+                continue
         if card.get('field')=='schedule' and str(card.get('row_key','')).lower().startswith('week') and any(LECTURE.search(p) for p in pages) and not any(WEEK.search(p) for p in pages):
             continue
         card=_weight_display(card)

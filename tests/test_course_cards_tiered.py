@@ -45,4 +45,5 @@ if os.getenv('RAG_REPAIR_COURSE_CARDS','').lower() in {'1','true','yes','on'}:
         assert template=='A'
         assert {'block','atomic'} <= {c['tier'] for c in cards}
         assert all(c['span_status']=='found' for c in cards if c['tier']=='atomic')
-        assert all(c['span_status']=='not_found' for c in rejected)
+        assert all(c['span_status'] in {'not_found','statement_rejected'} for c in rejected)
+        assert all(c.get('reject_reason') for c in rejected if c['span_status']=='statement_rejected')
