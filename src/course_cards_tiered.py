@@ -155,7 +155,7 @@ def _supplement(pdf: str, pages: list[str]) -> list[dict]:
                 prior_end = terminator.end()
                 continue
             strategy = ''
-            strategy_start = re.search(r'\b(?:Lecture|Group\s+work|Presentation|Lab\s+practice|Discussion)\b', after, re.I)
+            strategy_start = re.search(r'\b(?:Lecture|Group\s+work|Presentation|Discussion)\b', after, re.I)
             activities = after[:strategy_start.start()].strip() if strategy_start else after
             if strategy_start:
                 strategy = after[strategy_start.start():].strip()
@@ -317,7 +317,7 @@ def _gap_fill(pdf: str, pages: list[str]) -> list[dict]:
                 if match:
                     out.append(_new(pdf,page,'knowledge_profile',match.group(),row_key={'K':'Ks','P':'Ps','A':'As'}[marker],course_level=True))
         # Total rows on continuation pages preserve all column totals.
-        total=re.search(r'(?<!\w)Total\s+(100%|\d+(?:\.\d+)?%)\s+((?:\d+\s+){2,10}\d+)',flat,re.I)
+        total=re.search(r'(?<!\w)Total\s+(100%|\d+(?:\.\d+)?%)\s+((?:\d+\s+){2,10}\d+)(?=\s+\d{1,2}\s*\.\s*[A-Z]|\s*$)',flat,re.I)
         if total:
             nums=re.findall(r'\d+',total.group(2))
             out.append(_new(pdf,page,'weight_total',total.group(1),row_key='Total',assessment='Total',
@@ -350,15 +350,59 @@ def _gap_fill(pdf: str, pages: list[str]) -> list[dict]:
     return out
 
 
-def parse_tiered_pages(pdf: str, pages: Iterable[str]) -> tuple[str, list[dict], list[dict]]:
+def _weight_cell_hints(card: dict, layout: str, plain: str) -> dict:
+    """Map percentage cells to outcome columns, verifying each in plain text."""
+    if card.get('field')!='weight' or not card.get('assessment'):
+        return card
+    lines=layout.splitlines()
+    head=next((line for line in lines if re.search(r'Assessment\s+Type',line,re.I) and re.search(r'%\s*weight|Marks',line,re.I)),None)
+    if head is None:return card
+    columns=[(m.group().replace(' ',''),m.start()) for m in re.finditer(r'\b(?:CLO|CO)\s*\d+\b',head,re.I)]
+    if not columns:return card
+    label=' '.join(str(card['assessment']).split()).casefold()
+    for line in lines:
+        if not line.strip().casefold().startswith(label):continue
+        percents=list(re.finditer(r'\d+(?:\.\d+)?\s*%',line))
+        if not percents:continue
+        if card.get('weight_display') and percents[0].group().replace(' ','')!=card['weight_display']:
+            continue
+        cells={}
+        for pct in percents[1:]:
+            if pct.group() not in plain:continue
+            eligible=[name for name,start in columns if start<=pct.start()]
+            if eligible:cells[eligible[-1]]=pct.group().replace(' ','')
+        if cells:return dict(card,co_clo_cells=cells)
+    return card
+
+
+def _weight_display(card: dict) -> dict:
+    value=str(card.get('weight_display',''))
+    if card.get('field') not in {'weight','weight_total'} or not value:return card
+    match=re.fullmatch(r'(\d+)\.0+%',value)
+    if match:return dict(card,weight_display=match.group(1)+'%',derivation='numeric display from verbatim percentage')
+    return card
+
+
+def parse_tiered_pages(pdf: str, pages: Iterable[str], layouts: Iterable[str] | None = None) -> tuple[str, list[dict], list[dict]]:
     pages=list(pages)
     if not enabled() or not pages:return 'OFF',[],[]
     template, blocks=parse_pages(pdf,pages)
     if template=='UNKNOWN':return template,[],[]
     _, atomic=parse_atomic_pages(pdf,pages)
     raw_atomic=atomic+_supplement(pdf,pages)+_gap_fill(pdf,pages)
+    if layouts is not None:
+        from .course_cards_mapping import mapping_cards
+        column_cards,_ = mapping_cards(pdf,pages,list(layouts))
+        raw_atomic += column_cards
     kept=[];rejected=[];seen=set()
     for card in raw_atomic:
+        if card.get('field') in {'co','clo'} and re.search(r'\b(?:Part\s+[A-D]|\d{1,2}\s*\.\s*(?:Class\s+Schedule|Mapping|Assessment|Course\s+Content)|Weighting\s+COs|Appendix)\b',str(card.get('value','')),re.I):
+            continue
+        if card.get('field')=='schedule' and str(card.get('row_key','')).lower().startswith('week') and any(LECTURE.search(p) for p in pages) and not any(WEEK.search(p) for p in pages):
+            continue
+        card=_weight_display(card)
+        if layouts is not None and card.get('field')=='weight' and 1<=card.get('page',0)<=len(pages):
+            card=_weight_cell_hints(card,list(layouts)[card['page']-1],pages[card['page']-1])
         anchored=_anchor(card,pages)
         if anchored is None:
             rejected.append(dict(card,span_status='not_found',tier='atomic'))
