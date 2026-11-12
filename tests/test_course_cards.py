@@ -100,3 +100,67 @@ def test_template_b_weights_and_clo_plo_links(monkeypatch):
     assert any(c.field == 'clo_plo_link' and c.row_key == 'CLO 1' and '1/Apply' in c.value for c in cards)
     assert any(c.field == 'assessment_weight' and '20%' in c.value for c in cards)
     assert any(c.field == 'assessment_weight' and '80%' in c.value for c in cards)
+
+
+def test_three_layout_families_by_features(monkeypatch):
+    from src.course_cards import detect_layout_family
+    monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS', '1')
+    b = 'Course Outline Part A – Introduction 1. Course No. / Course Code: ABC 123 12. Course Learning Outcomes: CLO 1 Apply'
+    co = 'Course Outline Program: Example Course Code: ABC 123 CO No. CO 1 Do something 1 Cognitive'
+    hybrid = 'Course Outline Program: Example Course Code: ABC 123 CLO 1 Do something PLO(a)'
+    assert detect_layout_family([b]) == 'B numbered Part A-D'
+    assert detect_layout_family([co]) == 'A label:value + CO/PO'
+    assert detect_layout_family([hybrid]) == 'A label:value + CLO/PLO (hybrid)'
+
+
+def test_bare_week_range_and_week_lecture_rows(monkeypatch):
+    monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS', '1')
+    text = ('Course Outline Program: Example Course Code: ABC 123 '
+            'Course Content Outline and mapping with COs Weeks Topics / Content Course Outcome '
+            '1 Introduction to chemistry CO1 Lecture, multimedia Supplied Content '
+            '2-3 Atomic structure and models CO1 Lecture, multimedia Reference Books')
+    _, cards = parse_pages('synthetic.pdf', [text])
+    keys = [c.row_key for c in cards if c.field == 'schedule_row']
+    assert 'week 1' in keys and 'week 2-3' in keys
+    mixed = ('Course Outline Program: Example Course Code: ABC 123 '
+             'Lecture Schedule (Tentative) Weeks Lecture # Topics Course Outcome '
+             '2 3, 4 Coordinates and Transformations CO1 Lecture, Problem Solving')
+    _, cards = parse_pages('synthetic.pdf', [mixed])
+    assert any(c.field == 'schedule_row' and c.row_key == 'week 2 | lecture 3, 4' for c in cards)
+
+
+def test_alignment_table_is_not_schedule(monkeypatch):
+    monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS', '1')
+    text = ('Course Outline Part A – Introduction 1. Course No. / Course Code: ABC 123 '
+            '15. Alignment of topics with CLO SL. No Topics CLO 1 Topic one CLO1')
+    assert not any(c.field == 'schedule_row' for c in parse_pages('synthetic.pdf', [text])[1])
+
+
+def test_weight_traps_are_not_assessment_weight_cards(monkeypatch):
+    monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS', '1')
+    prefix = 'Course Outline Program: Example Course Code: ABC 123 '
+    for trap in ['80% and above A+ 4.00', 'Late submission will result in a 50% deduction in score.',
+                 'Minimum attendance: 70% class attendance is mandatory.']:
+        text = prefix + 'Weighting COs with Assessment methods: Assessment Type % weight Quiz 10% ' + trap
+        _, cards = parse_pages('synthetic.pdf', [text])
+        weights = [c.value for c in cards if c.field == 'assessment_weight']
+        assert weights and all(trap not in value for value in weights)
+
+
+def test_weight_table_can_continue_without_percent_sign(monkeypatch):
+    monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS', '1')
+    pages = [
+        'Course Outline Program: Example Course Code: ABC 123 Weighting COs with Assessment methods:',
+        'Assessment Type % weight CO1 CO2 CO3 Lab Final Exam 40 20 30 0 Assignment 40 - 40 - Total 100',
+    ]
+    _, cards = parse_pages('synthetic.pdf', pages)
+    assert any(c.field == 'assessment_weight' and c.page == 2 and 'Lab Final Exam 40' in c.value for c in cards)
+
+
+def test_hybrid_numbered_direct_course_code(monkeypatch):
+    from src.course_cards import detect_layout_family
+    monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS', '1')
+    text = ('Course Outline: Project Strategy Part A – Introduction 1. Course Code: ABC 123 '
+            '2. Course Title: Project Strategy 12. Course Learning Outcomes: CLO 1 Apply PLO(a)')
+    assert detect_layout_family([text]) == 'A label:value + CLO/PLO (hybrid)'
+    assert parse_pages('synthetic.pdf', [text])[0] == 'A'
