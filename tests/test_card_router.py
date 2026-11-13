@@ -33,6 +33,8 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         assert understand('What academic semester is listed for CSE 316?').field=='semester'
         assert understand('What academic level is listed for CSE 316?').field=='level_term'
         assert understand('CSE 316-er year ar semester ki?').field=='level_term'
+        assert understand('EX 101-er semester ki deya ache?').field=='semester'
+        assert understand('EX 101 কোর্সের শিক্ষাবর্ষের সেমিস্টার কী?').field=='semester'
 
     def test_count_list_reverse():
         assert understand('How many objectives does CSE 316 have?').mode=='count'

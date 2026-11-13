@@ -29,7 +29,7 @@ MAP_CUE=re.compile(r'\b(?:map|maps|mapped|mapping|alignment|corresponding|aligne
 WEIGHT_CUE=re.compile(r'\b(?:weight|percent|percentage|marks|score|distribution|worth|carries)\b|'
                       r'\b(?:counts?\s+toward|assigned\s+to|share\s+of|percentage\s+of\s+the\s+grade|koto\s+(?:percent|marks))\b|'
                       r'শতাংশ|নম্বরের\s*হার|ওয়েট|কত\s*(?:শতাংশ|নম্বর)',re.I)
-YEAR_LEVEL_CUE=re.compile(r'\b(?:year|level|semester|level\s*/\s*term)\b|বর্ষ|লেভেল|সেমিস্টার',re.I)
+YEAR_LEVEL_CUE=re.compile(r'\b(?:year|level|level\s*/\s*term)\b|(?<!শিক্ষা)বর্ষ|লেভেল',re.I)
 SESSION_CUE=re.compile(r'\b(?:academic\s+(?:semester|session)|session|semester)\b|শিক্ষাবর্ষ|সেমিস্টার',re.I)
 ASSESSMENT_TERM_CUE=re.compile(r'\b(?:test|tests|exam|exams|class\s*tests?|ct|quiz|mid\s*term|midterm|final\s*term|term[ -]?wise|each\s+term)\b|টার্ম.*(?:টেস্ট|পরীক্ষা|কুইজ)|(?:টেস্ট|পরীক্ষা|কুইজ).*টার্ম',re.I)
 OTHER_DOCUMENT_CUE=re.compile(r'\b(?:prospectus|curriculum|syllabus\s+book|infobook|alumni)\b|প্রসপেক্টাস|কারিকুলাম|সিলেবাস',re.I)
@@ -177,10 +177,10 @@ def understand(question:str,cards:Iterable[Mapping[str,Any]]=())->CardIntent:
         field='weight'
         if key_type=='outcome':key=''
     if WEIGHT_CUE.search(text) and field=='level_term':field='weight'
-    elif field=='level_term' and re.search(r'\bacademic\s+(?:semester|session)\b',text) and not re.search(r'\b(?:level|year|level\s*/\s*term)\b|লেভেল|বর্ষ',text):field='semester'
+    elif field=='level_term' and SESSION_CUE.search(text) and not YEAR_LEVEL_CUE.search(text):field='semester'
     elif not field and SESSION_CUE.search(text):field='level_term' if YEAR_LEVEL_CUE.search(text) else 'semester'
     elif not field and YEAR_LEVEL_CUE.search(text):field='level_term'
-    if re.search(r'\bacademic\s+(?:semester|session)\b',text) and not re.search(r'\b(?:level|year|level\s*/\s*term)\b|লেভেল|বর্ষ',text):
+    if re.search(r'\bacademic\s+(?:semester|session)\b',text) and not YEAR_LEVEL_CUE.search(text):
         field='semester'
     if field=='level_term' and (not YEAR_LEVEL_CUE.search(text) or ASSESSMENT_TERM_CUE.search(text)):
         field='rule' if ASSESSMENT_TERM_CUE.search(text) else ''
