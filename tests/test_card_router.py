@@ -25,6 +25,10 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
     def test_schedule_attribute_exception_falls_back():
         assert understand('What activities are in Week 4 of CSE 316?').mode=='none'
 
+    def test_mapping_question_routes_to_link_field():
+        intent=understand('Which PLO does CLO 2 map to in CSE 316?')
+        assert intent.field=='clo_plo_link' and intent.key=='CLO 2'
+
     def test_count_list_reverse():
         assert understand('How many objectives does CSE 316 have?').mode=='count'
         assert understand('List all teachers of CSE 316').mode=='list'

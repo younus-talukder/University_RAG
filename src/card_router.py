@@ -22,7 +22,10 @@ from .query_normalization import extract_course_entities
 LEXICON=Path(__file__).resolve().parents[1]/'config/card_lexicon.yaml'
 DIGITS=str.maketrans('০১২৩৪৫৬৭৮৯','0123456789')
 DEPARTMENTS={'সিএসই':'CSE','ইইই':'EEE','ইংরেজি':'ENG','গণিত':'MTH','পদার্থ':'PHY'}
+SINGLETON_FIELDS={'program','course_code','course_title','course_type','semester','level_term','credit',
+                  'prerequisite','contact_hours','total_marks','class_hours','consultation_hours','office','email','mobile'}
 FALLBACK=re.compile(r'\b(?:why|explain|compare|comparison|difference|versus|vs)\b|কেন|ব্যাখ্যা|তুলনা|পার্থক্য|\b(?:keno|ken|bakkha|tulona)\b',re.I)
+MAP_CUE=re.compile(r'\b(?:map|maps|mapped|mapping|alignment|corresponding|aligned)\b|ম্যাপ|সংযুক্ত|যুক্ত|\b(?:map|mape|jukto)\b',re.I)
 KEY_RE={
     'outcome':re.compile(r'\b(CLO|CO)\s*[-–]?\s*(\d+)\b',re.I),
     'mapping':re.compile(r'\b(PLO|PO)\s*[-–(]?\s*([a-z]|\d{1,2})\)?\b',re.I),
@@ -134,11 +137,15 @@ def understand(question:str,cards:Iterable[Mapping[str,Any]]=())->CardIntent:
     elif key_type=='teacher':field='teacher_person'
     elif key_type=='outcome' and field not in {'clo','co'}:field=key.split()[0].lower()
     elif key_type=='mapping' and not field:field='co_po_link'
+    if MAP_CUE.search(text) or (re.search(r'\b(?:PLO|PO)\s*[-–(]?\s*(?:[a-z]|\d)',text,re.I) and key_type=='outcome'):
+        if re.search(r'\bPLO',text,re.I):field='clo_plo_link'
+        elif re.search(r'\bPO',text,re.I):field='co_po_link'
     if field=='weight' and not key:key=_assessment_key(text,cards)
+    if field in SINGLETON_FIELDS and not key:key=field
     attribute=attr_hits[0][1] if attr_hits else ''
     mode=mode_hits[0][1] if mode_hits else 'lookup'
     if attribute and mode=='lookup' and field in {'schedule','weight','co_po_link','clo_plo_link'}:mode='attribute'
-    if field=='schedule' and mode=='attribute' and attribute in {'activities','teaching_strategy','delivery','reading','co_clo_refs'}:
+    if field=='schedule' and mode=='attribute':
         mode='none'  # P1 exception: schedule attribute extras below 90%.
     if not course or not field:mode='none'
     cues=tuple(dict.fromkeys([item[2] for item in field_hits[:2]+attr_hits[:2]+mode_hits[:1]]))

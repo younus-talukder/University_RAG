@@ -8,7 +8,7 @@ cues:
     course_title:
       en:
       - cue: title
-        dev_a_count: 23
+        dev_a_count: 21
       - cue: name of the course
         dev_a_count: 0
       bn:
@@ -26,7 +26,7 @@ cues:
       - cue: credit
         dev_a_count: 22
       - cue: credit hour
-        dev_a_count: 1
+        dev_a_count: 0
       bn:
       - cue: ক্রেডিট
         dev_a_count: 22
@@ -40,7 +40,7 @@ cues:
       - cue: level
         dev_a_count: 8
       - cue: term
-        dev_a_count: 16
+        dev_a_count: 7
       - cue: year and semester
         dev_a_count: 0
       bn:
@@ -54,7 +54,7 @@ cues:
       - cue: level
         dev_a_count: 4
       - cue: term
-        dev_a_count: 15
+        dev_a_count: 6
       - cue: year
         dev_a_count: 7
       - cue: semester
@@ -69,7 +69,7 @@ cues:
         dev_a_count: 0
       bn:
       - cue: শিক্ষক
-        dev_a_count: 37
+        dev_a_count: 36
       - cue: ইন্সট্রাক্টর
         dev_a_count: 0
       bl:
@@ -101,7 +101,7 @@ cues:
         dev_a_count: 0
       bn:
       - cue: উদ্দেশ্য
-        dev_a_count: 18
+        dev_a_count: 17
       bl:
       - cue: objective
         dev_a_count: 18
@@ -110,7 +110,7 @@ cues:
     clo:
       en:
       - cue: clo
-        dev_a_count: 76
+        dev_a_count: 10
       - cue: learning outcome
         dev_a_count: 0
       bn:
@@ -120,13 +120,13 @@ cues:
         dev_a_count: 0
       bl:
       - cue: clo
-        dev_a_count: 81
+        dev_a_count: 15
       - cue: learning outcome
         dev_a_count: 0
     co:
       en:
       - cue: co
-        dev_a_count: 224
+        dev_a_count: 0
       - cue: course outcome
         dev_a_count: 0
       bn:
@@ -136,29 +136,29 @@ cues:
         dev_a_count: 0
       bl:
       - cue: co
-        dev_a_count: 186
+        dev_a_count: 0
       - cue: course outcome
         dev_a_count: 0
     schedule:
       en:
       - cue: week
-        dev_a_count: 178
+        dev_a_count: 177
       - cue: lecture
-        dev_a_count: 18
+        dev_a_count: 17
       - cue: schedule
-        dev_a_count: 58
+        dev_a_count: 8
       bn:
       - cue: সপ্তাহ
-        dev_a_count: 178
+        dev_a_count: 177
       - cue: লেকচার
         dev_a_count: 17
       - cue: সময়সূচি
         dev_a_count: 0
       bl:
       - cue: week
-        dev_a_count: 180
+        dev_a_count: 179
       - cue: lecture
-        dev_a_count: 18
+        dev_a_count: 17
       - cue: shoptaho
         dev_a_count: 0
     weight:
@@ -184,7 +184,7 @@ cues:
       - cue: weight
         dev_a_count: 48
       - cue: percent
-        dev_a_count: 3
+        dev_a_count: 0
       - cue: marks
         dev_a_count: 17
       - cue: assessment
@@ -196,19 +196,19 @@ cues:
       - cue: reference book
         dev_a_count: 1
       - cue: book
-        dev_a_count: 31
+        dev_a_count: 22
       bn:
       - cue: পাঠ্যবই
-        dev_a_count: 10
+        dev_a_count: 9
       - cue: বই
-        dev_a_count: 37
+        dev_a_count: 25
       - cue: রেফারেন্স
         dev_a_count: 15
       bl:
       - cue: textbook
         dev_a_count: 10
       - cue: book
-        dev_a_count: 18
+        dev_a_count: 5
       - cue: boi
         dev_a_count: 22
       - cue: reference
@@ -227,7 +227,7 @@ cues:
       - cue: নিয়ম
         dev_a_count: 4
       - cue: নীতি
-        dev_a_count: 1
+        dev_a_count: 0
       - cue: জরিমানা
         dev_a_count: 0
       - cue: উপস্থিতি
@@ -250,14 +250,14 @@ cues:
         dev_a_count: 6
       bn:
       - cue: কার্যক্রম
-        dev_a_count: 4
+        dev_a_count: 3
       - cue: কাজ
-        dev_a_count: 38
+        dev_a_count: 33
       bl:
       - cue: activity
         dev_a_count: 8
       - cue: kaj
-        dev_a_count: 27
+        dev_a_count: 25
     topic:
       en:
       - cue: topic
@@ -266,7 +266,7 @@ cues:
         dev_a_count: 3
       bn:
       - cue: বিষয়
-        dev_a_count: 74
+        dev_a_count: 67
       - cue: টপিক
         dev_a_count: 0
       bl:
@@ -277,9 +277,9 @@ cues:
     co_clo_refs:
       en:
       - cue: clo
-        dev_a_count: 76
+        dev_a_count: 10
       - cue: co
-        dev_a_count: 224
+        dev_a_count: 0
       - cue: outcome
         dev_a_count: 4
       bn:
@@ -291,9 +291,9 @@ cues:
         dev_a_count: 0
       bl:
       - cue: clo
-        dev_a_count: 81
+        dev_a_count: 15
       - cue: co
-        dev_a_count: 186
+        dev_a_count: 0
       - cue: outcome
         dev_a_count: 1
     weight:
@@ -301,7 +301,7 @@ cues:
       - cue: weight
         dev_a_count: 32
       - cue: percent
-        dev_a_count: 11
+        dev_a_count: 0
       - cue: marks
         dev_a_count: 13
       bn:
@@ -315,7 +315,7 @@ cues:
       - cue: weight
         dev_a_count: 48
       - cue: percent
-        dev_a_count: 3
+        dev_a_count: 0
       - cue: marks
         dev_a_count: 17
     po_display:
@@ -323,7 +323,7 @@ cues:
       - cue: plo
         dev_a_count: 19
       - cue: po
-        dev_a_count: 42
+        dev_a_count: 6
       - cue: mapping
         dev_a_count: 1
       - cue: alignment
@@ -339,7 +339,7 @@ cues:
       - cue: plo
         dev_a_count: 19
       - cue: po
-        dev_a_count: 77
+        dev_a_count: 6
       - cue: mapping
         dev_a_count: 1
     bloom:
@@ -392,7 +392,7 @@ cues:
         dev_a_count: 0
       bn:
       - cue: পাঠ্য
-        dev_a_count: 13
+        dev_a_count: 1
       - cue: পড়ার উপকরণ
         dev_a_count: 0
       bl:
@@ -420,23 +420,23 @@ cues:
     list:
       en:
       - cue: all
-        dev_a_count: 10
+        dev_a_count: 0
       - cue: list
-        dev_a_count: 145
+        dev_a_count: 21
       - cue: which are
-        dev_a_count: 2
+        dev_a_count: 0
       bn:
       - cue: সব
         dev_a_count: 1
       - cue: তালিকা
-        dev_a_count: 43
+        dev_a_count: 4
       bl:
       - cue: sob
         dev_a_count: 0
       - cue: list
-        dev_a_count: 55
+        dev_a_count: 5
       - cue: shob
-        dev_a_count: 1
+        dev_a_count: 0
     reverse:
       en:
       - cue: which week
