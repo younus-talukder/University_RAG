@@ -1,0 +1,455 @@
+seed: 42
+source: DEV-A questions plus general vocabulary only
+dev_a_question_count: 838
+fold_rule: SHA-256(42|fact_group_id), alternating assignment within majority question_type
+  stratum
+cues:
+  fields:
+    course_title:
+      en:
+      - cue: title
+        dev_a_count: 23
+      - cue: name of the course
+        dev_a_count: 0
+      bn:
+      - cue: কোর্সের নাম
+        dev_a_count: 21
+      - cue: কোর্সের শিরোনাম
+        dev_a_count: 0
+      bl:
+      - cue: course er naam
+        dev_a_count: 0
+      - cue: course title
+        dev_a_count: 15
+    credit:
+      en:
+      - cue: credit
+        dev_a_count: 22
+      - cue: credit hour
+        dev_a_count: 1
+      bn:
+      - cue: ক্রেডিট
+        dev_a_count: 22
+      bl:
+      - cue: credit
+        dev_a_count: 22
+      - cue: credit hour
+        dev_a_count: 1
+    level_term:
+      en:
+      - cue: level
+        dev_a_count: 8
+      - cue: term
+        dev_a_count: 16
+      - cue: year and semester
+        dev_a_count: 0
+      bn:
+      - cue: লেভেল
+        dev_a_count: 0
+      - cue: বর্ষ
+        dev_a_count: 18
+      - cue: সেমিস্টার
+        dev_a_count: 15
+      bl:
+      - cue: level
+        dev_a_count: 4
+      - cue: term
+        dev_a_count: 15
+      - cue: year
+        dev_a_count: 7
+      - cue: semester
+        dev_a_count: 15
+    teacher_person:
+      en:
+      - cue: teacher
+        dev_a_count: 7
+      - cue: instructor
+        dev_a_count: 6
+      - cue: faculty member
+        dev_a_count: 0
+      bn:
+      - cue: শিক্ষক
+        dev_a_count: 37
+      - cue: ইন্সট্রাক্টর
+        dev_a_count: 0
+      bl:
+      - cue: teacher
+        dev_a_count: 11
+      - cue: instructor
+        dev_a_count: 6
+      - cue: shikkhok
+        dev_a_count: 0
+    prerequisite:
+      en:
+      - cue: prerequisite
+        dev_a_count: 14
+      - cue: pre-requisite
+        dev_a_count: 0
+      bn:
+      - cue: পূর্বশর্ত
+        dev_a_count: 14
+      bl:
+      - cue: prerequisite
+        dev_a_count: 14
+      - cue: purboshorto
+        dev_a_count: 0
+    objective:
+      en:
+      - cue: objective
+        dev_a_count: 18
+      - cue: course objective
+        dev_a_count: 0
+      bn:
+      - cue: উদ্দেশ্য
+        dev_a_count: 18
+      bl:
+      - cue: objective
+        dev_a_count: 18
+      - cue: uddesho
+        dev_a_count: 0
+    clo:
+      en:
+      - cue: clo
+        dev_a_count: 76
+      - cue: learning outcome
+        dev_a_count: 0
+      bn:
+      - cue: সিএলও
+        dev_a_count: 0
+      - cue: শিখনফল
+        dev_a_count: 0
+      bl:
+      - cue: clo
+        dev_a_count: 81
+      - cue: learning outcome
+        dev_a_count: 0
+    co:
+      en:
+      - cue: co
+        dev_a_count: 224
+      - cue: course outcome
+        dev_a_count: 0
+      bn:
+      - cue: সিও
+        dev_a_count: 0
+      - cue: শিখনফল
+        dev_a_count: 0
+      bl:
+      - cue: co
+        dev_a_count: 186
+      - cue: course outcome
+        dev_a_count: 0
+    schedule:
+      en:
+      - cue: week
+        dev_a_count: 178
+      - cue: lecture
+        dev_a_count: 18
+      - cue: schedule
+        dev_a_count: 58
+      bn:
+      - cue: সপ্তাহ
+        dev_a_count: 178
+      - cue: লেকচার
+        dev_a_count: 17
+      - cue: সময়সূচি
+        dev_a_count: 0
+      bl:
+      - cue: week
+        dev_a_count: 180
+      - cue: lecture
+        dev_a_count: 18
+      - cue: shoptaho
+        dev_a_count: 0
+    weight:
+      en:
+      - cue: weight
+        dev_a_count: 32
+      - cue: percentage
+        dev_a_count: 11
+      - cue: marks
+        dev_a_count: 13
+      - cue: assessment
+        dev_a_count: 9
+      bn:
+      - cue: ওয়েট
+        dev_a_count: 0
+      - cue: শতাংশ
+        dev_a_count: 6
+      - cue: নম্বর
+        dev_a_count: 95
+      - cue: মূল্যায়ন
+        dev_a_count: 26
+      bl:
+      - cue: weight
+        dev_a_count: 48
+      - cue: percent
+        dev_a_count: 3
+      - cue: marks
+        dev_a_count: 17
+      - cue: assessment
+        dev_a_count: 9
+    book:
+      en:
+      - cue: textbook
+        dev_a_count: 9
+      - cue: reference book
+        dev_a_count: 1
+      - cue: book
+        dev_a_count: 31
+      bn:
+      - cue: পাঠ্যবই
+        dev_a_count: 10
+      - cue: বই
+        dev_a_count: 37
+      - cue: রেফারেন্স
+        dev_a_count: 15
+      bl:
+      - cue: textbook
+        dev_a_count: 10
+      - cue: book
+        dev_a_count: 18
+      - cue: boi
+        dev_a_count: 22
+      - cue: reference
+        dev_a_count: 15
+    rule:
+      en:
+      - cue: rule
+        dev_a_count: 1
+      - cue: policy
+        dev_a_count: 0
+      - cue: penalty
+        dev_a_count: 3
+      - cue: attendance
+        dev_a_count: 4
+      bn:
+      - cue: নিয়ম
+        dev_a_count: 4
+      - cue: নীতি
+        dev_a_count: 1
+      - cue: জরিমানা
+        dev_a_count: 0
+      - cue: উপস্থিতি
+        dev_a_count: 3
+      bl:
+      - cue: rule
+        dev_a_count: 1
+      - cue: policy
+        dev_a_count: 0
+      - cue: penalty
+        dev_a_count: 3
+      - cue: attendance
+        dev_a_count: 4
+  attributes:
+    activities:
+      en:
+      - cue: activity
+        dev_a_count: 4
+      - cue: activities
+        dev_a_count: 6
+      bn:
+      - cue: কার্যক্রম
+        dev_a_count: 4
+      - cue: কাজ
+        dev_a_count: 38
+      bl:
+      - cue: activity
+        dev_a_count: 8
+      - cue: kaj
+        dev_a_count: 27
+    topic:
+      en:
+      - cue: topic
+        dev_a_count: 24
+      - cue: content
+        dev_a_count: 3
+      bn:
+      - cue: বিষয়
+        dev_a_count: 74
+      - cue: টপিক
+        dev_a_count: 0
+      bl:
+      - cue: topic
+        dev_a_count: 34
+      - cue: bishoy
+        dev_a_count: 0
+    co_clo_refs:
+      en:
+      - cue: clo
+        dev_a_count: 76
+      - cue: co
+        dev_a_count: 224
+      - cue: outcome
+        dev_a_count: 4
+      bn:
+      - cue: সিএলও
+        dev_a_count: 0
+      - cue: সিও
+        dev_a_count: 0
+      - cue: শিখনফল
+        dev_a_count: 0
+      bl:
+      - cue: clo
+        dev_a_count: 81
+      - cue: co
+        dev_a_count: 186
+      - cue: outcome
+        dev_a_count: 1
+    weight:
+      en:
+      - cue: weight
+        dev_a_count: 32
+      - cue: percent
+        dev_a_count: 11
+      - cue: marks
+        dev_a_count: 13
+      bn:
+      - cue: ওয়েট
+        dev_a_count: 0
+      - cue: শতাংশ
+        dev_a_count: 6
+      - cue: নম্বর
+        dev_a_count: 95
+      bl:
+      - cue: weight
+        dev_a_count: 48
+      - cue: percent
+        dev_a_count: 3
+      - cue: marks
+        dev_a_count: 17
+    po_display:
+      en:
+      - cue: plo
+        dev_a_count: 19
+      - cue: po
+        dev_a_count: 42
+      - cue: mapping
+        dev_a_count: 1
+      - cue: alignment
+        dev_a_count: 2
+      bn:
+      - cue: পিএলও
+        dev_a_count: 0
+      - cue: পিও
+        dev_a_count: 0
+      - cue: ম্যাপিং
+        dev_a_count: 1
+      bl:
+      - cue: plo
+        dev_a_count: 19
+      - cue: po
+        dev_a_count: 77
+      - cue: mapping
+        dev_a_count: 1
+    bloom:
+      en:
+      - cue: bloom
+        dev_a_count: 0
+      - cue: cognitive level
+        dev_a_count: 0
+      bn:
+      - cue: ব্লুম
+        dev_a_count: 0
+      - cue: জ্ঞানীয় স্তর
+        dev_a_count: 0
+      bl:
+      - cue: bloom
+        dev_a_count: 0
+      - cue: level
+        dev_a_count: 4
+    delivery:
+      en:
+      - cue: delivery
+        dev_a_count: 0
+      - cue: teaching method
+        dev_a_count: 0
+      bn:
+      - cue: পাঠদান পদ্ধতি
+        dev_a_count: 0
+      bl:
+      - cue: delivery
+        dev_a_count: 0
+      - cue: teaching method
+        dev_a_count: 0
+    assessment_tools:
+      en:
+      - cue: assessment tool
+        dev_a_count: 0
+      - cue: evaluation tool
+        dev_a_count: 0
+      bn:
+      - cue: মূল্যায়ন পদ্ধতি
+        dev_a_count: 1
+      bl:
+      - cue: assessment tool
+        dev_a_count: 0
+    reading:
+      en:
+      - cue: reading
+        dev_a_count: 1
+      - cue: reference material
+        dev_a_count: 0
+      bn:
+      - cue: পাঠ্য
+        dev_a_count: 13
+      - cue: পড়ার উপকরণ
+        dev_a_count: 0
+      bl:
+      - cue: reading
+        dev_a_count: 1
+      - cue: material
+        dev_a_count: 0
+  modes:
+    count:
+      en:
+      - cue: how many
+        dev_a_count: 17
+      - cue: number of
+        dev_a_count: 0
+      bn:
+      - cue: কয়টি
+        dev_a_count: 5
+      - cue: কতগুলো
+        dev_a_count: 0
+      bl:
+      - cue: koyta
+        dev_a_count: 5
+      - cue: koto gulo
+        dev_a_count: 0
+    list:
+      en:
+      - cue: all
+        dev_a_count: 10
+      - cue: list
+        dev_a_count: 145
+      - cue: which are
+        dev_a_count: 2
+      bn:
+      - cue: সব
+        dev_a_count: 1
+      - cue: তালিকা
+        dev_a_count: 43
+      bl:
+      - cue: sob
+        dev_a_count: 0
+      - cue: list
+        dev_a_count: 55
+      - cue: shob
+        dev_a_count: 1
+    reverse:
+      en:
+      - cue: which week
+        dev_a_count: 0
+      - cue: which lecture
+        dev_a_count: 0
+      bn:
+      - cue: কোন সপ্তাহে
+        dev_a_count: 0
+      - cue: কোন লেকচারে
+        dev_a_count: 0
+      bl:
+      - cue: kon week e
+        dev_a_count: 0
+      - cue: kon lecture e
+        dev_a_count: 0
