@@ -29,8 +29,11 @@ MAP_CUE=re.compile(r'\b(?:map|maps|mapped|mapping|alignment|corresponding|aligne
 WEIGHT_CUE=re.compile(r'\b(?:weight|percent|percentage|marks|score|distribution|worth|carries)\b|'
                       r'\b(?:counts?\s+toward|assigned\s+to|share\s+of|percentage\s+of\s+the\s+grade|koto\s+(?:percent|marks))\b|'
                       r'শতাংশ|নম্বরের\s*হার|ওয়েট|কত\s*(?:শতাংশ|নম্বর)',re.I)
-YEAR_LEVEL_CUE=re.compile(r'\b(?:year|level|term)\b|বর্ষ\s*(?:ও|এবং)?\s*সেমিস্টার|লেভেল',re.I)
+YEAR_LEVEL_CUE=re.compile(r'\b(?:year|level|semester|level\s*/\s*term)\b|বর্ষ|লেভেল|সেমিস্টার',re.I)
 SESSION_CUE=re.compile(r'\b(?:academic\s+(?:semester|session)|session|semester)\b|শিক্ষাবর্ষ|সেমিস্টার',re.I)
+ASSESSMENT_TERM_CUE=re.compile(r'\b(?:test|tests|exam|exams|class\s*tests?|ct|quiz|mid\s*term|midterm|final\s*term|term[ -]?wise|each\s+term)\b|টার্ম.*(?:টেস্ট|পরীক্ষা|কুইজ)|(?:টেস্ট|পরীক্ষা|কুইজ).*টার্ম',re.I)
+OTHER_DOCUMENT_CUE=re.compile(r'\b(?:prospectus|curriculum|syllabus\s+book|infobook|alumni)\b|প্রসপেক্টাস|কারিকুলাম|সিলেবাস',re.I)
+LINK_CUE=re.compile(r'\b(?:PLO|PO)\s*[-–(]?\s*(?:[a-z]|\d{1,2})?\b|\bprogram\s+outcomes?\b|প্রোগ্রাম\s+আউটকাম',re.I)
 KEY_RE={
     'outcome':re.compile(r'\b(CLO|CO)\s*[-–]?\s*(\d+)\b',re.I),
     'mapping':re.compile(r'\b(PLO|PO)\s*[-–(]?\s*([a-z]|\d{1,2})\)?\b',re.I),
@@ -96,6 +99,8 @@ def _course(text:str)->tuple[str,bool]:
 
 
 def _key(text:str)->tuple[str,str]:
+    # Course-code digits are never eligible schedule or list item numbers.
+    text=re.sub(r'(?<!\w)[a-z]{2,6}\s*[- ]?\s*\d{2,4}(?!\w)',' ',text,flags=re.I)
     for word,number in BN_WEEK_WORDS.items():
         if re.search(r'(?<!\w)'+re.escape(word)+r'(?:এ|র|এর)?\s*সপ্তাহ(?:ে|র|ের)?',text):
             return f'Week {number}','week'
@@ -152,6 +157,7 @@ def understand(question:str,cards:Iterable[Mapping[str,Any]]=())->CardIntent:
     text=_norm(question)
     course,multiple=_course(question)
     if multiple or FALLBACK.search(text):return CardIntent(lang,course,'','','','none',0.0,('multi-course-or-explanation',))
+    if OTHER_DOCUMENT_CUE.search(text):return CardIntent(lang,course,'','','','none',0.0,('named-other-document',))
     key,key_type=_key(text)
     field_hits=_score_cues(text,lang,'fields')
     attr_hits=_score_cues(text,lang,'attributes')
@@ -163,16 +169,21 @@ def understand(question:str,cards:Iterable[Mapping[str,Any]]=())->CardIntent:
     elif key_type=='teacher':field='teacher_person'
     elif key_type=='outcome' and field not in {'clo','co'}:field=key.split()[0].lower()
     elif key_type=='mapping' and not field:field='co_po_link'
-    if MAP_CUE.search(text) or (re.search(r'\b(?:PLO|PO)\s*[-–(]?\s*(?:[a-z]|\d)',text,re.I) and key_type=='outcome'):
-        if re.search(r'\bPLO',text,re.I):field='clo_plo_link'
-        elif re.search(r'\bPO',text,re.I):field='co_po_link'
+    if LINK_CUE.search(text):
+        field='clo_plo_link' if re.search(r'\bPLO',text,re.I) else 'co_po_link'
+    elif MAP_CUE.search(text) and key_type=='outcome':
+        field='clo_plo_link' if key.startswith('CLO') else 'co_po_link'
     if WEIGHT_CUE.search(text) and field not in {'co_po_link','clo_plo_link'}:
         field='weight'
         if key_type=='outcome':key=''
     if WEIGHT_CUE.search(text) and field=='level_term':field='weight'
-    elif field=='level_term' and SESSION_CUE.search(text) and not YEAR_LEVEL_CUE.search(text):field='semester'
+    elif field=='level_term' and re.search(r'\bacademic\s+(?:semester|session)\b',text) and not re.search(r'\b(?:level|year|level\s*/\s*term)\b|লেভেল|বর্ষ',text):field='semester'
     elif not field and SESSION_CUE.search(text):field='level_term' if YEAR_LEVEL_CUE.search(text) else 'semester'
     elif not field and YEAR_LEVEL_CUE.search(text):field='level_term'
+    if re.search(r'\bacademic\s+(?:semester|session)\b',text) and not re.search(r'\b(?:level|year|level\s*/\s*term)\b|লেভেল|বর্ষ',text):
+        field='semester'
+    if field=='level_term' and (not YEAR_LEVEL_CUE.search(text) or ASSESSMENT_TERM_CUE.search(text)):
+        field='rule' if ASSESSMENT_TERM_CUE.search(text) else ''
     if field=='weight' and not key:key=_assessment_key(text,cards,course)
     if field in SINGLETON_FIELDS and not key:key=field
     attribute=attr_hits[0][1] if attr_hits else ''

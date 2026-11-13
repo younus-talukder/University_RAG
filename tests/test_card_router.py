@@ -68,3 +68,27 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         assert understand('EX 101-এর final project কত শতাংশ?',cards).field=='weight'
         assert understand('EX 101-er final project koto marks?',cards).field=='weight'
         assert understand('How much is assigned to Final Project in EX 101?',cards).key=='Final Project'
+
+    def test_term_in_assessment_is_not_course_level():
+        for question in ('EX 101-er class test term-wise kibhabe divided?',
+                         'How many CTs in each term of EX 101?',
+                         'EX 101-এর টার্ম পরীক্ষার নিয়ম কী?'):
+            intent=understand(question)
+            assert intent.field!='level_term',question
+        assert understand('What is the level/term of EX 101?').field=='level_term'
+
+    def test_plo_po_cue_never_selects_statement():
+        assert understand('Which PLO is CLO 2 in EX 101 linked to?').field=='clo_plo_link'
+        assert understand('Which PO does CO 3 address in EX 101?').field=='co_po_link'
+        assert understand('EX 101-এর প্রোগ্রাম আউটকাম কোনটি?').field=='co_po_link'
+
+    def test_week_number_excludes_course_code_digits():
+        assert understand('EX 108 week 6 topic').key=='Week 6'
+        assert understand('EX 108 lecture 7 topic').key=='Lecture 7'
+        assert understand('EX 108 week topic').key==''
+
+    def test_named_other_document_falls_back():
+        for name in ('prospectus','curriculum','syllabus book','infobook','alumni',
+                     'প্রসপেক্টাস','কারিকুলাম','সিলেবাস'):
+            intent=understand(f'According to the {name}, what is EX 101 credit?')
+            assert intent.mode=='none' and intent.field=='',name
