@@ -1,6 +1,8 @@
 """Opt-in atomic card route with the existing trust validators."""
 from __future__ import annotations
 from functools import lru_cache
+from dataclasses import replace
+import csv
 import json,os,time
 from pathlib import Path
 from typing import Any
@@ -10,7 +12,7 @@ from pypdf import PdfReader
 from .answer_safety import answer_safety_failures
 from .card_answer import render_card_answer
 from .card_router import understand
-from .card_selector import CardEmbeddingIndex,infer_complete_fields,select_cards
+from .card_selector import CardEmbeddingIndex,CardValueIndex,infer_complete_fields,resolve_course_by_value,select_cards,select_item_by_value
 from .course_cards import match_text
 from .embeddings import get_embedding_model
 from .grounding_validator import validate_grounding
@@ -40,6 +42,18 @@ def _bundle():
     return cards,index,config
 
 
+@lru_cache(maxsize=1)
+def _value_index()->CardValueIndex:
+    return CardValueIndex(_bundle()[0])
+
+
+@lru_cache(maxsize=1)
+def _field_policy()->dict[tuple[str,str],dict[str,str]]:
+    root=Path(os.environ.get('RAG_CARD_BUNDLE_DIR',DEFAULT_BUNDLE))
+    with (root/'field_policy.csv').open(encoding='utf-8',newline='') as handle:
+        return {(row['field'],row['mode']):row for row in csv.DictReader(handle)}
+
+
 @lru_cache(maxsize=256)
 def _plain_page(pdf:str,page:int)->str:
     root=Path(os.environ.get('RAG_CARD_PDF_DIR',DEFAULT_PDFS))
@@ -66,13 +80,27 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
     started=time.perf_counter()
     cards,index,config=_bundle()
     intent=understand(question,cards)
+    vector=get_embedding_model().embed(question)
+    if not intent.course and 'multi-course-or-explanation' not in intent.cues and intent.field:
+        inferred=resolve_course_by_value(question,cards,_value_index(),index.all_scores(vector),
+                                         float(config.get('course_margin',config['tau'])))
+        if inferred:intent=replace(intent,course=inferred,mode='lookup',confidence=.6)
     if not intent.course:return None,[]
     course_cards=[c for c in cards if c['course']==intent.course]
-    vector=get_embedding_model().embed(question)
     scores=index.scores(vector,intent.course)
+    sparse_scores=_value_index().scores(question,intent.course,intent.field)
     enabled_fields={c['field'] for c in course_cards}-set(config['disabled_fields'])
     selected=select_cards(intent,course_cards,scores,float(config['tau']),float(config['tau_rev']),
-                          infer_complete_fields(course_cards),enabled_fields)
+                          infer_complete_fields(course_cards),enabled_fields,bm25_scores=sparse_scores)
+    item=select_item_by_value(question,intent,course_cards,_value_index(),scores,
+                              float(config.get('item_margin',config['tau'])))
+    if item.route=='card':
+        selected=item
+        intent=replace(intent,mode='select',key=str(item.cards[0].get('row_key') or item.cards[0].get('key') or ''))
+    if selected.route=='card':
+        policy=_field_policy().get((selected.cards[0]['field'],selected.mode))
+        if not policy or policy['enabled']!='true' or (policy['exact_key_only']=='true' and selected.reason!='exact_field_key'):
+            selected=replace(selected,route='fallback',cards=(),reason='field_mode_not_certified')
     ranked=sorted(course_cards,key=lambda c:scores.get(c['card_id'],-1),reverse=True)
     extras=[dict(text=c['plain_span'],source=c['pdf'],relative_path=c['pdf'],page=c['page'],
                  chunk_id=c['card_id'],score=scores.get(c['card_id'],0),card_tier='atomic')
@@ -80,11 +108,15 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
     if selected.route!='card':return None,extras
     chosen=selected.cards
     if not all(_span_verified(card) for card in chosen):return None,extras
-    rendered=render_card_answer(intent,selected)
-    evidence=[dict(excerpt=card['plain_span'],source=card['pdf'],page=card['page']) for card in chosen]
+    identity=next((card for card in course_cards if card.get('field')=='course_code'
+                   and card.get('tier')=='atomic' and card.get('pdf')==chosen[0].get('pdf')
+                   and _span_verified(card)),None)
+    evidence_cards=tuple(chosen)+(identity,) if identity and identity not in chosen else tuple(chosen)
+    rendered=render_card_answer(intent,selected,tuple(identity.get('pages') or [identity['page']]) if identity else ())
+    evidence=[dict(excerpt=card['plain_span'],source=card['pdf'],page=card['page']) for card in evidence_cards]
     language=validate_language(rendered.body,{'en':'english','bn':'bangla','bl':'banglish'}[intent.lang])
     grounding=validate_grounding(rendered.body,evidence)
-    safety=answer_safety_failures(question,rendered.body,[card['plain_span'] for card in chosen],
+    safety=answer_safety_failures(question,rendered.body,[card['plain_span'] for card in evidence_cards],
                                   cited_excerpt=chosen[0]['plain_span'])
     if not language.get('validation_passed') or not grounding.get('grounding_validation_passed') or safety:
         return None,extras
@@ -102,7 +134,7 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
                 chunk_id=first['card_id'],card_id=first['card_id'],card_ids=[card['card_id'] for card in chosen],
                 card_mode=selected.mode,card_field=first['field'],supporting_excerpt=first['plain_span'],
                 sources=[dict(source=card['pdf'],relative_path=card['pdf'],page=card['page'],
-                              chunk_id=card['card_id'],supporting_excerpt=card['plain_span'],score=scores.get(card['card_id'],0)) for card in chosen],
+                              chunk_id=card['card_id'],supporting_excerpt=card['plain_span'],score=scores.get(card['card_id'],0)) for card in evidence_cards],
                 evidence=evidence,retrieved_context=extras,
                 latency_seconds=dict(retrieval=latency,answering=0.0,generation=0.0,retry=0.0,total=latency),
                 answerability_seconds=latency,requested_entity=intent.course,requested_field=intent.field,

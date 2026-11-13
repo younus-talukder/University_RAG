@@ -35,6 +35,46 @@ cues:
         dev_a_count: 22
       - cue: credit hour
         dev_a_count: 1
+    course_type:
+      en:
+      - cue: course type
+        dev_a_count: 8
+      bn:
+      - cue: কোর্সের ধরন
+        dev_a_count: 8
+      bl:
+      - cue: course type
+        dev_a_count: 8
+    contact_hours:
+      en:
+      - cue: contact hours
+        dev_a_count: 8
+      bn:
+      - cue: কনট্যাক্ট আওয়ার
+        dev_a_count: 3
+      bl:
+      - cue: contact hour
+        dev_a_count: 8
+    consultation_hours:
+      en:
+      - cue: consultation
+        dev_a_count: 5
+      bn:
+      - cue: পরামর্শ
+        dev_a_count: 5
+      bl:
+      - cue: consultation
+        dev_a_count: 5
+    office:
+      en:
+      - cue: office location
+        dev_a_count: 3
+      bn:
+      - cue: অফিসের অবস্থান
+        dev_a_count: 3
+      bl:
+      - cue: office location
+        dev_a_count: 3
     level_term:
       en:
       - cue: level

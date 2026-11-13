@@ -145,6 +145,8 @@ def understand(question:str,cards:Iterable[Mapping[str,Any]]=())->CardIntent:
         elif re.search(r'\bPO',text,re.I):field='co_po_link'
     if WEIGHT_CUE.search(text) and field=='level_term':field='weight'
     elif field=='level_term' and SESSION_CUE.search(text) and not YEAR_LEVEL_CUE.search(text):field='semester'
+    elif not field and SESSION_CUE.search(text):field='level_term' if YEAR_LEVEL_CUE.search(text) else 'semester'
+    elif not field and YEAR_LEVEL_CUE.search(text):field='level_term'
     if field=='weight' and not key:key=_assessment_key(text,cards)
     if field in SINGLETON_FIELDS and not key:key=field
     attribute=attr_hits[0][1] if attr_hits else ''
@@ -152,6 +154,9 @@ def understand(question:str,cards:Iterable[Mapping[str,Any]]=())->CardIntent:
     if attribute and mode=='lookup' and field in {'schedule','weight','co_po_link','clo_plo_link'}:mode='attribute'
     if field=='schedule' and mode=='attribute':
         mode='none'  # P1 exception: schedule attribute extras below 90%.
+    outcome_ids=re.findall(r'\b(?:CLO|CO)\s*[-–]?\s*\d+\b',text,re.I)
+    if field in {'clo','co'} and (len(outcome_ids)>1 or re.search(r'\b(?:skill|skills|divided|split)\b|দক্ষতা|ভাগ',text,re.I)):
+        mode='none'  # A statement card does not answer a requested subskill or cross-outcome relation.
     if re.search(r'\bclass\s+tests?\b',text,re.I) and re.search(r'\bterms?\b',text,re.I) and re.search(r'\b(?:distributed|distribution|between|bhag)\b',text,re.I):
         mode='none'  # A term in an assessment policy is not the course level.
     if not course or not field:mode='none'

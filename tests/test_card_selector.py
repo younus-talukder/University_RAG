@@ -44,3 +44,28 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         assert infer_complete_fields(rows)=={'objective'}
         rows[1]['list_index']=3
         assert infer_complete_fields(rows)==set()
+
+    def test_value_anchored_item_requires_bm25_bge_agreement():
+        from src.card_selector import CardValueIndex,select_item_by_value
+        shared='standard academic reference materials practice overview instruction activity reading schedule '
+        rows=[{**card('objective 1','objective'),'value':shared+'Quartz nebula calibration'},
+              {**card('objective 2','objective'),'value':shared+'Harbor glacier assembly'}]
+        lexical=CardValueIndex(rows)
+        query='Which objective covers quartz nebula calibration?'
+        picked=select_item_by_value(query,intent('objective',''),rows,lexical,
+                                    {'objective 1':.9,'objective 2':.3},.03)
+        assert picked.route=='card' and picked.cards[0]['key']=='objective 1'
+        rejected=select_item_by_value(query,intent('objective',''),rows,lexical,
+                                      {'objective 1':.3,'objective 2':.9},.03)
+        assert rejected.route=='fallback'
+
+    def test_value_anchored_course_requires_two_distinctive_tokens_and_model_agreement():
+        from src.card_selector import CardValueIndex,resolve_course_by_value
+        shared='standard academic reference materials practice overview instruction activity reading schedule '
+        rows=[{**card('book 1','book','a'),'course':'EX 101','value':shared+'Quartz nebula calibration manual'},
+              {**card('book 1','book','b'),'course':'AB 202','value':shared+'Harbor glacier assembly manual'},
+              {**card('book 2','book','c'),'course':'CD 303','value':shared+'Common manual'}]
+        lexical=CardValueIndex(rows)
+        query='Which manual mentions quartz nebula calibration?'
+        assert resolve_course_by_value(query,rows,lexical,{'a':.9,'b':.4,'c':.2},.03)=='EX 101'
+        assert resolve_course_by_value(query,rows,lexical,{'a':.3,'b':.9,'c':.2},.03)==''

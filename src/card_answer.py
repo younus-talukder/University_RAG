@@ -16,9 +16,9 @@ BN_DIGITS=str.maketrans('0123456789','০১২৩৪৫৬৭৮৯')
 NUMERIC_FIELDS={'credit','contact_hours','total_marks','class_hours','consultation_hours','weight','weight_total'}
 NONE_VALUES={'none','nil','n/a'}
 LABELS={
- 'credit':('credit','ক্রেডিট','credit'), 'course_title':('course title','কোর্সের নাম','course title'),
- 'level_term':('level/term','বর্ষ ও সেমিস্টার','level/term'),
- 'semester':('semester','সেমিস্টার','semester'), 'prerequisite':('prerequisite','পূর্বশর্ত','prerequisite'),
+ 'credit':('Credit value','ক্রেডিট','credit'), 'course_title':('Course title','কোর্সের নাম','course title'),
+ 'level_term':('Level/Term','বর্ষ ও সেমিস্টার','level/term'),
+ 'semester':('Semester','সেমিস্টার','semester'), 'prerequisite':('Prerequisite','পূর্বশর্ত','prerequisite'),
  'teacher_person':('teacher','শিক্ষক','teacher'), 'objective':('objective','উদ্দেশ্য','objective'),
  'clo':('CLO','সিএলও','CLO'), 'co':('CO','সিও','CO'),
  'book':('book','বই','book'), 'books':('reference book','রেফারেন্স বই','reference book'),
@@ -57,17 +57,19 @@ def _label(field:str)->tuple[str,str,str]:
     return LABELS.get(field,(field.replace('_',' '),field.replace('_',' '),field.replace('_',' ')))
 
 
-def render_card_answer(intent:CardIntent,selection:CardSelection)->RenderedCardAnswer:
+def render_card_answer(intent:CardIntent,selection:CardSelection,extra_pages:tuple[int,...]=())->RenderedCardAnswer:
     if selection.route!='card' or not selection.cards:raise ValueError('a card route is required')
     cards=selection.cards;first=cards[0];lang=intent.lang if intent.lang in {'en','bn','bl'} else 'en'
     templates=_templates()[lang]
     course=str(first['course']);field=str(first['field']);label,label_bn,label_bl=_label(field)
     key=str(first.get('row_key') or first.get('key') or first.get('assessment') or '')
+    if field in {'clo','co'} and key.replace(' ','') in str(first.get('plain_span','')) and key not in str(first.get('plain_span','')):
+        key=key.replace(' ','')
     value=str(first.get('value',''))
     if field in NUMERIC_FIELDS:value=_digits(value,lang)
     pdf=str(first['pdf'])
     if any(card.get('pdf')!=pdf for card in cards):raise ValueError('a card answer must cite one PDF')
-    pages=tuple(sorted({int(page) for card in cards for page in card.get('pages',[card['page']])}))
+    pages=tuple(sorted({int(page) for card in cards for page in card.get('pages',[card['page']])}|set(extra_pages)))
     slots=dict(course=course,label=label,label_bn=label_bn,label_bl=label_bl,label_plural=label+'s',
                key=key,key_bn=_key_bn(key),value=value,pdf=pdf,pages=', '.join(map(str,pages)),
                pages_bn=', '.join(_digits(page,'bn') for page in pages),
@@ -103,5 +105,6 @@ def render_card_answer(intent:CardIntent,selection:CardSelection)->RenderedCardA
         template='schedule_topic';slots['topic']=str(first.get('topic') or value)
     else:template='generic'
     body=templates[template].format(**slots)
+    if body and 'a'<=body[0]<='z':body=body[0].upper()+body[1:]
     citation=templates['citation'].format(**slots)
     return RenderedCardAnswer(body,citation,body+' '+citation,pdf,pages)

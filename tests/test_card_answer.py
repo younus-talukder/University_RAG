@@ -31,6 +31,12 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         answer=render('bl','clo','Explain examples',row_key='CLO 2')
         assert 'course er' in answer.body and 'CLO 2' in answer.body
 
+    def test_bangla_frame_keeps_long_verbatim_english_title_meaningful():
+        from src.language_validator import validate_language
+        answer=render('bn','book','A Synthetic Reference Manual by Example Writers')
+        assert validate_language(answer.body,'bangla')['validation_passed']
+        assert 'A Synthetic Reference Manual' in answer.body
+
     def test_flag_requires_both_switches(monkeypatch):
         monkeypatch.setenv('RAG_REPAIR_CARD_ANSWERS','1')
         monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS','0')
