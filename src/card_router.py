@@ -26,6 +26,9 @@ SINGLETON_FIELDS={'program','course_code','course_title','course_type','semester
                   'prerequisite','contact_hours','total_marks','class_hours','consultation_hours','office','email','mobile'}
 FALLBACK=re.compile(r'\b(?:why|explain|compare|comparison|difference|versus|vs)\b|কেন|ব্যাখ্যা|তুলনা|পার্থক্য|\b(?:keno|ken|bakkha|tulona)\b',re.I)
 MAP_CUE=re.compile(r'\b(?:map|maps|mapped|mapping|alignment|corresponding|aligned)\b|ম্যাপ|সংযুক্ত|যুক্ত|\b(?:map|mape|jukto)\b',re.I)
+WEIGHT_CUE=re.compile(r'\b(?:weight|percent|percentage|marks|score|distribution)\b|শতাংশ|নম্বরের\s*হার|ওয়েট|\b(?:weight|percent|marks)\b',re.I)
+YEAR_LEVEL_CUE=re.compile(r'\b(?:year|level|term)\b|বর্ষ\s*(?:ও|এবং)?\s*সেমিস্টার|লেভেল',re.I)
+SESSION_CUE=re.compile(r'\b(?:academic\s+(?:semester|session)|session|semester)\b|শিক্ষাবর্ষ|সেমিস্টার',re.I)
 KEY_RE={
     'outcome':re.compile(r'\b(CLO|CO)\s*[-–]?\s*(\d+)\b',re.I),
     'mapping':re.compile(r'\b(PLO|PO)\s*[-–(]?\s*([a-z]|\d{1,2})\)?\b',re.I),
@@ -140,6 +143,8 @@ def understand(question:str,cards:Iterable[Mapping[str,Any]]=())->CardIntent:
     if MAP_CUE.search(text) or (re.search(r'\b(?:PLO|PO)\s*[-–(]?\s*(?:[a-z]|\d)',text,re.I) and key_type=='outcome'):
         if re.search(r'\bPLO',text,re.I):field='clo_plo_link'
         elif re.search(r'\bPO',text,re.I):field='co_po_link'
+    if WEIGHT_CUE.search(text) and field=='level_term':field='weight'
+    elif field=='level_term' and SESSION_CUE.search(text) and not YEAR_LEVEL_CUE.search(text):field='semester'
     if field=='weight' and not key:key=_assessment_key(text,cards)
     if field in SINGLETON_FIELDS and not key:key=field
     attribute=attr_hits[0][1] if attr_hits else ''
@@ -147,6 +152,8 @@ def understand(question:str,cards:Iterable[Mapping[str,Any]]=())->CardIntent:
     if attribute and mode=='lookup' and field in {'schedule','weight','co_po_link','clo_plo_link'}:mode='attribute'
     if field=='schedule' and mode=='attribute':
         mode='none'  # P1 exception: schedule attribute extras below 90%.
+    if re.search(r'\bclass\s+tests?\b',text,re.I) and re.search(r'\bterms?\b',text,re.I) and re.search(r'\b(?:distributed|distribution|between|bhag)\b',text,re.I):
+        mode='none'  # A term in an assessment policy is not the course level.
     if not course or not field:mode='none'
     cues=tuple(dict.fromkeys([item[2] for item in field_hits[:2]+attr_hits[:2]+mode_hits[:1]]))
     confidence=min(1.0,.35+.25*bool(course)+.2*bool(field)+.15*bool(key)+.05*bool(cues)) if mode!='none' else 0.0

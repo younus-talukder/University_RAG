@@ -29,6 +29,11 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         intent=understand('Which PLO does CLO 2 map to in CSE 316?')
         assert intent.field=='clo_plo_link' and intent.key=='CLO 2'
 
+    def test_academic_session_is_distinct_from_year_and_semester():
+        assert understand('What academic semester is listed for CSE 316?').field=='semester'
+        assert understand('What academic level is listed for CSE 316?').field=='level_term'
+        assert understand('CSE 316-er year ar semester ki?').field=='level_term'
+
     def test_count_list_reverse():
         assert understand('How many objectives does CSE 316 have?').mode=='count'
         assert understand('List all teachers of CSE 316').mode=='list'

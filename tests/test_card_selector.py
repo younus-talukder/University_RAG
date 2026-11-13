@@ -17,6 +17,11 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         result=select_cards(intent('schedule','Week 7'),rows,{'Weeks 5–12':.82,'Week 14':.70},.2,.9)
         assert result.route=='card' and result.cards[0]['key']=='Weeks 5–12'
 
+    def test_unique_header_field_beats_repeated_course_code_embedding():
+        rows=[card('course_code','course_code'),card('level_term','level_term')]
+        result=select_cards(intent('level_term','level_term'),rows,{'course_code':.8,'level_term':.5},.03,.03)
+        assert result.route=='card' and result.cards[0]['field']=='level_term'
+
     def test_ambiguous_margin_falls_back():
         rows=[card('course_title','course_title'),card('credit','credit')]
         result=select_cards(intent('course_title',''),rows,{'course_title':.80,'credit':.79},.05,.9)

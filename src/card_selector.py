@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any,Iterable,Mapping
 import numpy as np
 
-from .card_router import CardIntent,resolve_range
+from .card_router import CardIntent,SINGLETON_FIELDS,resolve_range
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,9 @@ def select_cards(intent:CardIntent,cards:Iterable[Mapping[str,Any]],scores:Mappi
     if intent.mode=='none' or not intent.course:return CardSelection('fallback',intent.mode,(),0,0,'no_intent')
     if not course_cards:return CardSelection('fallback',intent.mode,(),0,0,'course_not_in_cards')
     same_field=[c for c in course_cards if c.get('field')==intent.field]
+    if intent.mode=='lookup' and intent.field in SINGLETON_FIELDS and intent.key==intent.field and len(same_field)==1:
+        card=same_field[0]
+        return CardSelection('card',intent.mode,(card,),float(scores.get(card['card_id'],-1)),1.0,'unique_field_key')
     if intent.mode in {'list','count'}:
         if intent.field not in set(complete_fields) or not same_field:
             return CardSelection('fallback',intent.mode,(),0,0,'field_incomplete')
