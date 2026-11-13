@@ -75,3 +75,22 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         monkeypatch.setattr(pipeline,'load_index',lambda **kwargs:(_ for _ in ()).throw(AssertionError('index loaded')))
         result=pipeline.answer_question('What is the credit of EX 101?')
         assert result['final_status']=='ANSWER_RETURNED'
+
+    def test_non_routed_fallback_context_and_prompt_hash_match_flag_off(monkeypatch):
+        import hashlib,json
+        import src.pipeline as pipeline
+        from src.generator import build_prompt
+        question='What is the fee for EX 999?'
+        monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS','1')
+        monkeypatch.setenv('RAG_REPAIR_CARD_ANSWERS','0')
+        off=pipeline.answer_question(question,use_answer_bank=False,use_generation=False)
+        monkeypatch.setenv('RAG_REPAIR_CARD_ANSWERS','1')
+        monkeypatch.setattr(runtime,'attempt_card_answer',lambda q:(None,[{'text':'Injected synthetic passage',
+                                                                          'source':'synthetic.pdf','page':1}]))
+        on=pipeline.answer_question(question,use_answer_bank=False,use_generation=False)
+        def hashes(result):
+            context=result['retrieved_context']
+            prompt=build_prompt(question,[str(row.get('text') or '') for row in context],'english')
+            return (hashlib.sha256(json.dumps(context,sort_keys=True,ensure_ascii=False).encode()).hexdigest(),
+                    hashlib.sha256(prompt.encode()).hexdigest())
+        assert hashes(on)==hashes(off)

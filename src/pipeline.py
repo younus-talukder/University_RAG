@@ -273,11 +273,10 @@ def _answer_question_impl(
             ],
         }
 
-    card_extra: list[dict[str, Any]] = []
     if os.environ.get('RAG_REPAIR_CARD_ANSWERS','0').strip().casefold() in {'1','true','yes','on'}:
         from .card_runtime import attempt_card_answer,enabled as card_answers_enabled
         if card_answers_enabled():
-            card_result,card_extra=attempt_card_answer(question)
+            card_result,_=attempt_card_answer(question)
             if card_result is not None:return card_result
 
     index_path = str(VECTOR_DB_DIR / "index.faiss")
@@ -305,8 +304,6 @@ def _answer_question_impl(
     else:
         report("Retrieving relevant context with fast lexical search...")
         retrieved = retrieve_lexical(question, metadata=metadata, top_k=top_k)
-    if card_extra:
-        retrieved=[*retrieved,*card_extra]
     retrieval_seconds = time.perf_counter() - pipeline_started
 
     report("Validating retrieved evidence...")
