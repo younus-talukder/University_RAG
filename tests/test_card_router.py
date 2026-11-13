@@ -38,3 +38,33 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         assert understand('How many objectives does CSE 316 have?').mode=='count'
         assert understand('List all teachers of CSE 316').mode=='list'
         assert understand('Which week covers circuits in CSE 316?').mode=='reverse'
+
+    def test_week_and_lecture_key_forms_across_languages():
+        cases={
+            'EX 101-এর ৪তম সপ্তাহে কী আছে?':'Week 4',
+            'EX 101-এর ২য় সপ্তাহে কী আছে?':'Week 2',
+            'EX 101-এর সপ্তাহ ৩-এ কী আছে?':'Week 3',
+            'EX 101-এর লেকচার ৬ কী?':'Lecture 6',
+            'EX 101-er week 5 er topic ki?':'Week 5',
+            'EX 101-er 7th week er topic ki?':'Week 7',
+            'EX 101-er soptaho 8 er topic ki?':'Week 8',
+            'What is in the second week of EX 101?':'Week 2',
+            'What is in week two of EX 101?':'Week 2',
+        }
+        for question,expected in cases.items():
+            assert understand(question).key==expected,question
+
+    def test_bangla_ordinal_words_one_through_sixteen_and_inflections():
+        words=('প্রথম','দ্বিতীয়','তৃতীয়','চতুর্থ','পঞ্চম','ষষ্ঠ','সপ্তম','অষ্টম',
+               'নবম','দশম','একাদশ','দ্বাদশ','ত্রয়োদশ','চতুর্দশ','পঞ্চদশ','ষোড়শ')
+        for number,word in enumerate(words,1):
+            for suffix in ('','এ','র','এর'):
+                assert understand(f'EX 101-এর {word}{suffix} সপ্তাহে কী?').key==f'Week {number}'
+
+    def test_weight_cues_and_course_scoped_assessment_name_ties():
+        cards=[{'course':'EX 101','field':'weight','assessment':'Final Project'},
+               {'course':'AB 202','field':'weight','assessment':'Final Project'}]
+        assert understand('How much counts toward the final project of EX 101?',cards).field=='weight'
+        assert understand('EX 101-এর final project কত শতাংশ?',cards).field=='weight'
+        assert understand('EX 101-er final project koto marks?',cards).field=='weight'
+        assert understand('How much is assigned to Final Project in EX 101?',cards).key=='Final Project'

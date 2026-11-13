@@ -12,7 +12,7 @@ from pypdf import PdfReader
 from .answer_safety import answer_safety_failures
 from .card_answer import render_card_answer
 from .card_router import understand
-from .card_selector import CardEmbeddingIndex,CardValueIndex,infer_complete_fields,resolve_course_by_value,select_cards,select_item_by_value
+from .card_selector import CardEmbeddingIndex,CardValueIndex,infer_complete_fields,is_heading_only_card,resolve_course_by_value,select_cards,select_item_by_value
 from .course_cards import match_text
 from .embeddings import get_embedding_model
 from .grounding_validator import validate_grounding
@@ -33,9 +33,15 @@ def enabled()->bool:
 def _bundle():
     root=Path(os.environ.get('RAG_CARD_BUNDLE_DIR',DEFAULT_BUNDLE))
     source=root/'cards_normalized_p1b.jsonl'
-    cards=[json.loads(line) for line in source.open(encoding='utf-8')]
+    raw_cards=[json.loads(line) for line in source.open(encoding='utf-8')]
+    trusted_schedule=set()
+    with (root/'extras_audit.csv').open(encoding='utf-8',newline='') as handle:
+        for row in csv.DictReader(handle):
+            if row['field']=='schedule' and row['extras_ok']=='True':trusted_schedule.add(row['card_id'])
+    cards=[{**card,'p1_schedule_extras_ok':card['card_id'] in trusted_schedule}
+           for card in raw_cards if not is_heading_only_card(card)]
     config=yaml.safe_load((Path(__file__).resolve().parents[1]/'config/card_routing.yaml').read_text(encoding='utf-8'))
-    index=CardEmbeddingIndex(root/'card_embeddings_v1',cards)
+    index=CardEmbeddingIndex(root/'card_embeddings_v1',raw_cards)
     import hashlib
     if config['card_source_sha256']!=hashlib.sha256(source.read_bytes()).hexdigest():
         raise ValueError('card bundle differs from calibrated source')
@@ -105,9 +111,9 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
     extras=[dict(text=c['plain_span'],source=c['pdf'],relative_path=c['pdf'],page=c['page'],
                  chunk_id=c['card_id'],score=scores.get(c['card_id'],0),card_tier='atomic')
             for c in ranked[:3] if c.get('plain_span') and _span_verified(c)]
-    if selected.route!='card':return None,extras
+    if selected.route!='card':return None,[]
     chosen=selected.cards
-    if not all(_span_verified(card) for card in chosen):return None,extras
+    if not all(_span_verified(card) for card in chosen):return None,[]
     identity=next((card for card in course_cards if card.get('field')=='course_code'
                    and card.get('tier')=='atomic' and card.get('pdf')==chosen[0].get('pdf')
                    and _span_verified(card)),None)
@@ -119,7 +125,7 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
     safety=answer_safety_failures(question,rendered.body,[card['plain_span'] for card in evidence_cards],
                                   cited_excerpt=chosen[0]['plain_span'])
     if not language.get('validation_passed') or not grounding.get('grounding_validation_passed') or safety:
-        return None,extras
+        return None,[]
     latency=time.perf_counter()-started
     first=chosen[0]
     result=dict(question=question,answer=rendered.answer,answer_body=rendered.body,citation=rendered.citation,

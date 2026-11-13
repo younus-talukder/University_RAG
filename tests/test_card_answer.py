@@ -37,6 +37,20 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         assert validate_language(answer.body,'bangla')['validation_passed']
         assert 'A Synthetic Reference Manual' in answer.body
 
+    def test_schedule_renders_topic_outcomes_and_only_verified_activities():
+        card=dict(card_id='synthetic',tier='atomic',course='EX 101',pdf='outline.pdf',page=2,pages=[2],
+                  field='schedule',key='Week 3',row_key='Week 3',value='Synthetic row',
+                  topic='Synthetic topic',outcomes=['Synthetic outcome one','Synthetic outcome two'],
+                  activities='Synthetic lab activity',plain_span='Synthetic topic Synthetic outcome one')
+        intent=CardIntent('en','EX 101','schedule','Week 3','','lookup',1,())
+        selection=CardSelection('card','lookup',(card,),1,1,'fixture')
+        unverified=render_card_answer(intent,selection)
+        assert 'Synthetic topic; Synthetic outcome one; Synthetic outcome two' in unverified.body
+        assert 'Synthetic lab activity' not in unverified.body
+        card['p1_schedule_extras_ok']=True
+        verified=render_card_answer(intent,CardSelection('card','lookup',(card,),1,1,'fixture'))
+        assert 'Synthetic lab activity' in verified.body
+
     def test_flag_requires_both_switches(monkeypatch):
         monkeypatch.setenv('RAG_REPAIR_CARD_ANSWERS','1')
         monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS','0')

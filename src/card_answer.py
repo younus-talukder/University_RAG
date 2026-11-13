@@ -102,7 +102,14 @@ def render_card_answer(intent:CardIntent,selection:CardSelection,extra_pages:tup
     elif field.endswith('_link'):
         template='link';slots['po_display']=str(first.get('po_display') or first.get('plo_display') or '')
     elif field=='schedule':
-        template='schedule_topic';slots['topic']=str(first.get('topic') or value)
+        template='schedule_topic'
+        parts=[str(first.get('topic') or value)]
+        outcomes=first.get('outcomes') or []
+        if isinstance(outcomes,str):outcomes=[outcomes]
+        parts.extend(str(item) for item in outcomes if str(item).strip())
+        if first.get('p1_schedule_extras_ok') and str(first.get('activities') or '').strip():
+            parts.append(str(first['activities']))
+        slots['topic']='; '.join(part for part in parts if part.strip())
     else:template='generic'
     body=templates[template].format(**slots)
     if body and 'a'<=body[0]<='z':body=body[0].upper()+body[1:]

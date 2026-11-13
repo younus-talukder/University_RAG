@@ -1,10 +1,8 @@
 # Fixed from Step 5B P4 DEV-A calibration; do not tune on DEV-B or held-out.
 tau: 0.03
 tau_rev: 0.03
-disabled_fields:
-  - schedule
-  - clo_plo_link
-disabled_reason: "DEV-A schedule exact-week precision 43/60 and CLO–PLO link precision 0/3; use RAG fallback"
+disabled_fields: []
+disabled_reason: "Field and mode decisions are certified in Step05B/field_policy.csv; schedule attribute mode remains disabled by the P1 exception"
 dev_a_routed: 188
 dev_a_value_match: 187
 dev_a_page_match: 188

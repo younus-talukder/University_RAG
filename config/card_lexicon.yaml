@@ -211,6 +211,18 @@ cues:
         dev_a_count: 13
       - cue: assessment
         dev_a_count: 9
+      - cue: count toward
+        dev_a_count: 4
+      - cue: assigned to
+        dev_a_count: 12
+      - cue: share of
+        dev_a_count: 1
+      - cue: worth
+        dev_a_count: 0
+      - cue: carries
+        dev_a_count: 0
+      - cue: percentage of the grade
+        dev_a_count: 0
       bn:
       - cue: ওয়েট
         dev_a_count: 0
@@ -220,6 +232,10 @@ cues:
         dev_a_count: 95
       - cue: মূল্যায়ন
         dev_a_count: 26
+      - cue: কত শতাংশ
+        dev_a_count: 6
+      - cue: কত নম্বর
+        dev_a_count: 1
       bl:
       - cue: weight
         dev_a_count: 48
@@ -229,6 +245,20 @@ cues:
         dev_a_count: 17
       - cue: assessment
         dev_a_count: 9
+      - cue: koto percent
+        dev_a_count: 0
+      - cue: koto marks
+        dev_a_count: 1
+      - cue: count toward
+        dev_a_count: 0
+      - cue: assigned to
+        dev_a_count: 0
+      - cue: share of
+        dev_a_count: 0
+      - cue: worth
+        dev_a_count: 0
+      - cue: carries
+        dev_a_count: 0
     book:
       en:
       - cue: textbook

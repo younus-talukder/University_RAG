@@ -10,6 +10,20 @@ from .card_router import CardIntent,SINGLETON_FIELDS,resolve_range
 from .sparse_index import SparseIndex,sparse_tokenize
 
 SELECT_FIELDS={'objective','clo','co','book','books','rule','synopsis','content','topic_clo','schedule'}
+HEADING_ONLY=re.compile(r'^(?:\d{1,2}\s*[.)]\s*)?(?:part\s+[a-d]|course\s+(?:objectives?|outcomes?|synopsis|content\s+outline)|'
+                        r'reference\s+books?(?:\s*(?:and|&)\s*materials?)?|text\s*books?|'
+                        r'learning\s+resources?|(?:required|recommended)\s+references?|'
+                        r'special\s+instructions?|weighting\s+cos?(?:\s+with\s+assessment\s+methods)?|'
+                        r'evaluation\s+policy|assessment\s+(?:strategy|techniques?)|'
+                        r'prepared\s+by|appendix(?:\s*\d+)?)$',re.I)
+
+
+def is_heading_only_card(card:Mapping[str,Any])->bool:
+    """Reject section labels accidentally emitted as atomic values."""
+    if card.get('tier')!='atomic':return False
+    value=re.sub(r'[^\w&]+',' ',str(card.get('value') or '').casefold()).strip()
+    value=re.sub(r'\s+',' ',value)
+    return bool(HEADING_ONLY.fullmatch(value))
 
 
 @dataclass(frozen=True)
@@ -23,15 +37,23 @@ class CardSelection:
 
 
 def _key_equal(requested:str,card:Mapping[str,Any])->bool:
-    key=str(card.get('row_key') or card.get('key') or card.get('assessment') or '')
-    if requested==key:return True
-    if requested.startswith('Week '):
-        return resolve_range(requested,[key])==key
+    key=str(card.get('row_key') or card.get('key') or card.get('assessment') or '').strip()
+    wanted=requested.strip()
+    if wanted.casefold()==key.casefold():return True
+    if wanted.startswith(('Week ','Weeks ')) and card.get('field')=='schedule':
+        if key.casefold().startswith('lecture '):return False
+        if resolve_range(wanted,[key]).casefold()==key.casefold():return True
+        header=str(card.get('key_column_header') or card.get('table_header') or card.get('header_text') or '')
+        if re.search(r'\bweeks?\b',header,re.I):
+            bare=re.fullmatch(r'(\d+)(?:\s*[-–]\s*(\d+))?',key)
+            if bare:
+                normalized=f'Weeks {bare.group(1)}–{bare.group(2)}' if bare.group(2) else f'Week {bare.group(1)}'
+                return resolve_range(wanted,[normalized])==normalized
     # PLO-a, PLO (a), PLO a, and bare a are equivalent under a PLO header.
     def canonical(value:str)->str:
         return re.sub(r'[^a-z0-9]','',value.casefold())
-    if re.match(r'^(?:PLO|PO)[\s(-]',requested,re.I) and card.get('header_text'):
-        return canonical(requested)==canonical(key) or canonical(requested)==canonical(str(card.get('po_display','')))
+    if re.match(r'^(?:PLO|PO)[\s(-]',wanted,re.I) and card.get('header_text'):
+        return canonical(wanted)==canonical(key) or canonical(wanted)==canonical(str(card.get('po_display','')))
     return False
 
 
@@ -68,6 +90,8 @@ def select_cards(intent:CardIntent,cards:Iterable[Mapping[str,Any]],scores:Mappi
             return CardSelection('fallback',intent.mode,(),0,0,'field_incomplete')
         ordered=tuple(sorted(same_field,key=lambda c:(c.get('list_index') is None,c.get('list_index') or 0,str(c.get('row_key') or c.get('key')))))
         return CardSelection('card',intent.mode,ordered,1,1,'complete_field')
+    if bm25_scores is not None and not intent.key:
+        return CardSelection('fallback',intent.mode,(),0,0,'no_bm25_bge_agreement')
     ranked=sorted(course_cards,key=lambda c:scores.get(c['card_id'],-1),reverse=True)
     first=ranked[0];top=float(scores.get(first['card_id'],-1))
     second=float(scores.get(ranked[1]['card_id'],-1)) if len(ranked)>1 else -1

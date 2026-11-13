@@ -69,3 +69,31 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         query='Which manual mentions quartz nebula calibration?'
         assert resolve_course_by_value(query,rows,lexical,{'a':.9,'b':.4,'c':.2},.03)=='EX 101'
         assert resolve_course_by_value(query,rows,lexical,{'a':.3,'b':.9,'c':.2},.03)==''
+
+    def test_week_bare_keys_need_week_column_and_lecture_is_not_week():
+        from src.card_selector import _key_equal
+        bare={**card('2-3'),'row_key':'2-3','header_text':'Weeks'}
+        assert _key_equal('Week 3',bare)
+        assert _key_equal('Weeks 2–3',bare)
+        assert not _key_equal('Week 3',{**bare,'header_text':'Lecture'})
+        assert not _key_equal('Week 3',{**card('Lecture 3'),'header_text':'Lecture'})
+
+    def test_exact_field_and_week_key_agree_without_bm25_score():
+        row={**card('Week 4'),'topic':'Synthetic topic'}
+        result=select_cards(intent('schedule','Week 4'),[row],{'Week 4':.1},.03,.03,
+                            bm25_scores={})
+        assert result.route=='card' and result.reason=='exact_field_key'
+
+    def test_heading_only_cards_are_rejected_without_changing_values():
+        from src.card_selector import is_heading_only_card
+        assert is_heading_only_card({**card('2','book'),'value':'Reference Books & Materials'})
+        assert is_heading_only_card({**card('1','objective'),'value':'Course Objectives'})
+        assert not is_heading_only_card({**card('1','book'),'value':'Synthetic Reference Manual'})
+
+    def test_no_course_and_no_distinctive_value_stays_on_fallback():
+        from src.card_selector import CardValueIndex,resolve_course_by_value
+        rows=[{**card('1','synopsis','a'),'value':'General outline topics'},
+              {**card('1','synopsis','b'),'course':'AB 202','value':'General learning topics'}]
+        lexical=CardValueIndex(rows)
+        assert resolve_course_by_value('Which areas does the synopsis emphasize?',rows,lexical,
+                                       {'a':.8,'b':.7},.03)==''
