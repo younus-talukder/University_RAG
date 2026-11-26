@@ -58,6 +58,15 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         monkeypatch.setenv('RAG_REPAIR_COURSE_CARDS','1')
         assert enabled()
 
+    def test_named_book_anchor_must_appear_in_selected_value():
+        card={'field':'book','value':'A Synthetic Reference by Jane Example'}
+        assert runtime._distinctive_anchor_missing(
+            'Which Morgan book is referenced for EX 101?',card)
+        assert not runtime._distinctive_anchor_missing(
+            'Which Example book is referenced for EX 101?',card)
+        assert not runtime._distinctive_anchor_missing(
+            'Which book is referenced for EX 101?',card)
+
     def test_validated_card_path_and_failed_span_fallback(monkeypatch):
         source='EX 101 Credit Value: 3.00'
         card=dict(card_id='c1',tier='atomic',course='EX 101',pdf='outline.pdf',page=1,pages=[1],

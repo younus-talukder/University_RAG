@@ -1,0 +1,10 @@
+# Younus source decision, 2026-11-13. Card answers use the current outline.
+source_priority:
+  - course_outline
+  - curriculum
+  - prospectus
+card_answer_source: course_outline
+named_other_document_route: fallback
+scoring:
+  alt_source: CORRECT
+  source_conflict: POLICY-CORRECT

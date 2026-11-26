@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from dataclasses import replace
 import csv
-import json,os,time
+import json,os,re,time
 from pathlib import Path
 from typing import Any
 import yaml
@@ -80,6 +80,18 @@ def _span_verified(card:dict[str,Any])->bool:
     return bool(value and value in source)
 
 
+def _distinctive_anchor_missing(question: str, card: dict[str, Any]) -> bool:
+    """Require an explicitly named book author or title word in the chosen value."""
+    if card.get('field') not in {'book', 'books'}:
+        return False
+    words = re.findall(r"(?<!\w)[A-Z][a-z]{3,}(?!\w)", question)
+    generic = {'Which', 'What', 'Where', 'When', 'Book', 'Books', 'Textbook',
+               'Reference', 'Recommended', 'Course', 'The', 'This', 'That'}
+    anchors = [word for word in words if word not in generic]
+    value = str(card.get('value') or '').casefold()
+    return any(word.casefold() not in value for word in anchors)
+
+
 def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,Any]]]:
     """Return a validated card answer, or extra plain spans for RAG fallback."""
     if not enabled():return None,[]
@@ -113,6 +125,7 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
             for c in ranked[:3] if c.get('plain_span') and _span_verified(c)]
     if selected.route!='card':return None,[]
     chosen=selected.cards
+    if any(_distinctive_anchor_missing(question, card) for card in chosen):return None,[]
     if not all(_span_verified(card) for card in chosen):return None,[]
     identity=next((card for card in course_cards if card.get('field')=='course_code'
                    and card.get('tier')=='atomic' and card.get('pdf')==chosen[0].get('pdf')
