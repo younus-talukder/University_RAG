@@ -10,7 +10,8 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
 
     def render(lang,field,value,**attributes):
         card=dict(card_id='synthetic',tier='atomic',course='EX 101',pdf='outline.pdf',page=2,pages=[2],
-                  field=field,key=field,value=value,plain_span=value,**attributes)
+                  field=field,key=field,value=value,plain_span=value)
+        card.update(attributes)
         intent=CardIntent(lang,'EX 101',field,field,'','lookup',1,())
         selected=CardSelection('card','lookup',(card,),1,1,'fixture')
         return render_card_answer(intent,selected)
@@ -26,6 +27,16 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         answer=render('en','prerequisite','None')
         assert 'no prerequisite' in answer.body
         assert '(Source: outline.pdf, page 2)'==answer.citation
+
+    def test_prerequisite_heading_contamination_uses_printed_literal():
+        answer=render('en','prerequisite','None Course Objective: unrelated',
+                      plain_span='Prerequisite: None\nCourse Objective: unrelated')
+        assert 'no prerequisite' in answer.body
+        assert 'Course Objective' not in answer.body
+
+    def test_printed_nill_is_preserved_in_bangla_and_banglish():
+        for lang in ('bn','bl'):
+            assert 'Nill' in render(lang,'prerequisite','Nill').body
 
     def test_banglish_frame_and_identifier_preservation():
         answer=render('bl','clo','Explain examples',row_key='CLO 2')

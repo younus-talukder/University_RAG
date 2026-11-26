@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+import re
 from typing import Any,Mapping
 
 import yaml
@@ -66,6 +67,13 @@ def render_card_answer(intent:CardIntent,selection:CardSelection,extra_pages:tup
     if field in {'clo','co'} and key.replace(' ','') in str(first.get('plain_span','')) and key not in str(first.get('plain_span','')):
         key=key.replace(' ','')
     value=str(first.get('value',''))
+    if field=='prerequisite' and value.casefold().startswith(('none ', 'nil ', 'nill ', 'n/a ')):
+        # An extracted value can absorb the next heading. Use only the literal
+        # on the prerequisite line of the same cited span.
+        span=' '.join(str(first.get('plain_span') or '').split())
+        printed=re.search(r'\bpre\s*[- ]?\s*requisite(?:\s*\([^)]*\))?\s*:\s*(none|nil|nill|n/a\.?)\b',span,re.I)
+        if printed:
+            value=printed.group(1)
     if field in NUMERIC_FIELDS:value=_digits(value,lang)
     pdf=str(first['pdf'])
     if any(card.get('pdf')!=pdf for card in cards):raise ValueError('a card answer must cite one PDF')
