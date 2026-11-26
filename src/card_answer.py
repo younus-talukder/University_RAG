@@ -15,7 +15,7 @@ from .card_selector import CardSelection
 TEMPLATES=Path(__file__).resolve().parents[1]/'config/templates.yaml'
 BN_DIGITS=str.maketrans('0123456789','০১২৩৪৫৬৭৮৯')
 NUMERIC_FIELDS={'credit','contact_hours','total_marks','class_hours','consultation_hours','weight','weight_total'}
-NONE_VALUES={'none','nil','n/a'}
+NONE_VALUES={'none','nil','nill','n/a'}
 LABELS={
  'credit':('Credit value','ক্রেডিট','credit'), 'course_title':('Course title','কোর্সের নাম','course title'),
  'level_term':('Level/Term','বর্ষ ও সেমিস্টার','level/term'),

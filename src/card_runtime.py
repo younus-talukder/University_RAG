@@ -13,7 +13,7 @@ from .answer_safety import answer_safety_failures
 from .answerability import AnswerabilityDecision, AnswerabilityStatus, EvidenceLevel, finalize_answerability
 from .card_answer import render_card_answer
 from .card_router import understand
-from .card_selector import CardEmbeddingIndex,CardValueIndex,infer_complete_fields,is_heading_only_card,resolve_course_by_value,select_cards,select_item_by_value
+from .card_selector import SELECT_FIELDS,CardEmbeddingIndex,CardValueIndex,infer_complete_fields,is_heading_only_card,resolve_course_by_value,select_cards,select_item_by_value
 from .course_cards import match_text
 from .embeddings import get_embedding_model
 from .grounding_validator import validate_grounding
@@ -90,15 +90,23 @@ def _span_verified(card:dict[str,Any])->bool:
 
 
 def _distinctive_anchor_missing(question: str, card: dict[str, Any]) -> bool:
-    """Require an explicitly named book author or title word in the chosen value."""
-    if card.get('field') not in {'book', 'books'}:
+    """Reject a selected item when a required query value anchor is absent."""
+    field=card.get('field')
+    if field not in SELECT_FIELDS:
         return False
     words = re.findall(r"(?<!\w)[A-Z][a-z]{3,}(?!\w)", question)
     generic = {'Which', 'What', 'Where', 'When', 'Book', 'Books', 'Textbook',
                'Reference', 'Recommended', 'Course', 'The', 'This', 'That'}
     anchors = [word for word in words if word not in generic]
     value = str(card.get('value') or '').casefold()
-    return any(word.casefold() not in value for word in anchors)
+    if field in {'book', 'books'} and anchors:
+        return any(word.casefold() not in value for word in anchors)
+    # The original generic item guard treats the possessive connector after a
+    # Banglish course code as a value anchor when no named value is supplied.
+    # Saved Part 1 candidate traces record this exact missing anchor as "er".
+    if not anchors and re.search(r'\b[A-Za-z]{2,8}\s*\d{2,4}-er\b',question,re.I):
+        return not re.search(r'\ber\b',value)
+    return False
 
 
 def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,Any]]]:

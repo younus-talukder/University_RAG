@@ -1,4 +1,4 @@
-from src.card_measurement import canonical_value, score_candidate
+from src.card_measurement import canonical_value, none_like_value_match, score_candidate
 
 
 def test_none_like_forms_and_policy_scoring():
@@ -8,3 +8,4 @@ def test_none_like_forms_and_policy_scoring():
     assert score_candidate('None', 'Nill') == (True, True, 'CORRECT')
     assert score_candidate('alpha', 'beta') == (False, False, 'WRONG')
     assert score_candidate('alpha', 'beta', 'source_conflict') == (True, False, 'POLICY-CORRECT')
+    assert none_like_value_match('Nill, as printed','Nill') is True

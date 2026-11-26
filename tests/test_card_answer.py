@@ -35,8 +35,11 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         assert 'Course Objective' not in answer.body
 
     def test_printed_nill_is_preserved_in_bangla_and_banglish():
-        for lang in ('bn','bl'):
-            assert 'Nill' in render(lang,'prerequisite','Nill').body
+        expected={'en':'has no prerequisite','bn':'কোনো পূর্বশর্ত নেই',
+                  'bl':'kono prerequisite nai'}
+        for lang,phrase in expected.items():
+            body=render(lang,'prerequisite','Nill').body
+            assert phrase in body and '"Nill"' in body
 
     def test_banglish_frame_and_identifier_preservation():
         answer=render('bl','clo','Explain examples',row_key='CLO 2')
@@ -78,6 +81,11 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         assert not runtime._distinctive_anchor_missing(
             'Which book is referenced for EX 101?',card)
 
+    def test_generic_item_anchor_rejects_missing_banglish_connector():
+        card={'field':'clo','value':'Apply synthetic project methods'}
+        assert runtime._distinctive_anchor_missing(
+            'EX 101-er CLO2 onujayi students-ra ki korte parbe?',card)
+
     def test_validated_card_path_and_failed_span_fallback(monkeypatch):
         source='EX 101 Credit Value: 3.00'
         card=dict(card_id='c1',tier='atomic',course='EX 101',pdf='outline.pdf',page=1,pages=[1],
@@ -96,6 +104,17 @@ if os.getenv('RAG_REPAIR_CARD_ANSWERS','').lower() in {'1','true','yes','on'}:
         assert result is not None and result['support_status']=='SUPPORTED'
         assert result['grounding_validation_passed'] and result['language_validation_passed']
         assert result['page']==1 and result['card_id']=='c1'
+        seen=[]
+        original_language=runtime.validate_language
+        def reject_rendered(text,target):
+            seen.append((text,target))
+            return {'validation_passed':False,'response_language':'english',
+                    'validation_reason':'SYNTHETIC_LANGUAGE_REJECTION'}
+        monkeypatch.setattr(runtime,'validate_language',reject_rendered)
+        result,_=runtime.attempt_card_answer('What is the credit of EX 101?')
+        assert result is None
+        assert seen and seen[0][0]!='3.00' and '3.00' in seen[0][0]
+        monkeypatch.setattr(runtime,'validate_language',original_language)
         monkeypatch.setattr(runtime,'_plain_page',lambda pdf,page:'EX 101 Credit Value: 4.00')
         result,_=runtime.attempt_card_answer('What is the credit of EX 101?')
         assert result is None
