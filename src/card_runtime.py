@@ -3,13 +3,14 @@ from __future__ import annotations
 from functools import lru_cache
 from dataclasses import replace
 import csv
-import json,os,re,time
+import copy,json,os,re,time
 from pathlib import Path
 from typing import Any
 import yaml
 from pypdf import PdfReader
 
 from .answer_safety import answer_safety_failures
+from .answerability import AnswerabilityDecision, AnswerabilityStatus, EvidenceLevel, finalize_answerability
 from .card_answer import render_card_answer
 from .card_router import understand
 from .card_selector import CardEmbeddingIndex,CardValueIndex,infer_complete_fields,is_heading_only_card,resolve_course_by_value,select_cards,select_item_by_value
@@ -21,6 +22,14 @@ from .language_validator import validate_language
 
 DEFAULT_BUNDLE=Path('/content/drive/MyDrive/University_RAG_Colab/Roadmap_2026-11/Step05B_Card_Answers')
 DEFAULT_PDFS=Path('/content/drive/MyDrive/University_RAG_Colab/corpus/source_pdfs_44_v1_2026-10-25')
+
+
+@lru_cache(maxsize=1)
+def _normal_response_defaults() -> dict[str, Any]:
+    schema=json.loads((Path(__file__).resolve().parents[1]/'config/card_response_schema.json').read_text())
+    defaults={'str':'', 'bool':False, 'int':0, 'float':0.0, 'NoneType':None}
+    return {key: ([] if kind=='list' else {} if kind=='dict' else defaults[kind])
+            for key,kind in schema.items()}
 
 
 def enabled()->bool:
@@ -141,6 +150,15 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
         return None,[]
     latency=time.perf_counter()-started
     first=chosen[0]
+    decision=finalize_answerability(
+        AnswerabilityDecision(AnswerabilityStatus.SUPPORTED,'CARD_VERIFIED',EvidenceLevel.STRONG,
+                              requested_entity=intent.course,requested_field=intent.field,
+                              entity_supported=True,field_supported=True,structured_extractable=True,
+                              supporting_evidence_count=len(chosen),independent_support_count=len(chosen),
+                              source_count=1,best_support_rank=1,retrieval_channels=('card',),
+                              generation_required=False),
+        answer_present=True,language_passed=True,grounding_passed=True,
+        semantic_passed=True,generation_used=False)
     result=dict(question=question,answer=rendered.answer,answer_body=rendered.body,citation=rendered.citation,
                 detected_language={'en':'english','bn':'bangla','bl':'banglish'}[intent.lang],
                 response_language=language['response_language'],language_validation_passed=True,
@@ -149,7 +167,7 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
                 support_status='SUPPORTED',final_status='ANSWER_RETURNED',final_answer_allowed=True,
                 answer_mode='card',answer_strategy='card',generation_mode='card',generation_used=False,
                 generation_attempts=0,retry_used=False,answer_bank_enabled=False,
-                source=rendered.pdf,relative_path=rendered.pdf,page=rendered.pages[0],
+                source=rendered.pdf,relative_path=rendered.pdf,page=int(first['page']),
                 chunk_id=first['card_id'],card_id=first['card_id'],card_ids=[card['card_id'] for card in chosen],
                 card_mode=selected.mode,card_field=first['field'],supporting_excerpt=first['plain_span'],
                 sources=[dict(source=card['pdf'],relative_path=card['pdf'],page=card['page'],
@@ -157,5 +175,15 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
                 evidence=evidence,retrieved_context=extras,
                 latency_seconds=dict(retrieval=latency,answering=0.0,generation=0.0,retry=0.0,total=latency),
                 answerability_seconds=latency,requested_entity=intent.course,requested_field=intent.field,
-                card_selection_reason=selected.reason,card_score=selected.top_score,card_margin=selected.margin)
+                card_selection_reason=selected.reason,card_score=selected.top_score,card_margin=selected.margin,
+                answer_returned=True,
+                semantic_validation_passed=True,language_validation_failed=False,
+                requested_answer_strategy='card',
+                target_language={'en':'english','bn':'bangla','bl':'banglish'}[intent.lang],
+                support_reason='CARD_VERIFIED',pre_generation_support_status='SUPPORTED',
+                pre_generation_support_reason='CARD_VERIFIED',generation_prompts=[])
+    result.update(decision.to_dict())
+    normal=copy.deepcopy(_normal_response_defaults())
+    normal.update(result)
+    result=normal
     return result,extras

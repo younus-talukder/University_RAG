@@ -77,7 +77,8 @@ def render_card_answer(intent:CardIntent,selection:CardSelection,extra_pages:tup
     if field in NUMERIC_FIELDS:value=_digits(value,lang)
     pdf=str(first['pdf'])
     if any(card.get('pdf')!=pdf for card in cards):raise ValueError('a card answer must cite one PDF')
-    pages=tuple(sorted({int(page) for card in cards for page in card.get('pages',[card['page']])}|set(extra_pages)))
+    fact_pages=[int(page) for card in cards for page in card.get('pages',[card['page']])]
+    pages=tuple(dict.fromkeys(fact_pages+[int(page) for page in extra_pages]))
     slots=dict(course=course,label=label,label_bn=label_bn,label_bl=label_bl,label_plural=label+'s',
                key=key,key_bn=_key_bn(key),value=value,pdf=pdf,pages=', '.join(map(str,pages)),
                pages_bn=', '.join(_digits(page,'bn') for page in pages),
