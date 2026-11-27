@@ -92,6 +92,14 @@ def test_card_route_uses_valid_rewrite_without_losing_original_anchor(monkeypatc
     result, _ = card_runtime.attempt_card_answer(original, rewritten)
     assert result is not None and result['anchor_source'] == 'rewrite'
     assert seen == ['banglish']
+    card.update(key='CLO 8', row_key='CLO 8')
+    blocked, _ = card_runtime.attempt_card_answer(original, rewritten)
+    assert blocked is None  # selected key differs from requested CLO2
+    monkeypatch.setenv('RAG_CARD_STATEMENT_GUARD', 'off')
+    previous, _ = card_runtime.attempt_card_answer(original, rewritten)
+    assert previous is not None and previous['card_id'] == 'synthetic'
+    monkeypatch.setenv('RAG_CARD_STATEMENT_GUARD', 'on')
+    card.update(key='CLO 2', row_key='CLO 2')
     card.update(field='book', key='book', row_key='book')
     named = 'EX 101-er Morgan book er naam ki?'
     result, _ = card_runtime.attempt_card_answer(named, 'Which book is used for EX 101?')

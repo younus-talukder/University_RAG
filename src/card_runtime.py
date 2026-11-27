@@ -19,6 +19,8 @@ from .embeddings import get_embedding_model
 from .grounding_validator import validate_grounding
 from .language_validator import validate_language
 from .banglish_norm import original_anchors_safe, enabled as banglish_norm_enabled
+from .card_statement_guard import enabled as statement_guard_enabled, guard_cards, selected_key_matches
+from .card_router import _key as extract_identifier_key
 
 
 DEFAULT_BUNDLE=Path('/content/drive/MyDrive/University_RAG_Colab/Roadmap_2026-11/Step05B_Card_Answers')
@@ -50,6 +52,9 @@ def _bundle():
             if row['field']=='schedule' and row['extras_ok']=='True':trusted_schedule.add(row['card_id'])
     cards=[{**card,'p1_schedule_extras_ok':card['card_id'] in trusted_schedule}
            for card in raw_cards if not is_heading_only_card(card)]
+    if statement_guard_enabled():
+        audit = os.environ.get('RAG_CARD_GUARD_AUDIT_DIR', '').strip()
+        cards = guard_cards(cards, _plain_page, Path(audit) if audit else None)
     config=yaml.safe_load((Path(__file__).resolve().parents[1]/'config/card_routing.yaml').read_text(encoding='utf-8'))
     index=CardEmbeddingIndex(root/'card_embeddings_v1',raw_cards)
     import hashlib
@@ -145,6 +150,11 @@ def _attempt_card_answer_once(question:str, routing_question:str|None=None)->tup
             for c in ranked[:3] if c.get('plain_span') and _span_verified(c)]
     if selected.route!='card':return None,[]
     chosen=selected.cards
+    if statement_guard_enabled():
+        requested_keys = [extract_identifier_key(question.casefold())[0]]
+        if routing_question:
+            requested_keys.append(extract_identifier_key(route_text.casefold())[0])
+        if any(not selected_key_matches(card, requested_keys) for card in chosen):return None,[]
     if routing_question:
         if any(_distinctive_anchor_missing(route_text, card) or not original_anchors_safe(question, card) for card in chosen):return None,[]
     elif any(_distinctive_anchor_missing(question, card) for card in chosen):return None,[]
