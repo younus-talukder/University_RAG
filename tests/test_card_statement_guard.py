@@ -1,4 +1,4 @@
-from src.card_statement_guard import guard_cards, normalized_key, selected_key_matches
+from src.card_statement_guard import guard_cards, normalized_key, selected_key_matches, explicit_outcome_key
 
 
 def card(key, value):
@@ -18,7 +18,7 @@ def test_trim_full_list_reject_leading_foreign_and_keep_clean(monkeypatch):
     full = card('CLO 1', 'At the end students can: CLO 1 Learn synthetic methods. CLO 2 Apply synthetic methods.')
     leading = card('CLO 1', 'CLO2 Apply synthetic methods.')
     clean = card('CLO 3', 'Evaluate synthetic methods.')
-    cards = guard_cards([full, leading, clean], lambda pdf, page: full['value'] + '\n' + leading['value'] + '\n' + clean['value'])
+    cards = guard_cards([full, leading, clean], lambda pdf, page: 'Course Learning Outcomes' if page == 1 else full['value'] + '\n' + leading['value'] + '\n' + clean['value'])
     assert len(cards) == 2
     assert cards[0]['value'] == 'Learn synthetic methods'
     assert cards[1] is clean
@@ -29,10 +29,31 @@ def test_reject_short_nonverbatim_trim(monkeypatch):
     monkeypatch.setenv('RAG_CARD_STATEMENT_GUARD', 'on')
     short = card('CLO 1', 'CLO 1 Learn it. CLO 2 Apply methods.')
     absent = card('CLO 1', 'CLO 1 Learn synthetic methods. CLO 2 Apply methods.')
-    assert guard_cards([short, absent], lambda pdf, page: 'unrelated page') == []
+    assert guard_cards([short, absent], lambda pdf, page: 'Course Learning Outcomes' if page == 1 else 'unrelated page') == []
 
 
 def test_off_returns_previous_cards_by_identity(monkeypatch):
     monkeypatch.setenv('RAG_CARD_STATEMENT_GUARD', 'off')
     items = [card('CLO 1', 'CLO 1 Learn methods. CLO 2 Apply methods.')]
     assert guard_cards(items, lambda pdf, page: '') is items
+
+
+def test_outside_section_schedule_and_misnumbered_statement_rejected(monkeypatch):
+    monkeypatch.setenv('RAG_CARD_STATEMENT_GUARD', 'on')
+    schedule = card('CLO 2', 'Lecture, practice and final project demonstration')
+    schedule['page'] = 6
+    mislabeled = card('CLO 1', 'CLO2 Construct synthetic database queries')
+    mislabeled['page'] = 6
+    clean = card('CLO 2', 'Construct synthetic database queries')
+    page = lambda pdf, number: ('Course Learning Outcomes' if number == 1 else
+                                'CLO 2 Construct synthetic database queries' if number == 2 else
+                                'CLO2 Lecture, practice and final project demonstration')
+    assert guard_cards([schedule, mislabeled, clean], page) == [clean]
+
+
+def test_explicit_numbered_outcome_required():
+    assert not explicit_outcome_key('Which CLO do Class Tests 2 and 3 cover?')
+    assert not explicit_outcome_key('kon CLO class test-e ache?')
+    assert not explicit_outcome_key('কোন CLO class test-এ আছে?')
+    assert explicit_outcome_key('What is CLO 2 of EX 101?')
+    assert explicit_outcome_key('Which outcome?', 'What is CO-3?')

@@ -92,6 +92,12 @@ def test_card_route_uses_valid_rewrite_without_losing_original_anchor(monkeypatc
     result, _ = card_runtime.attempt_card_answer(original, rewritten)
     assert result is not None and result['anchor_source'] == 'rewrite'
     assert seen == ['banglish']
+    unnumbered, _ = card_runtime.attempt_card_answer('Which CLO do Class Tests 2 and 3 cover?')
+    assert unnumbered is None
+    monkeypatch.setenv('RAG_CARD_STATEMENT_GUARD', 'off')
+    previous_unnumbered, _ = card_runtime.attempt_card_answer('Which CLO do Class Tests 2 and 3 cover?')
+    assert previous_unnumbered is not None
+    monkeypatch.setenv('RAG_CARD_STATEMENT_GUARD', 'on')
     card.update(key='CLO 8', row_key='CLO 8')
     blocked, _ = card_runtime.attempt_card_answer(original, rewritten)
     assert blocked is None  # selected key differs from requested CLO2

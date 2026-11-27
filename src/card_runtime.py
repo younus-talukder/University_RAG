@@ -19,7 +19,7 @@ from .embeddings import get_embedding_model
 from .grounding_validator import validate_grounding
 from .language_validator import validate_language
 from .banglish_norm import original_anchors_safe, enabled as banglish_norm_enabled
-from .card_statement_guard import enabled as statement_guard_enabled, guard_cards, selected_key_matches
+from .card_statement_guard import enabled as statement_guard_enabled, guard_cards, selected_key_matches, explicit_outcome_key
 from .card_router import _key as extract_identifier_key
 
 
@@ -151,6 +151,8 @@ def _attempt_card_answer_once(question:str, routing_question:str|None=None)->tup
     if selected.route!='card':return None,[]
     chosen=selected.cards
     if statement_guard_enabled():
+        if any(card.get('field') in {'clo', 'co'} for card in chosen) and not explicit_outcome_key(question, route_text if routing_question else ''):
+            return None,[]
         requested_keys = [extract_identifier_key(question.casefold())[0]]
         if routing_question:
             requested_keys.append(extract_identifier_key(route_text.casefold())[0])

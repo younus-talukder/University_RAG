@@ -73,7 +73,12 @@ def write_csv(path:Path,records:list[dict],fields:list[str])->None:
 
 
 def main()->None:
-    parser=argparse.ArgumentParser();parser.add_argument('mode',choices=['routes','fallback']);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('mode',choices=['routes','fallback'])
+    parser.add_argument('--output-dir',type=Path,required=True)
+    args=parser.parse_args()
+    global OUT
+    OUT=args.output_dir.resolve()
+    OUT.mkdir(parents=True,exist_ok=True)
     manifest_path=OUT/f'replay_{args.mode}_manifest.json'
     current=setup()
     if manifest_path.exists():

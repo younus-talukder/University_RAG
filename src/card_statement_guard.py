@@ -11,6 +11,7 @@ from .course_cards import match_text
 from .card_selector import is_heading_only_card
 
 _IDENTIFIER = re.compile(r'\b(CLO|CO)\s*[-–]?\s*(\d+)\b', re.I)
+_OUTCOME_HEADING = re.compile(r'course\s+learning\s+outcomes|course\s+outcomes|\bCLO\s+No\b|\bCO\s+No\b', re.I)
 _KEYED = re.compile(r'^(CLO|CO|PLO|PO|Weeks?|Lecture|objective|book)\s*[-–]?\s*([a-z]|\d+)(?:\s*[–-]\s*(\d+))?$', re.I)
 
 
@@ -44,6 +45,10 @@ def selected_key_matches(card: dict, requested_keys: Iterable[str]) -> bool:
     return bool(selected and wanted == {selected})
 
 
+def explicit_outcome_key(question: str, rewrite: str = '') -> bool:
+    return bool(_IDENTIFIER.search(question) or (rewrite and _IDENTIFIER.search(rewrite)))
+
+
 def _same_id(left: re.Match[str], right: re.Match[str]) -> bool:
     return (left.group(1).casefold(), int(left.group(2))) == (right.group(1).casefold(), int(right.group(2)))
 
@@ -62,6 +67,12 @@ def guard_cards(cards: list[dict], plain_page: Callable[[str, int], str],
     """Trim one statement after its own ID; reject mixed or mislabeled values."""
     if not enabled():
         return cards
+    max_page: dict[str, int] = {}
+    for item in cards:
+        pdf = str(item.get('pdf') or '')
+        if pdf and item.get('page'):
+            max_page[pdf] = max(max_page.get(pdf, 0), int(item['page']))
+    outcome_page: dict[str, int | None] = {}
     kept: list[dict] = []
     trimmed: list[dict] = []
     rejected: list[dict] = []
@@ -69,7 +80,18 @@ def guard_cards(cards: list[dict], plain_page: Callable[[str, int], str],
         if card.get('tier') != 'atomic' or card.get('field') not in {'clo', 'co'}:
             kept.append(card)
             continue
+        pdf = str(card.get('pdf') or '')
+        if pdf not in outcome_page:
+            outcome_page[pdf] = next((page for page in range(1, max_page.get(pdf, 0) + 1)
+                                      if _OUTCOME_HEADING.search(plain_page(pdf, page))), None)
+        heading_page = outcome_page[pdf]
         original = str(card.get('value') or '')
+        if heading_page is None or int(card.get('page') or 0) not in {heading_page, heading_page + 1}:
+            rejected.append(dict(card_id=card.get('card_id'), course=card.get('course'),
+                                 field=card.get('field'), key=card.get('row_key') or card.get('key'),
+                                 pdf=pdf, page=card.get('page'), reason='outside_outcome_section',
+                                 original_value=original, new_value=''))
+            continue
         own = _IDENTIFIER.search(str(card.get('row_key') or card.get('key') or ''))
         ids = list(_IDENTIFIER.finditer(original))
         foreign = [m for m in ids if not own or not _same_id(m, own)]
