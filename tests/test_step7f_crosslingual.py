@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 from unittest.mock import patch
+import os
 
 from src import pipeline
 from src.crosslingual import (
@@ -56,6 +57,7 @@ class PipelineFallbackTests(unittest.TestCase):
     def _run(self, question: str, original: list[dict], canonical: list[dict] | None = None,
              generation_failure: bool = False):
         with (
+            patch.dict(os.environ, {"RAG_BANGLISH_NORM": "off"}),
             patch.object(pipeline, "load_index", return_value=(object(), original)),
             patch.object(pipeline, "_get_embedding_model", return_value=object()),
             patch.object(pipeline, "Retriever") as retriever,

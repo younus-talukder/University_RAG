@@ -1,0 +1,49 @@
+# General Banglish cues only; no dataset facts or identifiers.
+cues:
+  - ki
+  - koto
+  - ke
+  - kon
+  - kobe
+  - kothay
+  - naam
+  - porbe
+  - lagbe
+  - shikhbo
+  - ache
+  - hobe
+  - er
+  - theke
+  - kivabe
+  - keno
+  - onujayi
+  - korte
+  - parbe
+  - koy
+  - konta
+  - somoy
+  - kemon
+  - bolo
+  - thakbe
+function_words:
+  - er
+  - ki
+  - ke
+  - kon
+  - koto
+  - kobe
+  - kothay
+  - theke
+  - onujayi
+  - korte
+  - parbe
+  - ache
+  - hobe
+  - thakbe
+field_cues:
+  naam: [name, title]
+  ki shikhbo: [learning outcomes, CLO]
+  koto credit: [credit]
+  koto marks: [marks]
+  kobe: [when]
+  kivabe: [how]

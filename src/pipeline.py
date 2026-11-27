@@ -5,10 +5,12 @@ import os
 import re
 import time
 from dataclasses import replace
+from contextvars import ContextVar
 from pathlib import Path
 from functools import lru_cache
 from typing import Any, Callable, Dict
 
+from .banglish_norm import detected as banglish_detected, enabled as banglish_enabled, rewrite as banglish_rewrite, fuse as banglish_fuse
 from .answer_policy import effective_answer_field, evidence_value, format_exact_fact, format_structured_text, select_answer_strategy
 from .answer_safety import answer_safety_failures, explicit_email_values, relation_compatible, requested_relation
 from .answerability import (
@@ -53,6 +55,7 @@ from .vector_store import load_index
 
 
 StatusCallback = Callable[[str], None]
+_BANGLISH_TRACE: ContextVar[dict | None] = ContextVar('banglish_trace', default=None)
 DEBUG_LOG_PATH = Path(__file__).resolve().parent.parent / "output" / "generation_debug_log.jsonl"
 
 
@@ -206,6 +209,10 @@ def _answer_question_impl(
     detected_language = language_detection.language
     representations = replace(representations, target_language=detected_language)
     runtime_intent = detect_runtime_intent(question)
+    norm_detected = banglish_enabled() and banglish_detected(question)
+    rewrite_text, rewrite_valid, rewrite_latency = banglish_rewrite(question) if norm_detected else ('', False, 0.0)
+    valid_query = rewrite_text if rewrite_valid else ''
+    _BANGLISH_TRACE.set({'banglish_detected': norm_detected, 'rewrite_text': rewrite_text if norm_detected else '', 'rewrite_valid': rewrite_valid, 'rewrite_latency_s': rewrite_latency, 'route_source': 'original', 'anchor_source': 'none'})
 
     answer_bank_match = None
     if use_answer_bank:
@@ -276,8 +283,13 @@ def _answer_question_impl(
     if os.environ.get('RAG_REPAIR_CARD_ANSWERS','0').strip().casefold() in {'1','true','yes','on'}:
         from .card_runtime import attempt_card_answer,enabled as card_answers_enabled
         if card_answers_enabled():
-            card_result,_=attempt_card_answer(question)
-            if card_result is not None:return card_result
+            card_result,_=attempt_card_answer(question, valid_query)
+            if card_result is not None:
+                trace = _BANGLISH_TRACE.get()
+                if trace is not None:
+                    trace['route_source'] = 'rewrite' if card_result.get('anchor_source') == 'rewrite' else 'original'
+                    trace['anchor_source'] = card_result.get('anchor_source', 'none')
+                return card_result
 
     index_path = str(VECTOR_DB_DIR / "index.faiss")
     metadata_path = str(VECTOR_DB_DIR / "metadata.pkl")
@@ -297,6 +309,9 @@ def _answer_question_impl(
         report("Retrieving relevant context...")
         retriever = Retriever(embedding_model=embedding_model, top_k=max(top_k, 30))
         original_pool = retriever.retrieve(question, index_path=index_path, metadata_path=metadata_path)
+        if valid_query:
+            rewritten_pool = retriever.retrieve(valid_query, index_path=index_path, metadata_path=metadata_path)
+            original_pool = banglish_fuse(original_pool, rewritten_pool, RRF_K, len(original_pool))
         if repair_trace["flags"]:
             original_pool = _prepare_pool(question, original_pool, metadata, repair_trace, "original")
         selection_pool = _course_anchored_order(question, original_pool, metadata, repair_trace, "original")
@@ -982,6 +997,7 @@ def answer_question(
         return _preflight_response(question, AnswerabilityStatus.OUT_OF_DOMAIN,
                                    "OUT_OF_DOMAIN", started)
     prompts: list[dict[str, Any]] = []
+    trace_token = _BANGLISH_TRACE.set(None)
     try:
         with capture_generation_prompts(prompts):
             result = _answer_question_impl(cleaned, top_k=top_k, status_callback=status_callback,
@@ -990,7 +1006,11 @@ def answer_question(
         return _preflight_response(question, AnswerabilityStatus.SYSTEM_ERROR,
                                    "SYSTEM_EXCEPTION", started,
                                    f"{type(exc).__name__}: {exc}")
-    result["question"] = question
+    result['question'] = question
+    trace = _BANGLISH_TRACE.get()
+    if trace is not None and banglish_enabled():
+        result.update(trace)
+    _BANGLISH_TRACE.reset(trace_token)
     # Instrumentation only: the exact chat messages sent to the generator.
     result["generation_prompts"] = prompts
     return result

@@ -18,6 +18,7 @@ from .course_cards import match_text
 from .embeddings import get_embedding_model
 from .grounding_validator import validate_grounding
 from .language_validator import validate_language
+from .banglish_norm import original_anchors_safe, enabled as banglish_norm_enabled
 
 
 DEFAULT_BUNDLE=Path('/content/drive/MyDrive/University_RAG_Colab/Roadmap_2026-11/Step05B_Card_Answers')
@@ -109,25 +110,27 @@ def _distinctive_anchor_missing(question: str, card: dict[str, Any]) -> bool:
     return False
 
 
-def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,Any]]]:
+def _attempt_card_answer_once(question:str, routing_question:str|None=None)->tuple[dict[str,Any]|None,list[dict[str,Any]]]:
     """Return a validated card answer, or extra plain spans for RAG fallback."""
     if not enabled():return None,[]
     started=time.perf_counter()
     cards,index,config=_bundle()
-    intent=understand(question,cards)
-    vector=get_embedding_model().embed(question)
+    route_text=routing_question or question
+    original_intent=understand(question,cards)
+    intent=replace(understand(route_text,cards),lang=original_intent.lang) if routing_question else original_intent
+    vector=get_embedding_model().embed(route_text)
     if not intent.course and 'multi-course-or-explanation' not in intent.cues and intent.field:
-        inferred=resolve_course_by_value(question,cards,_value_index(),index.all_scores(vector),
+        inferred=resolve_course_by_value(route_text,cards,_value_index(),index.all_scores(vector),
                                          float(config.get('course_margin',config['tau'])))
         if inferred:intent=replace(intent,course=inferred,mode='lookup',confidence=.6)
     if not intent.course:return None,[]
     course_cards=[c for c in cards if c['course']==intent.course]
     scores=index.scores(vector,intent.course)
-    sparse_scores=_value_index().scores(question,intent.course,intent.field)
+    sparse_scores=_value_index().scores(route_text,intent.course,intent.field)
     enabled_fields={c['field'] for c in course_cards}-set(config['disabled_fields'])
     selected=select_cards(intent,course_cards,scores,float(config['tau']),float(config['tau_rev']),
                           infer_complete_fields(course_cards),enabled_fields,bm25_scores=sparse_scores)
-    item=select_item_by_value(question,intent,course_cards,_value_index(),scores,
+    item=select_item_by_value(route_text,intent,course_cards,_value_index(),scores,
                               float(config.get('item_margin',config['tau'])))
     if item.route=='card':
         selected=item
@@ -142,7 +145,9 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
             for c in ranked[:3] if c.get('plain_span') and _span_verified(c)]
     if selected.route!='card':return None,[]
     chosen=selected.cards
-    if any(_distinctive_anchor_missing(question, card) for card in chosen):return None,[]
+    if routing_question:
+        if any(_distinctive_anchor_missing(route_text, card) or not original_anchors_safe(question, card) for card in chosen):return None,[]
+    elif any(_distinctive_anchor_missing(question, card) for card in chosen):return None,[]
     if not all(_span_verified(card) for card in chosen):return None,[]
     identity=next((card for card in course_cards if card.get('field')=='course_code'
                    and card.get('tier')=='atomic' and card.get('pdf')==chosen[0].get('pdf')
@@ -194,4 +199,17 @@ def attempt_card_answer(question:str)->tuple[dict[str,Any]|None,list[dict[str,An
     normal=copy.deepcopy(_normal_response_defaults())
     normal.update(result)
     result=normal
+    if banglish_norm_enabled():
+        result.update(anchor_source='rewrite' if routing_question else 'original',
+                      banglish_detected=False,rewrite_text='',rewrite_valid=False,
+                      rewrite_latency_s=0.0,route_source='rewrite' if routing_question else 'original')
     return result,extras
+
+
+def attempt_card_answer(question:str, rewrite_text:str|None=None)->tuple[dict[str,Any]|None,list[dict[str,Any]]]:
+    """Try a valid rewrite first, then preserve the original card route."""
+    if rewrite_text:
+        result, extras = _attempt_card_answer_once(question, rewrite_text)
+        if result is not None:
+            return result, extras
+    return _attempt_card_answer_once(question)
