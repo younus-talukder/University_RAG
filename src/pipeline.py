@@ -11,6 +11,7 @@ from functools import lru_cache
 from typing import Any, Callable, Dict
 
 from .banglish_norm import detected as banglish_detected, enabled as banglish_enabled, rewrite as banglish_rewrite, fuse as banglish_fuse
+from .page_reranker import enabled as page_reranker_enabled, rerank_pages
 from .answer_policy import effective_answer_field, evidence_value, format_exact_fact, format_structured_text, select_answer_strategy
 from .answer_safety import answer_safety_failures, explicit_email_values, relation_compatible, requested_relation
 from .answerability import (
@@ -168,7 +169,7 @@ def _prepare_pool(question: str, pool: list[dict[str, Any]], metadata: list[dict
 def _course_anchored_order(question: str, pool: list[dict[str, Any]], metadata: list[dict[str, Any]],
                            repair_trace: dict[str, Any], label: str) -> list[dict[str, Any]]:
     """R1: order used only to pick the top-k passages (never for joins or widening)."""
-    if not repair_enabled("COURSE_ANCHORED_RETRIEVAL"):
+    if page_reranker_enabled() or not repair_enabled("COURSE_ANCHORED_RETRIEVAL"):
         return pool
     codes = [entity.normalized for entity in analyze_query(question).entities if entity.kind == "course_code"]
     if len(codes) != 1:
@@ -280,7 +281,7 @@ def _answer_question_impl(
             ],
         }
 
-    if os.environ.get('RAG_REPAIR_CARD_ANSWERS','0').strip().casefold() in {'1','true','yes','on'}:
+    if not page_reranker_enabled() and os.environ.get('RAG_REPAIR_CARD_ANSWERS','0').strip().casefold() in {'1','true','yes','on'}:
         from .card_runtime import attempt_card_answer,enabled as card_answers_enabled
         if card_answers_enabled():
             card_result,_=attempt_card_answer(question, valid_query)
@@ -312,6 +313,28 @@ def _answer_question_impl(
         if valid_query:
             rewritten_pool = retriever.retrieve(valid_query, index_path=index_path, metadata_path=metadata_path)
             original_pool = banglish_fuse(original_pool, rewritten_pool, RRF_K, len(original_pool))
+        rerank_retriever_depth = getattr(retriever, 'top_k', max(top_k, 30))
+        if page_reranker_enabled() and len(original_pool) < 20:
+            retriever.top_k = max(rerank_retriever_depth * 2, 40)
+            rerank_retriever_depth = retriever.top_k
+            original_pool = retriever.retrieve(question, index_path=index_path, metadata_path=metadata_path)
+            if valid_query:
+                rewritten_pool = retriever.retrieve(valid_query, index_path=index_path, metadata_path=metadata_path)
+                original_pool = banglish_fuse(original_pool, rewritten_pool, RRF_K, len(original_pool))
+        original_pool, rerank_trace = rerank_pages(valid_query or question, original_pool)
+        rerank_trace['rerank_retriever_depth'] = rerank_retriever_depth
+        trace = _BANGLISH_TRACE.get()
+        if trace is not None:
+            trace.update(rerank_trace)
+        if page_reranker_enabled() and os.environ.get('RAG_REPAIR_CARD_ANSWERS','0').strip().casefold() in {'1','true','yes','on'}:
+            from .card_runtime import attempt_card_answer, enabled as card_answers_enabled
+            if card_answers_enabled():
+                card_result, _ = attempt_card_answer(question, valid_query)
+                if card_result is not None:
+                    if trace is not None:
+                        trace['route_source'] = 'rewrite' if card_result.get('anchor_source') == 'rewrite' else 'original'
+                        trace['anchor_source'] = card_result.get('anchor_source', 'none')
+                    return card_result
         if repair_trace["flags"]:
             original_pool = _prepare_pool(question, original_pool, metadata, repair_trace, "original")
         selection_pool = _course_anchored_order(question, original_pool, metadata, repair_trace, "original")
